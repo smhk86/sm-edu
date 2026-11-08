@@ -5,7 +5,7 @@
    Output has the same shape the existing exam-builder UI already renders. */
 (function(g){'use strict';
 const prior=g.SM_EDUCATION_RELEASE||{};
-g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.0',focus:'local-exam-generator',features:(prior.features||[]).concat(['local-math-generator-primary','offline-exam-builder'])});
+g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.0',focus:'local-exam-generator',features:(prior.features||[]).concat(['local-math-generator-primary','local-generator-middle-secondary','offline-exam-builder'])});
 
 const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const pick=a=>a[ri(0,a.length-1)];
@@ -94,6 +94,20 @@ const G5={
  prop(t,lv){const u=ri(5,lv?90:40),a=ri(2,5),b=ri(6,12);return mk('التناسبية',`ثمن ${a} كغ من الفاكهة ${u*a} دج. ما ثمن ${b} كغ بالسعر نفسه؟`,`${u*b} دج`,[`ثمن 1 كغ = ${u*a} ÷ ${a} = ${u} دج.`,`ثمن ${b} كغ = ${u} × ${b} = ${u*b} دج.`])}
 };
 const BY_GRADE={'الأولى ابتدائي':G1,'الثانية ابتدائي':G2,'الثالثة ابتدائي':G3,'الرابعة ابتدائي':G4,'الخامسة ابتدائي':G5};
+/* ---- middle & secondary generators (math-middle-gen.js): 1AM..4AM and 1AS..3AS math, plus physics 2AS/3AS ---- */
+const MM_CODE={'الأولى متوسط':'1AM','الثانية متوسط':'2AM','الثالثة متوسط':'3AM','الرابعة متوسط':'4AM','الأولى ثانوي':'1AS','الثانية ثانوي':'2AS','الثالثة ثانوي':'3AS'};
+const MM_TOPIC={'divisibility':'قابلية القسمة','euclid':'القسمة الإقليدية','decimal-div':'القسمة العشرية','angle-sum':'الزوايا',
+ 'order-of-ops':'ترتيب العمليات','relative-numbers':'الأعداد النسبية','decimal-div-approx':'القسمة والتقريب','fraction-shares':'الكسور','distance-abscissa':'المسافة على مستقيم',
+ 'scientific':'الكتابة العلمية','power-simplify':'القوى','numeric-expr':'العبارات العددية','frame':'الحصر',
+ 'identity':'المتطابقات الشهيرة','factor':'التحليل','quadratic-roots':'المعادلات','rect-system':'مسألة المستطيل',
+ 'linear-system':'جملة معادلتين','parallelogram':'متوازي الأضلاع','canonical-form':'الشكل النموذجي','composition':'تركيب الدوال','arith-seq':'متتالية حسابية','geom-seq':'متتالية هندسية',
+ 'phys-molarity':'التركيز المولي','phys-dilution':'التمديد','phys-dissolution':'الإذابة','phys-incline':'المستوي المائل'};
+const mmSubject=(gr,subject)=>{const c=MM_CODE[gr];if(!c||!g.SMMathMiddle)return null;
+  if(subject==='الرياضيات'&&g.SMMathMiddle.has(c,'math'))return{code:c,kind:'math'};
+  if(subject==='العلوم الفيزيائية'&&g.SMMathMiddle.has(c,'physics'))return{code:c,kind:'physics'};
+  return null};
+const mmQuestions=(gr,subject,count)=>{const m=mmSubject(gr,subject);if(!m)return[];
+  return g.SMMathMiddle.generate(m.code,count,null,m.kind).map(x=>mk(MM_TOPIC[x.type]||'تمرين',x.q,ltr(x.a),x.steps||[],(x.steps||[]).slice(-1)[0]||''))};
 const LEVELS={easy:()=>0,medium:()=>1,hard:()=>2,mixed:i=>i%3};
 
 function mathQuestions(gradeLabel,term,count,diff){
@@ -157,6 +171,7 @@ async function localGenerate(){
   const recentKey='smExamRecentQuestionIds:'+grade_+'|'+subject+'|'+term;let recent=[];try{recent=JSON.parse(localStorage.getItem(recentKey)||'[]')}catch(e){}
   let qs,note;
   if(subject==='الرياضيات'&&BY_GRADE[grade_]){qs=mathQuestions(grade_,term,count,diff);note='تمارين مولَّدة آلياً على نمط امتحانات الفصل، والحلول محسوبة بالبرنامج، وليست امتحاناً رسمياً.'}
+  else if(mmSubject(grade_,subject)){qs=mmQuestions(grade_,subject,count);note='تمارين مولَّدة آلياً على نمط فروض الفصل الثاني، والحلول محسوبة بالبرنامج، وليست امتحاناً رسمياً.'}
   else{qs=bankQuestions(grade_,subject,term,count,diff,recent);note='أسئلة تدريبية من بنك المنصة، وليست امتحاناً رسمياً.'}
   if(!qs.length){mount.innerHTML='<p class="notice">لا توجد أسئلة مطابقة لهذه السنة والمادة والفصل.</p>';return}
   if(qs.length<count)note+=` توفّر ${qs.length} سؤالاً فقط من ${count} المطلوبة.`;
@@ -168,7 +183,7 @@ async function localGenerate(){
 const original=g.generateCurriculumExam;
 g.generateCurriculumExam=async function(){
   const grade_=(typeof bankTestSelection!=='undefined'&&bankTestSelection.grade)||(typeof grade!=='undefined'?grade:'');
-  const isMath=typeof bankTestSelection!=='undefined'&&bankTestSelection.subject==='الرياضيات'&&BY_GRADE[grade_];
+  const isMath=typeof bankTestSelection!=='undefined'&&((bankTestSelection.subject==='الرياضيات'&&BY_GRADE[grade_])||!!mmSubject(grade_,bankTestSelection.subject));
   const hasBackend=typeof apiBase==='function'&&!!apiBase();
   if(isMath||!hasBackend||typeof original!=='function')return localGenerate();
   return original.apply(this,arguments);
@@ -180,18 +195,18 @@ const PS=g.SM_PRACTICE_STATE=g.SM_PRACTICE_STATE||{subject:'',term:1,diff:'mixed
 const curLang=()=>typeof lang!=='undefined'?lang:'ar';
 const esc=s=>typeof escapeReviewText==='function'?escapeReviewText(s):String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const T={
- ar:{title:'مولّد التمارين',desc:'اختر المادة والفصل ثم ولّد تمارين جديدة مع حلولها. في رياضيات الابتدائي تتغير الأرقام في كل مرة، وفي باقي المواد تُسحب التمارين من بنك المنصة.',
+ ar:{title:'مولّد التمارين',desc:'اختر المادة والفصل ثم ولّد تمارين جديدة مع حلولها. في رياضيات الابتدائي والمتوسط والثانوي (وفيزياء 2 و3 ثانوي) تتغير الأرقام في كل مرة، وفي باقي المواد تُسحب التمارين من بنك المنصة.',
   subject:'المادة',term:'الفصل',diff:'الصعوبة',count:'عدد التمارين',mixed:'متدرجة',easy:'سهلة',medium:'متوسطة',hard:'صعبة',go:'ولّد تمارين',more:'تمارين أخرى',exam:'ولّد اختباراً كاملاً',
   showAll:'إظهار كل الحلول',hideAll:'إخفاء الحلول',sol:'عرض الحل',ans:'الإجابة',q:'التمرين',none:'لا توجد تمارين لهذه السنة والمادة والفصل.',only:'توفّر {n} تمريناً فقط من {c} المطلوبة.',
-  genNote:'تمارين مولَّدة آلياً وحلولها محسوبة بالبرنامج.',bankNote:'تمارين من بنك المنصة، وهي تدريبية وليست مواضيع وزارية رسمية.',loading:'جارٍ تحميل البنك…'},
+  genNote:'تمارين مولَّدة آلياً وحلولها محسوبة بالبرنامج.',bankNote:'تمارين من بنك المنصة، وهي تدريبية وليست مواضيع وزارية رسمية.',loading:'جارٍ تحميل البنك…',mmNote:'أنماطها مأخوذة من فروض الفصل الثاني، ولا تتغير بتغيّر الفصل أو الصعوبة.'},
  fr:{title:'Générateur d’exercices',desc:'Choisissez la matière et le trimestre, puis générez de nouveaux exercices avec corrigé.',
   subject:'Matière',term:'Trimestre',diff:'Difficulté',count:'Nombre',mixed:'Mixte',easy:'Facile',medium:'Moyen',hard:'Difficile',go:'Générer',more:'Autres exercices',exam:'Générer un sujet complet',
   showAll:'Afficher les corrigés',hideAll:'Masquer les corrigés',sol:'Voir le corrigé',ans:'Réponse',q:'Exercice',none:'Aucun exercice pour cette sélection.',only:'Seulement {n} exercices sur {c}.',
-  genNote:'Exercices générés automatiquement, corrigés calculés.',bankNote:'Exercices de la banque, non officiels.',loading:'Chargement…'},
+  genNote:'Exercices générés automatiquement, corrigés calculés.',bankNote:'Exercices de la banque, non officiels.',loading:'Chargement…',mmNote:'Modèles issus des devoirs du 2e trimestre ; trimestre et difficulté sans effet.'},
  en:{title:'Exercise generator',desc:'Pick a subject and term, then generate fresh exercises with solutions.',
   subject:'Subject',term:'Term',diff:'Difficulty',count:'Count',mixed:'Mixed',easy:'Easy',medium:'Medium',hard:'Hard',go:'Generate',more:'More exercises',exam:'Generate a full exam',
   showAll:'Show all solutions',hideAll:'Hide solutions',sol:'Show solution',ans:'Answer',q:'Exercise',none:'No exercises for this selection.',only:'Only {n} of {c} available.',
-  genNote:'Auto-generated exercises with computed answers.',bankNote:'Exercises from the platform bank, not official papers.',loading:'Loading…'}
+  genNote:'Auto-generated exercises with computed answers.',bankNote:'Exercises from the platform bank, not official papers.',loading:'Loading…',mmNote:'Patterns come from term-2 papers; term and difficulty have no effect.'}
 };
 const tx=()=>T[curLang()]||T.en;
 const bankFor=gr=>typeof exerciseBankRecords!=='undefined'?exerciseBankRecords.filter(x=>x.grade===gr):[];
@@ -200,6 +215,9 @@ const subjectsFor=gr=>{const s=[...new Set(bankFor(gr).map(x=>x.subject))];if(BY
 function practiceItems(gr,subject,term,count,diff){
   if(subject==='الرياضيات'&&BY_GRADE[gr]){
     return{gen:true,items:mathQuestions(gr,term,count,diff).map(q=>({topic:q.topic,question:q.question,choices:[],answer:q.answer,steps:q.solution_steps||[],explanation:q.explanation||''}))};
+  }
+  if(mmSubject(gr,subject)){
+    return{gen:true,mm:true,items:mmQuestions(gr,subject,count).map(q=>({topic:q.topic,question:q.question,choices:[],answer:q.answer,steps:q.solution_steps||[],explanation:q.explanation||''}))};
   }
   const key=gr+'|'+subject+'|'+term,seen=PS.seen[key]||(PS.seen[key]=[]);
   let all=bankFor(gr).filter(x=>x.subject===subject&&Number(x.term)===Number(term));
@@ -233,7 +251,7 @@ const SMP=g.SM_PRACTICE={
     if(!r.items.length){mount.innerHTML=`<p class="notice">${L.none}</p>`;return}
     const short=r.items.length<PS.count?' '+L.only.replace('{n}',r.items.length).replace('{c}',PS.count):'';
     mount.innerHTML=`<div class="learning-meta"><b>${esc(PS.subject)} · ${esc(gr)}</b><span class="pill">${L.term} ${PS.term}</span></div>`+r.items.map((it,i)=>practiceCard(it,i,L)).join('')+
-      `<p class="notice">${r.gen?L.genNote:L.bankNote}${short}</p><div class="exam-version-actions"><button class="primary-btn" onclick="SM_PRACTICE.run()">${L.more}</button><button class="secondary-btn" onclick="SM_PRACTICE.toggleAll(this)">${L.showAll}</button></div>`;
+      `<p class="notice">${r.gen?L.genNote+(r.mm?' '+L.mmNote:''):L.bankNote}${short}</p><div class="exam-version-actions"><button class="primary-btn" onclick="SM_PRACTICE.run()">${L.more}</button><button class="secondary-btn" onclick="SM_PRACTICE.toggleAll(this)">${L.showAll}</button></div>`;
   },
   toggleAll(btn){
     const L=tx(),ds=document.querySelectorAll('#genPracticeResult details.gen-solution'),open=!(ds.length&&ds[0].open);
