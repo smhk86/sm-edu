@@ -9,6 +9,7 @@ Commit and push the resulting repository files/index through your normal GitHub 
 """
 from __future__ import annotations
 import argparse, csv, hashlib, json, re, sys, time
+import urllib.error
 from pathlib import Path
 from urllib.parse import urlparse, unquote
 from urllib.request import Request, urlopen
@@ -84,6 +85,24 @@ def download(url: str, robots: RobotFileParser, allowed: tuple | None = None) ->
     return data, ext
 
 
+def download_with_retry(url, robots, allowed, tries=3):
+    """Retry only transient network errors; policy errors (robots, host, not-a-document) fail at once."""
+    last = None
+    for attempt in range(1, tries + 1):
+        try:
+            return download(url, robots, allowed)
+        except urllib.error.HTTPError as exc:
+            if exc.code in (429, 500, 502, 503, 504) and attempt < tries:
+                last = exc; time.sleep(5 * attempt); continue
+            raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
+            last = exc
+            if attempt < tries:
+                time.sleep(5 * attempt); continue
+            raise
+    raise last
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--source", choices=sorted(SOURCES), default="dzexams", help="Which approved source the CSV belongs to (default: dzexams)")
@@ -113,34 +132,49 @@ def main() -> int:
             if not rows.fieldnames or not required.issubset(set(rows.fieldnames)):
                 raise ValueError("CSV headers must include url, grade, subject, title; optional: year, term, solution")
             robots_cache = {}
+            failed = []
+            def save_index():
+                index["updated_at"] = time.strftime("%Y-%m-%d")
+                index_path.parent.mkdir(parents=True, exist_ok=True)
+                index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
             for row in rows:
                 url = (row.get("url") or "").strip()
                 if not url or url in seen:
                     continue
-                if not all((row.get(k) or "").strip() for k in ("grade", "subject", "title")):
-                    raise ValueError("Each row needs grade, subject and title")
-                origin = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
-                if origin not in robots_cache:
-                    robots_cache[origin] = read_robots(url)
-                data, ext = download(url, robots_cache[origin], src["allowed"])
-                digest = hashlib.sha256(data).hexdigest()[:12]
-                folder = safe_name(row["grade"])
-                filename = safe_name(row["title"]) + "-" + digest + "." + ext
-                rel = f"{folder}/{filename}"
-                target = dest_root / folder / filename
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(data)
-                item = {"grade":row["grade"].strip(),"subject":row["subject"].strip(),"title":row["title"].strip(),"ext":ext,"file":f"{base}/{src['url_path']}/{rel}","source":args.source,"source_url":url,"sha256":hashlib.sha256(data).hexdigest(),"bytes":len(data),"rights_cleared":True}
-                for k in ("year", "term"):
-                    if (row.get(k) or "").strip(): item[k] = int(row[k])
-                item["solution"] = (row.get("solution") or "").strip().lower() in ("1","true","yes","نعم")
-                index["items"].append(item);seen.add(url);added += 1
-                print(f"Imported: {row['title']} ({len(data)} bytes)")
+                title_for_log = (row.get("title") or url)[:80]
+                try:
+                    if not all((row.get(k) or "").strip() for k in ("grade", "subject", "title")):
+                        raise ValueError("Row needs grade, subject and title")
+                    origin = f"{urlparse(url).scheme}://{urlparse(url).netloc}"
+                    if origin not in robots_cache:
+                        robots_cache[origin] = read_robots(url)
+                    data, ext = download_with_retry(url, robots_cache[origin], src["allowed"])
+                    digest = hashlib.sha256(data).hexdigest()[:12]
+                    folder = safe_name(row["grade"])
+                    filename = safe_name(row["title"]) + "-" + digest + "." + ext
+                    rel = f"{folder}/{filename}"
+                    target = dest_root / folder / filename
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(data)
+                    item = {"grade":row["grade"].strip(),"subject":row["subject"].strip(),"title":row["title"].strip(),"ext":ext,"file":f"{base}/{src['url_path']}/{rel}","source":args.source,"source_url":url,"sha256":hashlib.sha256(data).hexdigest(),"bytes":len(data),"rights_cleared":True}
+                    for k in ("year", "term"):
+                        if (row.get(k) or "").strip():
+                            try: item[k] = int(row[k])
+                            except ValueError: pass
+                    item["solution"] = (row.get("solution") or "").strip().lower() in ("1","true","yes","نعم")
+                    index["items"].append(item); seen.add(url); added += 1
+                    save_index()  # progress survives a later failure or a cancelled run
+                    print(f"Imported: {row['title']} ({len(data)} bytes)", flush=True)
+                except Exception as exc:  # one bad row must never discard the rest of the batch
+                    failed.append((title_for_log, url, str(exc)[:160]))
+                    print(f"SKIPPED: {title_for_log} | {url} | {str(exc)[:160]}", file=sys.stderr, flush=True)
                 time.sleep(max(2.0, args.delay))
-        index["updated_at"] = time.strftime("%Y-%m-%d")
-        index_path.parent.mkdir(parents=True, exist_ok=True)
-        index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        print(f"Done ({src['label']}): {added} new file(s). Review files and index, then commit and push to GitHub.")
+        save_index()
+        print(f"Done ({src['label']}): {added} new file(s), {len(failed)} skipped. Review files and index, then commit and push to GitHub.")
+        for t, u, why in failed:
+            print(f"  FAILED: {t} | {u} | {why}")
+        if failed and not added:
+            return 2
         return 0
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
