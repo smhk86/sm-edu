@@ -119,7 +119,7 @@ def main() -> int:
     ap.add_argument("--source", choices=sorted(SOURCES), default="dzexams", help="Which approved source the CSV belongs to (default: dzexams)")
     ap.add_argument("--csv", type=Path, required=True, help="CSV of direct URLs and grade/subject metadata")
     ap.add_argument("--permission-confirmed", action="store_true", help="Confirm written permission to store/re-publish these files in this repository")
-    ap.add_argument("--public-base", default="https://smhk86.github.io/sm-education", help="GitHub Pages base URL")
+    ap.add_argument("--public-base", default="https://smhk86.github.io/sm-edu", help="GitHub Pages base URL")
     ap.add_argument("--delay", type=float, default=2.0, help="Pause between downloads (minimum 2 seconds)")
     ap.add_argument("--limit", type=int, default=0, help="Process at most N not-yet-imported rows in this run (0 = no limit); rerun to continue")
     ap.add_argument("--sample-per-group", type=int, default=0, help="Import at most N files per (grade, subject, term) group, counting files already imported (0 = off)")
