@@ -110,6 +110,7 @@ def main() -> int:
     ap.add_argument("--permission-confirmed", action="store_true", help="Confirm written permission to store/re-publish these files in this repository")
     ap.add_argument("--public-base", default="https://smhk86.github.io/sm-education", help="GitHub Pages base URL")
     ap.add_argument("--delay", type=float, default=2.0, help="Pause between downloads (minimum 2 seconds)")
+    ap.add_argument("--limit", type=int, default=0, help="Process at most N not-yet-imported rows in this run (0 = no limit); rerun to continue")
     args = ap.parse_args()
     if not args.permission_confirmed:
         ap.error("Refusing to import without --permission-confirmed and documented rights-holder permission")
@@ -133,6 +134,7 @@ def main() -> int:
                 raise ValueError("CSV headers must include url, grade, subject, title; optional: year, term, solution")
             robots_cache = {}
             failed = []
+            attempted = 0
             def save_index():
                 index["updated_at"] = time.strftime("%Y-%m-%d")
                 index_path.parent.mkdir(parents=True, exist_ok=True)
@@ -141,6 +143,10 @@ def main() -> int:
                 url = (row.get("url") or "").strip()
                 if not url or url in seen:
                     continue
+                if args.limit and attempted >= args.limit:
+                    print(f"Batch limit {args.limit} reached; run again to continue with the remaining rows.")
+                    break
+                attempted += 1
                 title_for_log = (row.get("title") or url)[:80]
                 try:
                     if not all((row.get(k) or "").strip() for k in ("grade", "subject", "title")):

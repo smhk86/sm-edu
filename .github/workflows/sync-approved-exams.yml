@@ -11,6 +11,10 @@ on:
         type: choice
         default: both
         options: [both, dzexams, raji3dz]
+      limit:
+        description: 'Max files to import in this run (0 = all). Use e.g. 150 and rerun to continue.'
+        type: string
+        default: '0'
       permission_confirmed:
         description: 'I hold written permission from the site owner to store AND re-publish these files'
         type: boolean
@@ -49,18 +53,22 @@ jobs:
 
       - name: Import approved DZExams files
         if: ${{ inputs.source == 'both' || inputs.source == 'dzexams' }}
+        env:
+          LIMIT: ${{ inputs.limit }}
         run: |
           if [ "$(grep -c '[^[:space:]]' templates/dzexams-approved-files.csv)" -gt 1 ]; then
-            python tools/sync_dzexams_repository.py --source dzexams --csv templates/dzexams-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE"
+            python tools/sync_dzexams_repository.py --source dzexams --csv templates/dzexams-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE" --limit "${LIMIT:-0}"
           else
             echo "templates/dzexams-approved-files.csv has no rows; nothing to import."
           fi
 
       - name: Import approved Raji3DZ files
         if: ${{ inputs.source == 'both' || inputs.source == 'raji3dz' }}
+        env:
+          LIMIT: ${{ inputs.limit }}
         run: |
           if [ "$(grep -c '[^[:space:]]' templates/raji3dz-approved-files.csv)" -gt 1 ]; then
-            python tools/sync_dzexams_repository.py --source raji3dz --csv templates/raji3dz-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE"
+            python tools/sync_dzexams_repository.py --source raji3dz --csv templates/raji3dz-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE" --limit "${LIMIT:-0}"
           else
             echo "templates/raji3dz-approved-files.csv has no rows; nothing to import."
           fi
