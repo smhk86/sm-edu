@@ -210,7 +210,7 @@ const T={
 };
 const tx=()=>T[curLang()]||T.en;
 const bankFor=gr=>typeof exerciseBankRecords!=='undefined'?exerciseBankRecords.filter(x=>x.grade===gr):[];
-const subjectsFor=gr=>{const s=[...new Set(bankFor(gr).map(x=>x.subject))];if(BY_GRADE[gr]&&!s.includes('الرياضيات'))s.unshift('الرياضيات');return s};
+const subjectsFor=gr=>['الرياضيات','العلوم الفيزيائية'].filter(s=>(s==='الرياضيات'&&BY_GRADE[gr])||mmSubject(gr,s));
 
 function practiceItems(gr,subject,term,count,diff){
   if(subject==='الرياضيات'&&BY_GRADE[gr]){
@@ -219,16 +219,7 @@ function practiceItems(gr,subject,term,count,diff){
   if(mmSubject(gr,subject)){
     return{gen:true,mm:true,items:mmQuestions(gr,subject,count).map(q=>({topic:q.topic,question:q.question,choices:[],answer:q.answer,steps:q.solution_steps||[],explanation:q.explanation||''}))};
   }
-  const key=gr+'|'+subject+'|'+term,seen=PS.seen[key]||(PS.seen[key]=[]);
-  let all=bankFor(gr).filter(x=>x.subject===subject&&Number(x.term)===Number(term));
-  const d=DIFF_AR[diff];if(d){const p=all.filter(x=>x.difficulty===d);if(p.length>=Math.min(count,all.length))all=p}
-  let pool=all.filter(x=>!seen.includes(x.id));if(pool.length<Math.min(count,all.length)){seen.length=0;pool=all}
-  const chosen=shuffle(pool).slice(0,count);chosen.forEach(x=>seen.push(x.id));
-  return{gen:false,total:all.length,items:chosen.map(x=>{
-    let ch=Array.isArray(x.choices)?x.choices.slice():[],ans=x.solution||x.answer||'';
-    if(ch.length&&Number.isInteger(x.answer_index)&&ch[x.answer_index]!==undefined){const right=ch[x.answer_index];ch=shuffle(ch);ans=LET[ch.indexOf(right)]+') '+right}
-    return{topic:x.topic||'',question:x.question,choices:ch,answer:ans,steps:x.solution_steps||[],explanation:x.explanation||''};
-  })};
+  return{gen:false,total:0,items:[]};
 }
 function practiceCard(it,i,L){
   const ch=it.choices.length?`<div class="gen-choices">${it.choices.map((c,j)=>`<div>${LET[j]||j+1}) ${esc(c)}</div>`).join('')}</div>`:'';
@@ -264,7 +255,7 @@ const SMP=g.SM_PRACTICE={
   },
   panelHtml(){
     const L=tx(),{gr,subs}=ensureState();
-    if(!subs.length)return `<section class="panel"><div class="notice">${L.loading}</div></section>`;
+    if(!subs.length)return `<section class="panel"><div class="notice">${curLang()==='ar'?'لا يوجد مولّد تمارين لهذه السنة بعد. استعمل مكتبة الامتحانات أدناه.':'Aucun générateur pour ce niveau pour l’instant.'}</div></section>`;
     const opt=(v,t,cur)=>`<option value="${esc(v)}"${String(v)===String(cur)?' selected':''}>${esc(t)}</option>`;
     return `<section class="panel practice-generator"><div class="learning-meta"><b>✨ ${L.title}</b><span class="pill">${esc(gr)}</span></div><p>${L.desc}</p><div class="test-builder-grid">`+
       `<label>${L.subject}<select onchange="SM_PRACTICE.set('subject',this.value)">${subs.map(s=>opt(s,s,PS.subject)).join('')}</select></label>`+
