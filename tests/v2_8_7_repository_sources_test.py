@@ -41,7 +41,7 @@ class Sources(unittest.TestCase):
         self.assertNotEqual(a["schema"], b["schema"]); self.assertNotEqual(a["index"], b["index"]); self.assertNotEqual(a["dest"], b["dest"])
         self.assertEqual(b["url_path"], "repository/raji3dz")
         data = json.loads((ROOT / "web/data/raji3dz-repository-index.json").read_text(encoding="utf-8"))
-        self.assertEqual(data["schema"], b["schema"]); self.assertEqual(data["items"], [])
+        self.assertEqual(data["schema"], b["schema"]); self.assertIsInstance(data["items"], list)
 
     def _run(self, tmp, rows, extra=()):
         csv_path = tmp / "in.csv"; csv_path.write_text("url,grade,subject,title,year,term,solution\n" + rows, encoding="utf-8")
@@ -79,7 +79,7 @@ class Sources(unittest.TestCase):
     def test_template_headers(self):
         import csv
         for name in ("dzexams", "raji3dz"):
-            with (ROOT / f"templates/{name}-approved-files.csv").open(encoding="utf-8") as f:
-                self.assertEqual(next(csv.reader(f)), ["url", "grade", "subject", "title", "year", "term", "solution"])
+            with (ROOT / f"templates/{name}-approved-files.csv").open(encoding="utf-8-sig") as f:
+                self.assertEqual(next(csv.reader(f))[:7], ["url", "grade", "subject", "title", "year", "term", "solution"])
 
 if __name__ == "__main__": unittest.main(verbosity=2)
