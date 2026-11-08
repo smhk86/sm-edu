@@ -1,0 +1,15 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const root=path.resolve(__dirname,'..');
+const rootCap=JSON.parse(fs.readFileSync(path.join(root,'capacitor.config.json'),'utf8'));
+const wrapperCap=JSON.parse(fs.readFileSync(path.join(root,'android-wrapper/capacitor.config.json'),'utf8'));
+assert.strictEqual(wrapperCap.appId,rootCap.appId,'Android wrapper appId must match root Capacitor config');
+assert.strictEqual(wrapperCap.appName,rootCap.appName,'Android wrapper appName must match root Capacitor config');
+const html=fs.readFileSync(path.join(root,'web/index.html'),'utf8');
+const sw=fs.readFileSync(path.join(root,'web/sw.js'),'utf8');
+const ux=fs.readFileSync(path.join(root,'web/ux-v2-1-8.js'),'utf8');
+assert(html.includes('aria-controls="sidebar"')&&html.includes('aria-expanded="false"'));
+assert(html.includes('ux-v2-1-8.js'),'navigation enhancer must be loaded');
+assert(sw.includes('./ux-v2-1-8.js'),'navigation enhancer must be precached');
+for(const feature of ["event.key==='Escape'",'pointerdown','aria-expanded','menu.focus()'])assert(ux.includes(feature),`missing accessible navigation feature: ${feature}`);
+console.log('PASS: v2.1.8 Android identity parity, accessible mobile menu, outside dismissal, Escape handling and offline precache');

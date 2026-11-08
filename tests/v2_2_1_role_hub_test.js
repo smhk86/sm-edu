@@ -1,0 +1,15 @@
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const root=path.resolve(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'web/index.html'),'utf8');
+const ux=fs.readFileSync(path.join(root,'web/ux-v2-2-1.js'),'utf8');
+const css=fs.readFileSync(path.join(root,'web/styles.css'),'utf8');
+const sw=fs.readFileSync(path.join(root,'web/sw.js'),'utf8');
+const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+assert.equal(pkg.version,'2.8.9');
+assert(html.includes('ux-v2-2-1.js'),'new UX layer must be loaded');
+assert(ux.includes("page:'exercises'")&&ux.includes("page:'teacher'")&&ux.includes("page:'parents'"),'student, teacher and parent shortcuts must target existing routes');
+assert(ux.includes('window.home=function()')&&ux.includes('oldHome()'),'existing home dashboard must be preserved and extended');
+assert(ux.includes('Escape')&&ux.includes('aria-expanded'),'keyboard accessible mobile menu behavior must exist');
+assert(css.includes('.role-shortcuts')&&css.includes('@media(max-width:760px)'),'role shortcuts must have responsive layout');
+assert(sw.includes('./ux-v2-2-1.js'),'new script must be precached');
+console.log('PASS: v2.8.4 role hub, existing route links, responsive layout, keyboard menu and PWA precache');

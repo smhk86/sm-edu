@@ -1,0 +1,16 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const script=fs.readFileSync('web/ux-v2-2-2.js','utf8');
+const css=fs.readFileSync('web/styles.css','utf8');
+const html=fs.readFileSync('web/index.html','utf8');
+assert(script.includes('sm222FilterSubjects'));
+assert(script.includes('sm222FilterSubjectStage'));
+assert(script.includes('v222-test-overview'));
+assert(css.includes('.v222-test-overview'));
+assert(css.includes('.subject-card[hidden]'));
+assert(html.includes('ux-v2-2-2.js'));
+const calls=[];
+const context={window:{exerciseBankHomePage:()=>'<h3 class="bank-section-title">Subjects</h3><div class="subject-grid"></div>',testBankHomePage:()=>'<section class="panel test-builder v2-builder">Builder</section>'},exerciseBankRecords:[{grade:'G',subject:'Math',difficulty:'مبتدئ',term:1},{grade:'G',subject:'Math',difficulty:'متقدم',term:2}],grade:'G',bankTestSelection:{grade:'G',subject:'Math'},lang:'ar',document:{addEventListener(){}}};
+vm.createContext(context);vm.runInContext(script,context);
+assert(context.window.exerciseBankHomePage().includes('اعثر على تمرينك بسرعة'));
+assert(context.window.testBankHomePage().includes('v222-test-overview'));
+console.log('v2.2.2 learning UX tests passed');

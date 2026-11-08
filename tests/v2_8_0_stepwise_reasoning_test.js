@@ -1,0 +1,16 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const root=process.cwd();
+const teacher=fs.readFileSync(root+'/web/smart-teacher.js','utf8');
+assert(teacher.includes('smartTeacherSolutionSteps'),'solution-step field must be present');
+assert(teacher.includes('smartTeacherDiagramDescription'),'geometry description field must be present');
+assert(teacher.includes('افحص خطوات الحل لا النتيجة فقط'),'prompt must grade intermediate reasoning');
+assert(teacher.includes('موضع أول خطأ جبري'),'prompt must localize first algebra error');
+assert(teacher.includes('لا تستنتج علاقة غير مثبتة'),'geometry reasoning must avoid unsupported assumptions');
+const source=fs.readFileSync(root+'/web/v2-8-0.js','utf8');
+const window={};vm.runInNewContext(source,{window,navigator:{serviceWorker:{}}});
+assert.strictEqual(window.SM_EDUCATION_RELEASE.version,'2.8.0');
+assert(window.SM_EDUCATION_RELEASE.features.includes('step-by-step-math-review'));
+assert.strictEqual(window.smEducationReasoningCapabilities().automaticVisualUnderstanding,false);
+const html=fs.readFileSync(root+'/web/index.html','utf8'),sw=fs.readFileSync(root+'/web/sw.js','utf8');
+assert(html.includes('src="v2-8-0.js"'));assert(sw.includes('./v2-8-0.js'));assert(sw.includes('sm-school-ai-v2.8.9'));
+console.log('v2.8.0 stepwise maths and geometry reasoning tests passed');

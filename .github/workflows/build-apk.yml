@@ -1,0 +1,108 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Run the full test suite
+        run: npm test
+
+  apk:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Set Android version from package.json
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          IFS=. read -r MA MI PA <<< "$VERSION"
+          CODE=$(( (MA*10000 + MI*100 + PA) * 1000 + (GITHUB_RUN_NUMBER % 1000) ))
+          GRADLE=android/app/build.gradle
+          sed -i -E "s/versionCode [0-9]+/versionCode $CODE/; s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" "$GRADLE"
+          grep -nE "versionCode|versionName" "$GRADLE"
+
+      - name: Generate app icons (Android)
+        run: npx --yes @capacitor/assets generate --android --assetPath assets
+
+      - name: Keep the APK small (papers, lessons and curated repository files are downloaded from the content server)
+        run: rm -rf web/exams web/repository
+
+      - name: Sync web assets
+        run: npx cap sync android
+
+      - name: Use fixed signing key
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "KEYSTORE_B64 secret not set: building with the default debug key (the APK will not update over a build signed with the fixed key)."
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/smedu.keystore"
+          python3 - <<'PY'
+          import os,re
+          p='android/app/build.gradle'
+          g=open(p).read()
+          if 'smeduSigning' not in g:
+              cfg = """
+              signingConfigs {
+                  smeduSigning {
+                      storeFile file(System.getenv('RUNNER_TEMP') + '/smedu.keystore')
+                      storePassword System.getenv('KEYSTORE_PASSWORD')
+                      keyAlias System.getenv('KEY_ALIAS')
+                      keyPassword System.getenv('KEYSTORE_PASSWORD')
+                  }
+              }
+              """
+              g=re.sub(r'(android\s*\{)', r'\1' + cfg, g, count=1)
+              g=re.sub(r'(buildTypes\s*\{)', r'\1\n        debug { signingConfig signingConfigs.smeduSigning }', g, count=1)
+              open(p,'w').write(g)
+          PY
+
+      - name: Build debug APK
+        working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SM_EDUCATION-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

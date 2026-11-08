@@ -1,0 +1,17 @@
+'use strict';
+const fs=require('fs'),path=require('path'),assert=require('assert');
+const root=path.resolve(__dirname,'..');
+const html=fs.readFileSync(path.join(root,'web/index.html'),'utf8');
+const sw=fs.readFileSync(path.join(root,'web/sw.js'),'utf8');
+const ux=fs.readFileSync(path.join(root,'web/ux-v2-1-9.js'),'utf8');
+const css=fs.readFileSync(path.join(root,'web/styles.css'),'utf8');
+assert(html.includes('id="connectionStatus" role="status" aria-live="polite"'),'connection status must be announced accessibly');
+assert(html.includes('src="ux-v2-1-9.js"'),'new UX runtime must be wired');
+assert(sw.includes("'./ux-v2-1-9.js'"),'new UX runtime must be precached');
+for(const state of ['online','offline','unknown'])assert(ux.includes(`'${state}'`),`missing connection state ${state}`);
+for(const lang of ['ar','fr','en'])assert(ux.includes(`${lang}:`),`missing ${lang} status translations`);
+assert(ux.includes("addEventListener('online'")&&ux.includes("addEventListener('offline'"),'connection listeners missing');
+assert(css.includes('env(safe-area-inset-bottom')&&css.includes(':focus-visible')&&css.includes('prefers-contrast:more'),'mobile/accessibility styles missing');
+const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+assert.strictEqual(pkg.version,'2.8.9');
+console.log('PASS: v2.8.4 connection awareness, multilingual status, PWA precache, mobile safe areas and keyboard/contrast accessibility');

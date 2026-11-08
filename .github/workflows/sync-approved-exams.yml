@@ -1,0 +1,86 @@
+name: Sync approved exam files (DZExams + Raji3DZ) to repository and Pages
+
+# Manual run only. Downloads the direct file links listed in the approved CSVs, stores them under
+# web/repository/, updates the indexes, commits, then redeploys GitHub Pages so the app can read them.
+# The built-in GITHUB_TOKEN stays inside GitHub Actions; no token is ever placed in the app.
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Which source to import'
+        type: choice
+        default: both
+        options: [both, dzexams, raji3dz]
+      permission_confirmed:
+        description: 'I hold written permission from the site owner to store AND re-publish these files'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: sm-education-content-pages
+  cancel-in-progress: false
+
+env:
+  # Pages URL of THIS repository (e.g. https://smhk86.github.io/sm-education), so index links never point to an old account.
+  PUBLIC_BASE: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Require the permission confirmation
+        if: ${{ inputs.permission_confirmed != true }}
+        run: |
+          echo "Refusing to run: tick 'permission_confirmed' only if written re-publication permission exists."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Import approved DZExams files
+        if: ${{ inputs.source == 'both' || inputs.source == 'dzexams' }}
+        run: |
+          if [ "$(grep -c '[^[:space:]]' templates/dzexams-approved-files.csv)" -gt 1 ]; then
+            python tools/sync_dzexams_repository.py --source dzexams --csv templates/dzexams-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE"
+          else
+            echo "templates/dzexams-approved-files.csv has no rows; nothing to import."
+          fi
+
+      - name: Import approved Raji3DZ files
+        if: ${{ inputs.source == 'both' || inputs.source == 'raji3dz' }}
+        run: |
+          if [ "$(grep -c '[^[:space:]]' templates/raji3dz-approved-files.csv)" -gt 1 ]; then
+            python tools/sync_dzexams_repository.py --source raji3dz --csv templates/raji3dz-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE"
+          else
+            echo "templates/raji3dz-approved-files.csv has no rows; nothing to import."
+          fi
+
+      - name: Check published site size
+        run: |
+          SIZE_MB=$(du -sm web | cut -f1)
+          echo "Website payload: ${SIZE_MB} MB"
+          if [ "$SIZE_MB" -gt 900 ]; then echo "Refusing: payload exceeds 900 MB."; exit 1; fi
+
+      - name: Commit imported files and indexes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/repository web/data/dzexams-repository-index.json web/data/raji3dz-repository-index.json
+          if git diff --cached --quiet; then echo "No changes to commit."; else git commit -m "Sync approved exam files" && git push; fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

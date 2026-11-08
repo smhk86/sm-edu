@@ -1,0 +1,8 @@
+{
+  "schema_version": "1.0",
+  "academic_year": "2026-2027",
+  "purpose": "Teacher adjudication records for generated exam papers. This template contains no real reviewer identities or completed reviews.",
+  "scoring_maxima": {"curriculum":30,"answer_key":25,"marking":20,"difficulty":10,"diversity":10,"clarity":5},
+  "decision_values": ["accepted","revision_required","rejected","pending"],
+  "reviews": []
+}

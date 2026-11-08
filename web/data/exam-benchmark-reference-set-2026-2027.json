@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0",
+  "academic_year": "2026-2027",
+  "status": "reference_manifest_pending_teacher_review",
+  "rights_policy": "Store metadata and source links only unless explicit permission allows reproduction. Do not label independent archives as official sources.",
+  "entries": [
+    {"id":"bem-2026-arabic","exam":"BEM","year":2026,"subject":"اللغة العربية","level":"الرابعة متوسط","source_id":"bem-archive","source_url":"https://bem-algerie.net/sujets.html","document_status":"not_downloaded","rights_status":"unverified","teacher_review_status":"pending"},
+    {"id":"bem-2026-mathematics","exam":"BEM","year":2026,"subject":"الرياضيات","level":"الرابعة متوسط","source_id":"bem-archive","source_url":"https://bem-algerie.net/sujets.html","document_status":"not_downloaded","rights_status":"unverified","teacher_review_status":"pending"},
+    {"id":"bem-2026-science","exam":"BEM","year":2026,"subject":"علوم الطبيعة والحياة","level":"الرابعة متوسط","source_id":"bem-archive","source_url":"https://bem-algerie.net/sujets.html","document_status":"not_downloaded","rights_status":"unverified","teacher_review_status":"pending"},
+    {"id":"bem-2026-physics","exam":"BEM","year":2026,"subject":"العلوم الفيزيائية والتكنولوجيا","level":"الرابعة متوسط","source_id":"bem-archive","source_url":"https://bem-algerie.net/sujets.html","document_status":"not_downloaded","rights_status":"unverified","teacher_review_status":"pending"},
+    {"id":"bem-2026-history-geography","exam":"BEM","year":2026,"subject":"التاريخ والجغرافيا","level":"الرابعة متوسط","source_id":"bem-archive","source_url":"https://bem-algerie.net/sujets.html","document_status":"not_downloaded","rights_status":"unverified","teacher_review_status":"pending"}
+  ]
+}

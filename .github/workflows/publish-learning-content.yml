@@ -1,0 +1,50 @@
+name: Publish SM education learning content
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/data/ai-course-updates.json'
+      - 'web/data/dzexams-repository-index.json'
+      - 'web/data/raji3dz-repository-index.json'
+      - 'web/repository/**'
+      - '.github/workflows/publish-learning-content.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: sm-education-content-pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Check published site size
+        run: |
+          SIZE_MB=$(du -sm web | cut -f1)
+          echo "Website payload: ${SIZE_MB} MB"
+          if [ "$SIZE_MB" -gt 900 ]; then
+            echo "Refusing to publish: website payload exceeds the 900 MB safety limit."
+            exit 1
+          fi
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload app content to Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Deploy HTTPS content feed
+        id: deployment
+        uses: actions/deploy-pages@v4

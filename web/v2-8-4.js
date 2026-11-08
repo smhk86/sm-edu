@@ -1,0 +1,1 @@
+(function(g){'use strict';g.SM_EDUCATION_RELEASE={version:'2.8.4',focus:'teacher-reviewed-exam-benchmark'};g.smEducationExamQualityRubric=function(){return [{id:'curriculum',weight:30},{id:'answer_key',weight:25},{id:'marking',weight:20},{id:'difficulty',weight:10},{id:'diversity',weight:10},{id:'clarity',weight:5}];};})(window);
