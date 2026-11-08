@@ -9,3 +9,4 @@ backend/data/parents.sqlite3
 __pycache__/
 *.pyc
 .DS_Store
+*.bak
