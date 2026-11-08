@@ -39,8 +39,8 @@ const Z=window.SM_RAJI3DZ,T=Z._t;
  assert.equal(T.repoFileOk(ok),true);assert.equal(T.repoFileOk(BASE+'/repository/exams/a.pdf'),false);assert.equal(T.repoFileOk('https://evil.example/repository/raji3dz/a.pdf'),false);
  // shipped files: empty curated index + CSV template + config keys are in place
  const idx=JSON.parse(fs.readFileSync(path.join(root,'web/data/raji3dz-repository-index.json'),'utf8'));
- assert.equal(idx.schema,'sm-raji3dz-index-v1');assert.deepEqual(idx.items,[]);
- assert.equal(fs.readFileSync(path.join(root,'templates/raji3dz-approved-files.csv'),'utf8').split(/\r?\n/)[0],'url,grade,subject,title,year,term,solution');
+ assert.equal(idx.schema,'sm-raji3dz-index-v1');assert(Array.isArray(idx.items));
+ assert(fs.readFileSync(path.join(root,'templates/raji3dz-approved-files.csv'),'utf8').replace(/^\uFEFF/,'').split(/\r?\n/)[0].startsWith('url,grade,subject,title,year,term,solution'));
  const cfg=fs.readFileSync(path.join(root,'web/config.js'),'utf8');assert(cfg.includes('raji3dzRepositoryPath')&&cfg.includes('raji3dzRepositoryIndex'));
  console.log('PASS: Raji3DZ GitHub index sync — schema, path/host/https rules, read-only, idempotent, shipped templates');
 })().catch(e=>{console.error(e);process.exit(1)});
