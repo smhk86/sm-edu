@@ -85,6 +85,17 @@ def download(url: str, robots: RobotFileParser, allowed: tuple | None = None) ->
     return data, ext
 
 
+def term_of(title):
+    """1/2/3 from an Arabic exam title such as 'موضوع الفصل الأول رقم 1', else 0 (unknown)."""
+    t = title or ""
+    for n, pats in ((1, ("الفصل الأول", "الفصل الاول", "الفصل 1", "الثلاثي الأول", "الثلاثي الاول")),
+                    (2, ("الفصل الثاني", "الفصل 2", "الثلاثي الثاني")),
+                    (3, ("الفصل الثالث", "الفصل 3", "الثلاثي الثالث"))):
+        if any(x in t for x in pats):
+            return n
+    return 0
+
+
 def download_with_retry(url, robots, allowed, tries=3):
     """Retry only transient network errors; policy errors (robots, host, not-a-document) fail at once."""
     last = None
@@ -111,6 +122,7 @@ def main() -> int:
     ap.add_argument("--public-base", default="https://smhk86.github.io/sm-education", help="GitHub Pages base URL")
     ap.add_argument("--delay", type=float, default=2.0, help="Pause between downloads (minimum 2 seconds)")
     ap.add_argument("--limit", type=int, default=0, help="Process at most N not-yet-imported rows in this run (0 = no limit); rerun to continue")
+    ap.add_argument("--sample-per-group", type=int, default=0, help="Import at most N files per (grade, subject, term) group, counting files already imported (0 = off)")
     args = ap.parse_args()
     if not args.permission_confirmed:
         ap.error("Refusing to import without --permission-confirmed and documented rights-holder permission")
@@ -132,6 +144,21 @@ def main() -> int:
             required = {"url", "grade", "subject", "title"}
             if not rows.fieldnames or not required.issubset(set(rows.fieldnames)):
                 raise ValueError("CSV headers must include url, grade, subject, title; optional: year, term, solution")
+            if args.sample_per_group:
+                counts = {}
+                for x in index["items"]:
+                    k = (x.get("grade"), x.get("subject"), term_of(x.get("title", "")))
+                    counts[k] = counts.get(k, 0) + 1
+                picked = []
+                for row in rows:
+                    u = (row.get("url") or "").strip()
+                    k = ((row.get("grade") or "").strip(), (row.get("subject") or "").strip(), term_of(row.get("title") or ""))
+                    if not u or u in seen or counts.get(k, 0) >= args.sample_per_group:
+                        continue
+                    counts[k] = counts.get(k, 0) + 1
+                    picked.append(row)
+                rows = picked
+                print(f"Sample mode: {len(picked)} file(s) selected, at most {args.sample_per_group} per grade/subject/term.")
             robots_cache = {}
             failed = []
             attempted = 0

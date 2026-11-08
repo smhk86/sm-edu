@@ -15,6 +15,10 @@ on:
         description: 'Max files to import in this run (0 = all). Use e.g. 150 and rerun to continue.'
         type: string
         default: '0'
+      sample:
+        description: 'Sample mode: max files per grade/subject/term group (0 = off). Use 1 to fetch one example of each.'
+        type: string
+        default: '0'
       permission_confirmed:
         description: 'I hold written permission from the site owner to store AND re-publish these files'
         type: boolean
@@ -55,9 +59,10 @@ jobs:
         if: ${{ inputs.source == 'both' || inputs.source == 'dzexams' }}
         env:
           LIMIT: ${{ inputs.limit }}
+          SAMPLE: ${{ inputs.sample }}
         run: |
           if [ "$(grep -c '[^[:space:]]' templates/dzexams-approved-files.csv)" -gt 1 ]; then
-            python tools/sync_dzexams_repository.py --source dzexams --csv templates/dzexams-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE" --limit "${LIMIT:-0}"
+            python tools/sync_dzexams_repository.py --source dzexams --csv templates/dzexams-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE" --limit "${LIMIT:-0}" --sample-per-group "${SAMPLE:-0}"
           else
             echo "templates/dzexams-approved-files.csv has no rows; nothing to import."
           fi
@@ -66,9 +71,10 @@ jobs:
         if: ${{ inputs.source == 'both' || inputs.source == 'raji3dz' }}
         env:
           LIMIT: ${{ inputs.limit }}
+          SAMPLE: ${{ inputs.sample }}
         run: |
           if [ "$(grep -c '[^[:space:]]' templates/raji3dz-approved-files.csv)" -gt 1 ]; then
-            python tools/sync_dzexams_repository.py --source raji3dz --csv templates/raji3dz-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE" --limit "${LIMIT:-0}"
+            python tools/sync_dzexams_repository.py --source raji3dz --csv templates/raji3dz-approved-files.csv --permission-confirmed --public-base "$PUBLIC_BASE" --limit "${LIMIT:-0}" --sample-per-group "${SAMPLE:-0}"
           else
             echo "templates/raji3dz-approved-files.csv has no rows; nothing to import."
           fi
