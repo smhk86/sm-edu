@@ -172,17 +172,48 @@
     return { type: 'geom-seq', q: `(vₙ) متتالية هندسية حدّها الأول v₀ = ${v0} وأساسها q = ${q}. احسب v${n} ثم المجموع v₀ + v₁ + ... + v${n}.`,
       a: `v${n} = ${vn} ، المجموع = ${S}`, steps: [`vₙ = v₀ × qⁿ = ${v0} × (${q})${sup(n)}`, `S = v₀ × (qⁿ⁺¹ - 1)/(q - 1)`], _chk: [v0, q, n, vn, S] };
   };
+
+  // ---- فيزياء (2AS / 3AS) ----
+  const rd = (x, k) => Number(x.toFixed(k));
+  G.molarity = r => { // C = 10·p·d / M
+    const [name, M, d, pc] = pick(r, [['HCl', 36.5, 1.19, 35], ['HCl', 36.5, 1.18, 37], ['HNO₃', 63, 1.33, 52], ['HNO₃', 63, 1.4, 65], ['H₂SO₄', 98, 1.84, 96]]);
+    const C = rd(10 * pc * d / M, 2);
+    return { type: 'phys-molarity', q: `قارورة من محلول تجاري لـ ${name}: الكثافة d = ${d}، درجة النقاوة ${pc}%، الكتلة المولية M = ${M} g/mol. احسب التركيز المولي للمحلول التجاري.`,
+      a: `C = ${C} mol/L`, steps: ['C = 10 × p × d / M', `C = 10 × ${pc} × ${d} / ${M} = ${C} mol/L`], _chk: [pc, d, M, C] };
+  };
+  G.dilution = r => {
+    const [name, M, d, pc] = pick(r, [['HCl', 36.5, 1.19, 35], ['HNO₃', 63, 1.4, 65]]);
+    const C0 = rd(10 * pc * d / M, 2), C1 = pick(r, [0.1, 0.2, 0.5, 1]), V1 = pick(r, [100, 200, 250, 500]); // C0 المعروض هو المستعمل في الحل
+    const V0 = rd(C1 * V1 / C0, 2);
+    return { type: 'phys-dilution', q: `التركيز المولي للمحلول التجاري لـ ${name} هو C₀ = ${C0} mol/L. نريد تحضير محلول مائي (S₁) تركيزه C₁ = ${C1} mol/L وحجمه V₁ = ${V1} mL بالتمديد. احسب حجم V₀ اللازم أخذه من المحلول التجاري.`,
+      a: `V₀ = ${V0} mL`, steps: ['عند التمديد تبقى كمية المادة ثابتة: C₀V₀ = C₁V₁', `V₀ = C₁V₁ / C₀ = ${C1} × ${V1} / ${C0} ≈ ${V0} mL`], _chk: [C0, C1, V1, V0] };
+  };
+  G.dissolve = r => {
+    const M = 159.5, m = ri(r, 8, 40) / 10, V = pick(r, [100, 200, 250, 500]);
+    const n = m / M, C = n / (V / 1000), Cm = m / (V / 1000);
+    return { type: 'phys-dissolution', q: `نذيب كتلة m = ${m} g من كبريتات النحاس الصلبة (CuSO₄) في ${V} mL من الماء المقطّر (نهمل تغيّر الحجم). M = ${M} g/mol. احسب كمية المادة n والتركيز المولي C والتركيز الكتلي Cm.`,
+      a: `n = ${rd(n, 4)} mol ، C = ${rd(C, 3)} mol/L ، Cm = ${rd(Cm, 2)} g/L`, steps: [`n = m / M = ${m} / ${M} = ${rd(n, 4)} mol`, `C = n / V = ${rd(n, 4)} / ${V / 1000} ≈ ${rd(C, 3)} mol/L`, `Cm = m / V = ${rd(Cm, 2)} g/L`], _chk: [m, M, V, n, C, Cm] };
+  };
+  G.incline = r => {
+    const al = pick(r, [30, 45, 60]), h = ri(r, 5, 80) / 10, g = 9.8, sa = Math.sin(al * Math.PI / 180);
+    const a = g * sa, L = h / sa, v = Math.sqrt(2 * g * h);
+    return { type: 'phys-incline', q: `جسم (S) كتلته 200 g يبدأ حركته من السكون من أعلى مستوٍ مائل بزاوية α = ${al}° عن الأفقي، وارتفاع نقطة الانطلاق h = ${h} m. نهمل الاحتكاك (g = 9.8 m/s²). احسب تسارع الجسم ثم طول المستوي AB وسرعة الجسم عند B.`,
+      a: `a = ${rd(a, 2)} m/s² ، AB = ${rd(L, 2)} m ، vB = ${rd(v, 2)} m/s`, steps: [`a = g·sin α = ${g} × sin ${al}° = ${rd(a, 2)} m/s²`, `AB = h / sin α = ${rd(L, 2)} m`, `vB² = 2·a·AB = 2·g·h ⇒ vB = ${rd(v, 2)} m/s`], _chk: [al, h, g, a, L, v] };
+  };
   delete G.vec; // لا يُدرج: إجابة غير مضمونة
 
   const BY = { '1AS': ['system', 'parallelogram', 'canon'], '2AS': ['compose', 'system', 'canon'], '3AS': ['arithSum', 'geoSum', 'compose'], '2AM': ['order', 'relative', 'decdiv2', 'shares', 'abscissa'], '1AM': ['div', 'euclid', 'decdiv', 'angle'], '3AM': ['sci', 'power', 'exprInt', 'frame'], '4AM': ['expandSq', 'factorSq', 'solveProd', 'rect'] };
-  function generate(grade, count, rng) {
-    const r = rng || mk(Date.now()), names = BY[grade]; if (!names) return [];
+  const PHYS = { '2AS': ['molarity', 'dilution', 'dissolve'], '3AS': ['incline'] };
+  const SUBJ = { math: BY, physics: PHYS };
+  function generate(grade, count, rng, subject) {
+    const r = rng || mk(Date.now()), names = (SUBJ[subject || 'math'] || {})[grade]; if (!names) return [];
     const out = [], seen = new Set();
     for (let i = 0, t = 0; out.length < count && t < count * 20; i++, t++) {
       const x = G[names[i % names.length]](r); if (seen.has(x.q)) continue; seen.add(x.q); out.push(x);
     }
     return out;
   }
-  root.SMMathMiddle = { generate, grades: Object.keys(BY), _G: G, _mk: mk };
+  const has = (grade, subject) => !!(SUBJ[subject || 'math'] || {})[grade];
+  root.SMMathMiddle = { generate, has, grades: Object.keys(BY), physicsGrades: Object.keys(PHYS), _G: G, _mk: mk };
   if (typeof module !== 'undefined') module.exports = root.SMMathMiddle;
 })(typeof window !== 'undefined' ? window : globalThis);
