@@ -127,7 +127,7 @@
  };
 
  /* ---------- state + saved list ---------- */
- const S={grade:'',subject:'',q:'',sol:false,ext:'',shown:PAGE,bulk:null,view:null,busy:new Set(),pct:{},scan:null,url:'',deep:false};
+ const S={grade:'',subject:'',term:'',q:'',sol:false,ext:'',shown:PAGE,bulk:null,view:null,busy:new Set(),pct:{},scan:null,url:'',deep:false};
  let docs=[],have=new Set(),ready=false,loading=null;
  try{const j=JSON.parse(lsGet(IDX_KEY)||'null');if(j&&Array.isArray(j.documents))docs=j.documents}catch(e){}
  const saveIdx=()=>lsSet(IDX_KEY,JSON.stringify({version:1,documents:docs}));
@@ -136,7 +136,7 @@
  const norm=s=>String(s||'').replace(/[\u064B-\u065F\u0640]/g,'').toLowerCase();
  function filtered(){
   const q=norm(S.q).trim();
-  return gradeDocs().filter(({d})=>(!S.subject||d.subject===S.subject)&&(!S.sol||d.solution)&&(!S.ext||ext(d)===S.ext)&&(!q||norm(d.title+' '+(d.subject||'')).includes(q)))
+  return gradeDocs().filter(({d})=>(!S.subject||d.subject===S.subject)&&(!S.term||String(d.term)===String(S.term))&&(!S.sol||d.solution)&&(!S.ext||ext(d)===S.ext)&&(!q||norm(d.title+' '+(d.subject||'')).includes(q)))
    .sort((a,b)=>String(a.d.subject||'~').localeCompare(String(b.d.subject||'~'),'ar')||String(a.d.title).localeCompare(String(b.d.title),'ar'));
  }
 
@@ -163,7 +163,8 @@
   }
   const p=x.pathname+x.search;return !rules.some(rx=>rx.test(p));
  }
- const needPerm=()=>{if(perm())return true;say(tr('فعّل أولاً الإذن من أصحاب raji3dz داخل البطاقة.','Activez d’abord l’accord raji3dz dans la carte.','Confirm the raji3dz permission in the card first.'));return false};
+ const isRepoDoc=i=>{const d=docs[i];return !!(d&&d.repository&&repoFileOk(d.url))};
+ const needPerm=i=>{if(perm()||(i!=null&&isRepoDoc(i)))return true;say(tr('فعّل أولاً الإذن من أصحاب raji3dz داخل البطاقة.','Activez d’abord l’accord raji3dz dans la carte.','Confirm the raji3dz permission in the card first.'));return false};
  async function getHtml(u,signal){
   if(!await robotsAllows(u))throw new Error('robots-disallow');
   const r=await requestUrl(u,{signal,responseType:'text',headers:{Accept:'text/html,application/xhtml+xml'}});
@@ -260,11 +261,11 @@
  /* ---------- download ---------- */
  async function fetchDoc(i,signal){
   const d=docs[i];
-  if(!perm())throw new Error('no-permission');
+  if(!perm()&&!isRepoDoc(i))throw new Error('no-permission');
   if(!urlOk(d.url))throw new Error('host-not-allowed');
   S.busy.add(i);S.pct[i]=0;
   try{
-   if(!await robotsAllows(d.url))throw new Error('robots-disallow');
+   if(!isRepoDoc(i)&&!await robotsAllows(d.url))throw new Error('robots-disallow');
    const res=await requestUrl(d.url,{signal,responseType:'arraybuffer',headers:{Accept:MIME[ext(d)]||'*/*'}});
    if(res.status===403||res.status===429)throw new Error('refused');
    if(!res.ok)throw new Error('HTTP '+res.status);
@@ -310,8 +311,9 @@
   return tr('تعذّر التحميل. تحقق من الاتصال وأعد المحاولة.','Téléchargement impossible. Vérifiez la connexion.','Download failed. Check your connection and retry.');
  };
  async function downloadAll(){
-  if(S.bulk||!needPerm())return;
+  if(S.bulk)return;
   const todo=filtered().filter(x=>!have.has(x.d.file));
+  if(todo.some(x=>!isRepoDoc(x.i))&&!needPerm())return;
   if(!todo.length){say(tr('كل ما في القائمة محفوظ على الجهاز','Tout est déjà sur l’appareil','Everything shown is already on your device'));return}
   const ctl=new AbortController();S.bulk={n:todo.length,done:0,fail:0,ctl};refreshList();
   let refused=0;
@@ -345,7 +347,7 @@
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>{try{URL.revokeObjectURL(a.href)}catch(e){}},30000);return 'download';
  }
- async function save(i){if(!needPerm())return;try{await saveBlob(docs[i],await blobOf(i))}catch(e){const m=errText(e);if(m)say(m)}}
+ async function save(i){if(!needPerm(i))return;try{await saveBlob(docs[i],await blobOf(i))}catch(e){const m=errText(e);if(m)say(m)}}
 
  /* ---------- in-app viewer ---------- */
  async function renderPdf(blob){
@@ -365,7 +367,7 @@
   }catch(e){box.innerHTML='<p class="tl-vhint">'+tr('تعذّر عرض الملف هنا. اضغط زر الحفظ لفتحه في تطبيق آخر.','Affichage impossible ici ; utilisez Enregistrer.','Cannot show it here; tap Save to open it elsewhere.')+'</p>'}
  }
  async function openDoc(i){
-  if(!needPerm())return;
+  if(!needPerm(i))return;
   try{
    const d=docs[i],blob=await blobOf(i);closeViewer(true);
    const url=URL.createObjectURL(blob),isPdf=ext(d)==='pdf';
@@ -424,18 +426,19 @@
  }
  function inner(){
   if(!ready)return head()+`<p>${tr('جارٍ التحميل…','Chargement…','Loading…')}</p>`;
-  if(!perm())return head()+permHtml();
   const opt=(v,t,c)=>`<option value="${esc(v)}" ${String(c)===String(v)?'selected':''}>${esc(t)}</option>`;
-  return head()+scanHtml()+`<div class="tl-filters"><select aria-label="${tr('المادة','Matière','Subject')}" onchange="SM_RAJI3DZ.set('subject',this.value)">${opt('',tr('كل المواد','Toutes','All subjects'),S.subject)}${[...new Set(gradeDocs().map(x=>x.d.subject).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar')).map(s=>opt(s,s,S.subject)).join('')}</select><input type="search" value="${esc(S.q)}" placeholder="${tr('بحث','Rechercher','Search')}" oninput="SM_RAJI3DZ.set('q',this.value)">`+
+  const termSel=`<select aria-label="${tr('الفصل','Trimestre','Term')}" onchange="SM_RAJI3DZ.set('term',this.value)">${opt('',tr('كل الفصول','Tous','All terms'),S.term)}${[1,2,3].map(n=>opt(String(n),tr('الفصل '+['الأول','الثاني','الثالث'][n-1],'Trimestre '+n,'Term '+n),S.term)).join('')}</select>`;
+  const adv=`<details class="tl-adv"><summary>${tr('إضافة ملفات من raji3dz.com (متقدم)','Ajouter depuis raji3dz.com (avancé)','Add from raji3dz.com (advanced)')}</summary>${perm()?scanHtml():permHtml()}</details>`;
+  return head()+`<div class="tl-filters"><select aria-label="${tr('المادة','Matière','Subject')}" onchange="SM_RAJI3DZ.set('subject',this.value)">${opt('',tr('كل المواد','Toutes','All subjects'),S.subject)}${[...new Set(gradeDocs().map(x=>x.d.subject).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar')).map(s=>opt(s,s,S.subject)).join('')}</select>${termSel}<input type="search" value="${esc(S.q)}" placeholder="${tr('بحث','Rechercher','Search')}" oninput="SM_RAJI3DZ.set('q',this.value)">`+
    `<select aria-label="${tr('الصيغة','Format','Format')}" onchange="SM_RAJI3DZ.set('ext',this.value)">${opt('',tr('كل الصيغ','Tous','All formats'),S.ext)}${opt('pdf','PDF',S.ext)}${opt('docx','Word',S.ext)}</select>`+
    `<label class="tl-check"><input type="checkbox" ${S.sol?'checked':''} onchange="SM_RAJI3DZ.set('sol',this.checked)"> ${tr('مع الحل فقط','Corrigés','With solution')}</label></div>`+
-   `<div id="rjList">${listHtml()}</div>`+credit();
+   `<div id="rjList">${listHtml()}</div>`+adv+credit();
  }
  function refresh(){const el=document.getElementById('rjLib');if(el)el.innerHTML=inner()}
  function refreshList(){const el=document.getElementById('rjList');if(el)el.innerHTML=listHtml()}
  function refreshScan(){const el=document.getElementById('rjScan'),sc=S.scan;if(el&&sc)el.textContent=tr('جارٍ الفحص… صفحات: '+sc.pages+' — ملفات: '+sc.found,'Analyse… pages : '+sc.pages+' — fichiers : '+sc.found,'Scanning… pages: '+sc.pages+' — files: '+sc.found);else refresh()}
  function panel(g){
-  if(S.grade!==g)Object.assign(S,{grade:g,subject:'',q:'',sol:false,ext:'',shown:PAGE,url:lastUrls()[g]||''});
+  if(S.grade!==g)Object.assign(S,{grade:g,subject:'',term:'',q:'',sol:false,ext:'',shown:PAGE,url:lastUrls()[g]||''});
   if(!ready)load();
   return `<section class="panel dz-panel tl" id="rjLib">${inner()}</section>`;
  }
@@ -444,7 +447,7 @@
 
  window.raji3dzPanel=panel;
  window.SM_RAJI3DZ={set,setv,more(){S.shown+=PAGE;refreshList()},grant,revoke,scan,cancelScan,open:openDoc,save,saveCurrent,close:()=>closeViewer(false),downloadAll,cancelBulk,clearGrade,readPdfText,syncRepositoryIndex,
-  _t:{S,subjectOf,lastUrls,store,load,filtered,fetchDoc,scan,robotsRules,robotsAllows,extract,titleFor,hostOk,urlOk,repoFileOk,perm,requestUrl,nativeHttp,docs:()=>docs,have:()=>have,reset(){docs=[];ready=false;loading=null;have=new Set();mem.clear();Object.keys(robotsCache).forEach(k=>delete robotsCache[k]);Object.assign(S,{grade:'',subject:'',q:'',sol:false,ext:'',shown:PAGE,bulk:null,view:null,scan:null,url:'',deep:false})}}};
+  _t:{S,subjectOf,lastUrls,store,load,filtered,fetchDoc,scan,robotsRules,robotsAllows,extract,titleFor,hostOk,urlOk,repoFileOk,perm,requestUrl,nativeHttp,docs:()=>docs,have:()=>have,reset(){docs=[];ready=false;loading=null;have=new Set();mem.clear();Object.keys(robotsCache).forEach(k=>delete robotsCache[k]);Object.assign(S,{grade:'',subject:'',term:'',q:'',sol:false,ext:'',shown:PAGE,bulk:null,view:null,scan:null,url:'',deep:false})}}};
 
  const st=document.createElement('style');
  st.textContent='.tl-chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.tl-pdfwrap{overflow:auto;height:calc(100% - 60px);padding:8px;background:#e9edf3}.tl-pg{display:block;margin:0 auto 8px;background:#fff;box-shadow:0 1px 4px #0003}';
