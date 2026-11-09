@@ -51,7 +51,9 @@
   if(data&&typeof data==='object'&&typeof data.base64==='string')return asBytes(data.base64);
   throw new Error('empty-response');
  }
+ const safeUrl=u=>{try{return new URL(String(u).trim()).href}catch(e){return String(u)}};
  async function requestUrl(url,opts={}){
+  url=safeUrl(url);
   const signal=opts.signal;
   if(signal&&signal.aborted)throw new DOMException('Aborted','AbortError');
   const http=nativeHttp();
@@ -308,7 +310,12 @@
   if(m==='robots-disallow'||m==='robots-unreachable'||m==='refused')return scanErr(e);
   if(m==='too-big')return tr('الملف أكبر من 40 MB فلم يُحمَّل.','Fichier > 40 MB, non téléchargé.','File is over 40 MB, not downloaded.');
   if(m==='not-a-document'||m==='bad-file')return tr('الرابط لم يُرجع ملفاً صالحاً (قد يكون محمياً أو يحتاج تسجيل دخول).','Le lien ne renvoie pas un fichier valide (protégé ou connexion requise).','The link did not return a valid file (it may be protected or need a login).');
-  return tr('تعذّر التحميل. تحقق من الاتصال وأعد المحاولة.','Téléchargement impossible. Vérifiez la connexion.','Download failed. Check your connection and retry.');
+  const h=/^HTTP (\d{3})$/.exec(m);
+  if(h){const c=h[1];
+   if(c==='404')return tr('الملف غير موجود في المستودع (404). تأكد من رفع مجلد repository/raji3dz ونشر GitHub Pages.','Fichier introuvable dans le dépôt (404). Vérifiez repository/raji3dz et GitHub Pages.','File not found in the repository (404). Check repository/raji3dz and GitHub Pages.');
+   return tr('تعذّر التحميل (HTTP '+c+').','Téléchargement impossible (HTTP '+c+').','Download failed (HTTP '+c+').');}
+  if(m==='host-not-allowed')return tr('رابط الملف خارج المستودع المضبوط في config.js (publicContentBase).','Lien hors du dépôt configuré (publicContentBase).','The file link is outside the repository set in config.js (publicContentBase).');
+  return tr('تعذّر التحميل. تحقق من الاتصال وأعد المحاولة.'+(m?' ('+String(m).slice(0,60)+')':''),'Téléchargement impossible. Vérifiez la connexion.','Download failed. Check your connection and retry.');
  };
  async function downloadAll(){
   if(S.bulk)return;
@@ -436,8 +443,17 @@
  function set(k,v){S[k]=v;S.shown=PAGE;refreshList()}
  function setv(k,v){S[k]=v}
 
+ async function indexByFile(file){
+  if(!ready&&typeof load==='function'){try{await load()}catch(e){}}
+  let i=docs.findIndex(d=>d.file===file);
+  if(i<0){try{await syncRepositoryIndex(true)}catch(e){}i=docs.findIndex(d=>d.file===file)}
+  return i;
+ }
+ async function openByFile(file){const i=await indexByFile(file);if(i<0){say(tr('الملف غير موجود في فهرس المكتبة.','Fichier absent de l’index.','File not in the library index.'));return false}return openDoc(i)}
+ async function textByFile(file,maxPages,maxChars){const i=await indexByFile(file);if(i<0)throw new Error('not-in-index');return readPdfText(i,maxPages||4,maxChars||5000)}
+
  window.raji3dzPanel=panel;
- window.SM_RAJI3DZ={set,setv,more(){S.shown+=PAGE;refreshList()},grant,revoke,scan,cancelScan,open:openDoc,save,saveCurrent,close:()=>closeViewer(false),downloadAll,cancelBulk,clearGrade,readPdfText,syncRepositoryIndex,
+ window.SM_RAJI3DZ={openByFile,textByFile,set,setv,more(){S.shown+=PAGE;refreshList()},grant,revoke,scan,cancelScan,open:openDoc,save,saveCurrent,close:()=>closeViewer(false),downloadAll,cancelBulk,clearGrade,readPdfText,syncRepositoryIndex,
   _t:{S,subjectOf,lastUrls,store,load,filtered,fetchDoc,scan,robotsRules,robotsAllows,extract,titleFor,hostOk,urlOk,repoFileOk,perm,requestUrl,nativeHttp,docs:()=>docs,have:()=>have,reset(){docs=[];ready=false;loading=null;have=new Set();mem.clear();Object.keys(robotsCache).forEach(k=>delete robotsCache[k]);Object.assign(S,{grade:'',subject:'',term:'',q:'',sol:false,ext:'',shown:PAGE,bulk:null,view:null,scan:null,url:'',deep:false})}}};
 
  const st=document.createElement('style');

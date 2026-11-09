@@ -6,7 +6,7 @@ assert(index.includes('ux-v2-4-0.js')&&sw.includes('./ux-v2-4-0.js'),'wired into
 assert(index.indexOf('ux-v2-4-0.js')>index.indexOf('ux-v2-3-0.js'),'loaded after the scripts it wraps');
 for(const c of ['.v240-chat','.v240-msgs','.v240-compose','.v240-seg','.v240-quick','.v240-mastery','.v240-sbar'])assert(css.includes(c),'css '+c);
 assert(index.includes('id="bnMore"')&&!/class="bn-item"[^>]*data-page="tests"/.test(index),'bottom bar: More replaces Tests');
-for(const p of ['home','exercises','tutor','generator'])assert(index.includes('class="bn-item'+(p==='home'?' active':'')+'" data-page="'+p+'"'),'bottom bar keeps '+p);
+for(const p of ['home','exercises','tutor','progress'])assert(index.includes('class="bn-item'+(p==='home'?' active':'')+'" data-page="'+p+'"'),'bottom bar keeps '+p);
 // harness
 const store={};const calls=[];
 const ctx={window:{

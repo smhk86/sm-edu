@@ -13,5 +13,5 @@ for(const lang of ['ar','fr','en'])assert(ux.includes(`${lang}:`),`missing ${lan
 assert(ux.includes("addEventListener('online'")&&ux.includes("addEventListener('offline'"),'connection listeners missing');
 assert(css.includes('env(safe-area-inset-bottom')&&css.includes(':focus-visible')&&css.includes('prefers-contrast:more'),'mobile/accessibility styles missing');
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
-assert.strictEqual(pkg.version,'2.9.7');
+assert.strictEqual(pkg.version,'2.9.1');
 console.log('PASS: v2.8.4 connection awareness, multilingual status, PWA precache, mobile safe areas and keyboard/contrast accessibility');

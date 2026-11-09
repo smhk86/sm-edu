@@ -138,6 +138,7 @@
   return [...lines.keys()].sort((a,b)=>b-a).map(y=>lines.get(y).sort((a,b)=>b.transform[4]-a.transform[4]).map(i=>i.str).join(' ').replace(/\s+/g,' ').trim()).filter(Boolean).join('\n');
  }
  async function refText(it){
+  if(g.SM_RAJI3DZ&&g.SM_RAJI3DZ.textByFile){const r=await g.SM_RAJI3DZ.textByFile(it.file,4,5000);return r.text}
   if(!g.pdfjsLib)throw new Error('pdfjs');
   g.pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';
   const r=await g.fetch(it.file);if(!r.ok)throw new Error('fetch');
@@ -177,7 +178,7 @@
  const noAi='<p class="notice">التوليد بالذكاء الاصطناعي يحتاج مفتاح Groq (من لوحة المعلّم الذكي) أو خادماً مفعّلاً.</p>';
  async function aiGenerate(refIdx){
   if(busy)return;const mount=$('smGeneratorResult');if(!mount)return;
-  if(!aiReady()){mount.innerHTML=noAi;return}
+  if(!aiReady()){mount.innerHTML=noAi;try{if(typeof g.toast==='function')g.toast('التوليد بالذكاء الاصطناعي يحتاج مفتاح Groq من لوحة المعلّم الذكي أو خادماً مفعّلاً.')}catch(e){}try{mount.scrollIntoView({behavior:'smooth'})}catch(e){}return}
   busy=true;const s=Object.assign({},st);
   mount.innerHTML='<p class="notice">جارٍ إعداد الموضوع بالذكاء الاصطناعي…</p>';
   let ref='',refNote='';
@@ -262,7 +263,7 @@
   st.topics=cur.size===all.length?null:[...cur];
  }
  function clearSaved(){if(g.confirm&&!g.confirm('حذف كل الأسئلة المحفوظة من الذكاء الاصطناعي على هذا الجهاز؟'))return;ls.set('smGenAiBank','[]');st.topics=null;refresh()}
- function openRef(i){const it=lastRefs[i];if(it&&it.file)g.open(it.file,'_blank')}
+ function openRef(i){const it=lastRefs[i];if(!it||!it.file)return;if(g.SM_RAJI3DZ&&g.SM_RAJI3DZ.openByFile)return g.SM_RAJI3DZ.openByFile(it.file);g.open(it.file,'_blank')}
  function raji(){if(typeof g.go==='function'){g.go('teacher');setTimeout(()=>{const p=$('rjLib');if(p&&p.scrollIntoView)p.scrollIntoView({behavior:'smooth'})},250)}}
 
  function injectStyle(){
