@@ -154,7 +154,7 @@
  async function pdfTextOf(file,maxPages,maxChars){
   if(!window.pdfjsLib)return '';
   pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';
-  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,out=[];
+  const pdf=await pdfjsLib.getDocument(Object.assign({data:await file.arrayBuffer()},window.SM_PDF_OPTS||{})).promise,out=[];
   for(let n=1;n<=Math.min(pdf.numPages,maxPages||12);n++){const pg=await pdf.getPage(n),c=await pg.getTextContent();out.push(c.items.map(x=>x.str||'').join(' ').replace(/\s+/g,' ').trim())}
   return out.join('\n').trim().slice(0,maxChars||9000);
  }

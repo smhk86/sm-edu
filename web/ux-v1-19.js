@@ -62,7 +62,7 @@
  }
 
  /* ---------- 5) Navigation: 5 main entries + "More" ---------- */
- const PRIMARY=['home','exercises','tests','tutor','progress'];
+ const PRIMARY=['home','exercises','tests','tutor','generator'];
  function buildNav(){
   const nav=document.getElementById('mainNav');if(!nav||nav.dataset.v19)return;nav.dataset.v19='1';
   const items=[...nav.querySelectorAll('.nav-item')];

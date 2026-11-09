@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from . import parent_auth
 
 load_dotenv()
-app = FastAPI(title="SM éducation API", version="2.8.9")
+app = FastAPI(title="SM éducation API", version="2.9.1")
 parent_auth.init_db()
 allowed_origins = [item.strip() for item in os.getenv("CORS_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080,https://localhost,capacitor://localhost").split(",") if item.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_credentials=False, allow_methods=["GET", "POST", "PUT"], allow_headers=["Content-Type", "Authorization", "X-Admin-Token"])
@@ -183,11 +183,11 @@ async def parent_sync_redeem(payload: ParentSyncRedeemRequest, request: Request)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "app": "SM éducation", "version": "2.8.9"}
+    return {"status": "ok", "app": "SM éducation", "version": "2.9.1"}
 
 @app.get("/api/v1/catalog")
 async def catalog():
-    return {"version": "2.8.9", "curriculum": "Algeria", "academic_year": "2026-2027", "levels": CATALOG}
+    return {"version": "2.9.1", "curriculum": "Algeria", "academic_year": "2026-2027", "levels": CATALOG}
 
 @app.get("/api/v1/learning/structure")
 async def learning_structure():

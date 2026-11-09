@@ -5,7 +5,7 @@ const ux=fs.readFileSync(path.join(root,'web/ux-v2-2-1.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'web/styles.css'),'utf8');
 const sw=fs.readFileSync(path.join(root,'web/sw.js'),'utf8');
 const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
-assert.equal(pkg.version,'2.8.9');
+assert.equal(pkg.version,'2.9.1');
 assert(html.includes('ux-v2-2-1.js'),'new UX layer must be loaded');
 assert(ux.includes("page:'exercises'")&&ux.includes("page:'teacher'")&&ux.includes("page:'parents'"),'student, teacher and parent shortcuts must target existing routes');
 assert(ux.includes('window.home=function()')&&ux.includes('oldHome()'),'existing home dashboard must be preserved and extended');

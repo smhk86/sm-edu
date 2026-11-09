@@ -1,3 +1,8 @@
+## v2.9.1
+- Dedicated multi-grade generator with term, subject, difficulty, duration, marks, solutions and marking scheme.
+- Removed progress and textbook navigation entries.
+- Arabic PDF text-layer typography improvements.
+
 ## v2.8.9
 - إصلاح رابط المستودع: `publicContentBase` في `web/config.js` وقيمة `--public-base` الافتراضية في `tools/sync_dzexams_repository.py` كانا يشيران إلى الحساب القديم `hakou44/sm-edu`؛ أصبحا `https://smhk86.github.io/sm-education`.
 - سير عمل `sync-approved-exams.yml`: تمرير `--public-base` محسوباً من المستودع الجاري (`github.repository_owner` + اسم المستودع) حتى لا تُكتب في الفهرس روابط لحساب آخر، وعدّ صفوف CSV بـ `grep -c` بدل `wc -l` (الصف الوحيد بلا سطر جديد في النهاية كان يُعدّ «لا صفوف» ويُتخطى بصمت).
@@ -141,3 +146,8 @@
 - Added taught-lessons input to exam generation and evidence-aware Algerian 2026-2027 exam prompts with separate student and teacher copies.
 - Added a rights-aware register of the Ministry and five Algerian educational resource sites; third-party content is discovery-only unless permission/licensing is documented.
 - Updated application, API, service-worker cache, and release metadata to v2.8.5.
+
+## v2.9.7
+- إضافة حفظ مواضيع المولّد محلياً مع العرض والحذف الفردي.
+- إبقاء بنك التمارين ومراجع المكتبة الأصلية دون تعديل عند حذف موضوع مولّد.
+- توثيق نطاق السنوات والمواد المتاحة والتنبيه إلى خرائط الشعب غير الموثقة رسمياً.

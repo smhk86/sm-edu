@@ -297,8 +297,8 @@
   const d=docs[i];if(!d||ext(d)!=='pdf')throw new Error('pdf-required');
   const blob=await blobOf(i);if(!window.pdfjsLib)throw new Error('pdfjs-missing');
   pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';
-  const pdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise;let out=[];
-  for(let n=1;n<=Math.min(pdf.numPages,maxPages);n++){const page=await pdf.getPage(n),content=await page.getTextContent();const line=content.items.map(x=>x.str||'').join(' ').replace(/\s+/g,' ').trim();if(line)out.push('صفحة '+n+': '+line);if(out.join('\n').length>=maxChars)break;}
+  const pdf=await pdfjsLib.getDocument(Object.assign({data:await blob.arrayBuffer()},window.SM_PDF_OPTS||{})).promise;let out=[];
+  for(let n=1;n<=Math.min(pdf.numPages,maxPages);n++){const page=await pdf.getPage(n),content=await page.getTextContent();const line=(window.SM_PDF?SM_PDF.itemsToText(content.items):content.items.map(x=>x.str||'').join(' ').replace(/\s+/g,' ').trim());if(line)out.push('صفحة '+n+': '+line);if(out.join('\n').length>=maxChars)break;}
   const text=out.join('\n').slice(0,maxChars);if(!text.trim())throw new Error('pdf-no-text');return {text,pages:pdf.numPages,readPages:Math.min(pdf.numPages,maxPages),title:d.title,grade:d.grade,subject:d.subject,source:d.file};
  }
  const errText=e=>{
@@ -353,17 +353,8 @@
  async function renderPdf(blob){
   const box=document.getElementById('rjPdf');if(!box)return;
   try{
-   if(!window.pdfjsLib)throw new Error('pdfjs missing');
-   pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';
-   const pdf=await pdfjsLib.getDocument({data:await blob.arrayBuffer()}).promise;
-   box.innerHTML='';
-   const w=Math.min(box.clientWidth||360,900)*(window.devicePixelRatio||1);
-   for(let n=1;n<=pdf.numPages;n++){
-    if(!document.getElementById('rjPdf'))return;
-    const pg=await pdf.getPage(n),v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:w/v0.width});
-    const c=document.createElement('canvas');c.width=v.width;c.height=v.height;c.style.width='100%';c.className='tl-pg';
-    box.appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise;
-   }
+   if(!window.SM_PDF)throw new Error('reader missing');
+   await SM_PDF.render(blob,box,()=>!!document.getElementById('rjPdf'));
   }catch(e){box.innerHTML='<p class="tl-vhint">'+tr('تعذّر عرض الملف هنا. اضغط زر الحفظ لفتحه في تطبيق آخر.','Affichage impossible ici ; utilisez Enregistrer.','Cannot show it here; tap Save to open it elsewhere.')+'</p>'}
  }
  async function openDoc(i){

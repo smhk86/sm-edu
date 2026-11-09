@@ -79,7 +79,7 @@ async function smartTeacherImageDataUrl(file,maxSide=1600){
 async function smartTeacherPdfVisionPages(file,maxPages=3){
  if(!window.pdfjsLib)throw new Error('PDF.js غير متاح لتحليل صفحات PDF بصرياً.');
  pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';
- const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise,images=[];
+ const pdf=await pdfjsLib.getDocument(Object.assign({data:await file.arrayBuffer()},window.SM_PDF_OPTS||{})).promise,images=[];
  for(let n=1;n<=Math.min(pdf.numPages,maxPages);n++){
   const page=await pdf.getPage(n),viewport=page.getViewport({scale:Math.min(1.6,1500/Math.max(page.view[2],page.view[3]))});
   const canvas=document.createElement('canvas');canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
@@ -125,7 +125,7 @@ async function reviewSmartTeacherPdf(){
    const r=await fetch(`${apiBase()}/api/v1/archive/document-review/image-ocr?languages=${encodeURIComponent(document.getElementById('smartTeacherOcrLang')?.value||'ara+fra+eng')}`,{method:'POST',headers:{'Content-Type':file.type,'X-Admin-Token':token},body:file});const d=await r.json().catch(()=>({}));if(r.ok){extracted=d.text||'';usedOcr=true;}}
   if(!visionImages.length)throw new Error('تعذر تجهيز الصورة للتحليل البصري.');
  }else{
-  if(!window.pdfjsLib)throw new Error('PDF.js غير متاح');pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;let chunks=[];for(let n=1;n<=Math.min(pdf.numPages,15);n++){const pg=await pdf.getPage(n),c=await pg.getTextContent();chunks.push(c.items.map(x=>x.str||'').join(' '));}extracted=chunks.join('\n').slice(0,9000);
+  if(!window.pdfjsLib)throw new Error('PDF.js غير متاح');pdfjsLib.GlobalWorkerOptions.workerSrc='vendor/pdfjs/pdf.worker.min.js';const pdf=await pdfjsLib.getDocument(Object.assign({data:await file.arrayBuffer()},window.SM_PDF_OPTS||{})).promise;let chunks=[];for(let n=1;n<=Math.min(pdf.numPages,15);n++){const pg=await pdf.getPage(n),c=await pg.getTextContent();chunks.push(c.items.map(x=>x.str||'').join(' '));}extracted=chunks.join('\n').slice(0,9000);
  }
  if(!extracted.trim()&&file&&/\.pdf$/i.test(file.name)&&!visionImages.length){if(libraryPick)throw new Error('الملف المصوّر في المكتبة يحتاج استيراده إلى مساحة مراجعة خاصة لتشغيل OCR.');out.textContent=smartTeacherText('الملف مصوّر؛ جارٍ تشغيل OCR…','PDF numérisé : lancement OCR…','Scanned PDF: starting OCR…');const ocr=await smartTeacherOcrPdf(file,document.getElementById('smartTeacherOcrLang')?.value||'ara+fra+eng');extracted=ocr.text;usedOcr=ocr.ocr;}
  if(!extracted.trim()&&!visionImages.length)throw new Error('لم يتم العثور على نص أو صورة قابلة للتحليل.');

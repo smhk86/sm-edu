@@ -48,7 +48,7 @@ function homePickLesson(l,subject){const m=starterLessons.map((x,i)=>({x,i})).fi
 function homeOpenStep(id,subjectEnc,step){
  const subject=decodeURIComponent(subjectEnc),l=getLearners().find(x=>x.id===id);if(!l||!HOME_STEPS.includes(step))return;selectLearner(id);
  if(step==='lesson'){const idx=homePickLesson(l,subject);go('library');
-  if(idx>=0){openStarterLesson(idx)}else toast(homeL('لا يوجد درس تكميلي لهذه المادة بعد؛ استعن بالكتاب المدرسي.','Pas encore de leçon complémentaire ; utilisez le manuel.','No supplemental lesson yet; use the textbook.'));return}
+  if(idx>=0){openStarterLesson(idx)}else toast(homeL('لا يوجد درس تكميلي لهذه المادة بعد؛ جرّب التمارين أو المولّد الذكي.','Pas encore de leçon complémentaire ; essayez les exercices ou le générateur IA.','No supplemental lesson yet; try exercises or the smart generator.'));return}
  go('exercises');loadHeavyData();
  homeWhenExercisesReady(()=>{renderExerciseBank(subject);if(step==='review')startExerciseSession('mistakes')})}
 function homeSchoolPage(){

@@ -7,7 +7,7 @@
 
  /* ---------- Home: what do you want to do? ---------- */
  const TILES=[
-  ['library','📖',['تعلّم','Apprendre','Learn'],['كتب ودروس تكميلية','Manuels et leçons','Books & lessons']],
+  ['generator','✨',['المولّد الذكي','Générateur IA','Smart generator'],['تمارين وفروض واختبارات مع الحل','Exercices, devoirs et examens corrigés','Exercises, tests & exams with solutions']],
   ['exercises','✎',['تمرّن','S’entraîner','Practice'],['تمارين مع الحلول','Exercices corrigés','Exercises with solutions']],
   ['tests','▣',['اختبر نفسك','Se tester','Test yourself'],['اختبارات وفروض','Tests et devoirs','Tests & exams']],
   ['teacher','🎓',['المعلم الذكي','Enseignant IA','Smart teacher'],['شرح ثم تقييم','Explication puis évaluation','Explain then assess']],
@@ -23,7 +23,7 @@
   const goal=Math.min(100,(stats.today||0)/3*100);
   return `<section class="panel home2-hero"><div><small>${tr('مرحباً بك في','Bienvenue sur','Welcome to')} SM éducation</small><h2>${esc(g)}</h2><p>${tr('اختر ما تريد فعله اليوم','Que voulez-vous faire aujourd’hui ?','What would you like to do today?')}</p></div><button class="primary-btn" onclick="go('exercises')">${tr('ابدأ تمريناً','Commencer','Start')} ←</button></section>`+
    `<div class="home2-grid">${TILES.map(t=>`<button type="button" class="home2-tile" onclick="go('${t[0]}')"><span class="home2-ic">${t[1]}</span><b>${esc(t[2][i])}</b><small>${esc(t[3][i])}</small></button>`).join('')}</div>`+
-   `<section class="panel progress-summary"><div><b>${tr('هدف اليوم','Objectif du jour','Daily goal')}</b><small>${tr('أنجز 3 أنشطة تعليمية اليوم','Terminez 3 activités aujourd’hui','Complete 3 activities today')}</small></div><div class="goal-track"><span style="width:${goal}%"></span></div><strong>${Math.min(stats.today||0,3)} / 3</strong><button class="secondary-btn" onclick="go('progress')">${tr('تقدمي الدراسي','Mon progrès','My progress')} ↗</button></section>`+
+   
    `<div class="stats-grid"><div class="stat-card"><div class="stat-icon">◷</div><div><b>${stats.total||0}</b><small>${tr('الأنشطة المنجزة','Activités terminées','Completed activities')}</small></div></div><div class="stat-card"><div class="stat-icon">✧</div><div><b>${stats.accuracy||0}%</b><small>${tr('الإجابات الصحيحة','Bonnes réponses','Correct answers')}</small></div></div></div>`;
  }
  window.home=home2;
@@ -31,7 +31,7 @@
 
  /* ---------- "More" menu: grouped with headings ---------- */
  const GROUPS=[
-  [['التعلّم','Apprendre','Learn'],['library','videos','computing','studycenter','homeschool']],
+  [['التعلّم','Apprendre','Learn'],['videos','computing','studycenter','homeschool']],
   [['أدوات ذكية','Outils intelligents','Smart tools'],['teacher','translate']],
   [['الامتحانات والأولياء','Examens et parents','Exams & parents'],['certificates','parents']]
  ];

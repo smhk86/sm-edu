@@ -521,3 +521,25 @@ button,.nav-item,.bn-item,.icon-btn{touch-action:manipulation}
 
 /* v2.5.1 — DZExams → GitHub → SM EDUCATION pipeline */
 .tl-flow{display:flex;flex-direction:column;align-items:center;gap:7px;margin:14px 0;padding:12px;border:1px solid var(--line,#dce5ed);border-radius:14px;background:var(--panel,#fff)}.tl-flow-step{width:min(100%,520px);padding:13px 16px;border-radius:12px;background:var(--surface,#f3f6fa);text-align:center;display:flex;flex-direction:column;gap:4px}.tl-flow-step b{font-size:1rem}.tl-flow-step small{opacity:.8}.tl-flow-arrow{font-size:1.35rem;line-height:1;color:var(--muted,#64748b)}.tl-flow-final{border:1px solid var(--accent,#4b8da5);background:var(--surface,#f3f6fa)}
+
+/* v2.9.1 — Arabic shaping, readable PDF text layers, and refined mobile navigation */
+.textLayer, .textLayer span, .textLayer br, .pdfViewer .textLayer {
+  font-family: "Noto Naskh Arabic", "Amiri", "IBM Plex Sans Arabic", serif !important;
+  font-kerning: normal; font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  text-rendering: optimizeLegibility; unicode-bidi: plaintext;
+}
+.textLayer span { direction: rtl; }
+.tl-pdfwrap { direction:ltr; -webkit-overflow-scrolling:touch; }
+.practice-generator, .sm-generator { border:1px solid var(--line); border-radius:18px; }
+.sm-generator .generator-heading {display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.sm-generator .generator-icon {width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:#e7f7f5;font-size:25px}
+.sm-generator .generator-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.sm-generator label {display:grid;gap:6px;font-weight:600;font-size:13px}
+.sm-generator select,.sm-generator input {width:100%;min-width:0;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
+.sm-generator .generator-result {margin-top:16px}
+.sm-generator .generator-paper {padding:14px;border:1px solid var(--line);border-radius:14px;margin:12px 0;background:var(--card)}
+.sm-generator .generator-question {padding:12px 0;border-bottom:1px dashed var(--line)}
+.sm-generator .generator-question:last-child {border-bottom:0}
+.sm-generator .generator-answer {margin-top:8px;padding:9px 12px;background:var(--bg);border-radius:9px}
+.sm-generator .generator-actions {display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+@media(max-width:560px){.sm-generator .generator-grid{grid-template-columns:1fr}.sm-generator .generator-heading{align-items:flex-start}}

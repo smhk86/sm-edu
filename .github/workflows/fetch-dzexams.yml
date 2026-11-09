@@ -1,0 +1,70 @@
+name: Fetch dzexams files into the repository
+
+# Run manually (Actions tab or: gh workflow run "Fetch dzexams files into the repository" -f pages='GRADE=URL').
+# Only use with the written agreement of the site owners (copying + republishing on GitHub Pages).
+
+on:
+  workflow_dispatch:
+    inputs:
+      pages:
+        description: 'One per line: GRADE=URL  (e.g. الأولى متوسط=https://www.dzexams.pro/...)'
+        required: true
+      deep:
+        description: 'Also follow linked pages (max 12 per run)'
+        type: boolean
+        default: true
+      max_files:
+        description: 'Max new files in this run'
+        default: '150'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: fetch-dzexams
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch files (polite: robots.txt, pauses, allowed hosts only)
+        env:
+          PAGES: ${{ inputs.pages }}
+          DEEP: ${{ inputs.deep }}
+          MAX_FILES: ${{ inputs.max_files }}
+        run: |
+          printf '%s\n' "$PAGES" > "$RUNNER_TEMP/pages.txt"
+          ARGS=""
+          if [ "$DEEP" = "true" ]; then ARGS="--deep"; fi
+          python tools/fetch_dzexams.py --pages-file "$RUNNER_TEMP/pages.txt" $ARGS --max-files "${MAX_FILES:-150}"
+
+      - name: Commit new files
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add web/exams web/data/dzexams-index.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Nothing new to commit."
+          else
+            git commit -m "Content: add dzexams files ($(git diff --cached --name-only | grep -c '^web/exams/') new)"
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to GitHub Pages
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish-learning-content.yml --ref "${GITHUB_REF_NAME}"
