@@ -586,7 +586,7 @@ function startPreparedTermExam(){
  const fresh=matches.filter(x=>x.id!==window.lastTermPaperId),pool=fresh.length?fresh:matches,paper=pool[Math.floor(Math.random()*pool.length)];
  if(paper)window.lastTermPaperId=paper.id;
  if(!paper){toast(lang==='ar'?'الاختبار الفصلي غير متاح لهذا الاختيار.':lang==='fr'?'Sujet trimestriel indisponible.':'Prepared term paper unavailable for this selection.');return}
- const byId=new Map(exerciseBankRecords.map(q=>[q.id,q]));
+ const byId=window.smRawBankById||new Map(exerciseBankRecords.map(q=>[q.id,q]));
  const selected=paper.question_ids.map(id=>byId.get(id)).filter(Boolean).map(q=>{const choices=q.choices||[],answer=q.answer_index;if(choices.length){const order=shuffleList(choices.map((_,i)=>i));return {...q,choices:order.map(i=>choices[i]),answer_index:order.indexOf(answer)}}return {...q}});
  if(selected.length!==paper.question_count){toast(lang==='ar'?'تعذر تحميل جميع أسئلة الاختبار.':lang==='fr'?'Impossible de charger toutes les questions.':'Could not load every paper question.');return}
  window.activeBankTest={grade:g,subject,term,items:selected,submitted:false,startedAt:Date.now(),paperId:paper.id,paperTitle:paper.title,durationMinutes:paper.duration_minutes,totalPoints:20,prepared:true};
@@ -597,7 +597,7 @@ function startIntegrativeAssessment(){
  if(term==='all'){toast(lang==='ar'?'اختر فصلاً محدداً أولاً.':lang==='fr'?'Choisissez un trimestre.':'Choose a specific term first.');return}
  const paper=integrativeAssessments.find(x=>x.grade===g&&x.subject===subject&&String(x.term)===String(term));
  if(!paper){toast(lang==='ar'?'الوضعية الإدماجية غير متاحة لهذا الاختيار.':lang==='fr'?'Situation indisponible.':'Integrative situation unavailable.');return}
- const byId=new Map(exerciseBankRecords.map(q=>[q.id,q]));
+ const byId=window.smRawBankById||new Map(exerciseBankRecords.map(q=>[q.id,q]));
  const selected=paper.question_ids.map(id=>byId.get(id)).filter(Boolean).map(q=>{const choices=q.choices||[],answer=q.answer_index;if(choices.length){const order=shuffleList(choices.map((_,i)=>i));return {...q,choices:order.map(i=>choices[i]),answer_index:order.indexOf(answer)}}return {...q}});
  if(selected.length!==paper.question_count){toast(lang==='ar'?'تعذر تحميل جميع أسئلة الوضعية.':lang==='fr'?'Questions indisponibles.':'Could not load all situation questions.');return}
  window.activeBankTest={grade:g,subject,term,items:selected,submitted:false,startedAt:Date.now(),paperId:paper.id,paperTitle:paper.title,durationMinutes:paper.duration_minutes,totalPoints:20,prepared:true,integrative:true,integrativePaper:paper};
@@ -683,7 +683,7 @@ function toast(s){let el=$('#toast');el.textContent=s;el.classList.add('show');s
 document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));$('#languageSelect').addEventListener('change',e=>setLanguage(e.target.value));$('#menuBtn').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));const savedLang=localStorage.getItem('smSchoolLanguage')||'ar';const savedLevel=localStorage.getItem('smSchoolLevel');const savedGrade=localStorage.getItem('smSchoolGrade');if(savedLevel&&levels[savedLevel]){level=savedLevel;grade=levels[level].includes(savedGrade)?savedGrade:levels[level][0];$('#levelSummary').textContent=grade}$('#languageSelect').value=savedLang;setLanguage(savedLang);
 let externalExamLibrary={sources:[],records:[],scope:{years:[2022,2023,2024,2025,2026]}};
 var heavyDataStarted; function loadHeavyData(){if(heavyDataStarted)return;heavyDataStarted=true;
-smFetchJSON('./data/exercise-bank-2026-2027.json').then(data=>{exerciseBankRecords=Array.isArray(data.records)?data.records:[];if(typeof smQualityFilter==='function')exerciseBankRecords=smQualityFilter(exerciseBankRecords);if(page==='exercises')renderExerciseBankHome();if(page==='tests')renderTestBankHome();if(page==='teacher')render()}).catch(()=>{exerciseBankRecords=[]});
+smFetchJSON('./data/exercise-bank-2026-2027.json').then(data=>{exerciseBankRecords=Array.isArray(data.records)?data.records:[];window.smRawBankById=new Map(exerciseBankRecords.map(q=>[q.id,q]));if(typeof smQualityFilter==='function')exerciseBankRecords=smQualityFilter(exerciseBankRecords);if(page==='exercises')renderExerciseBankHome();if(page==='tests')renderTestBankHome();if(page==='teacher')render()}).catch(()=>{exerciseBankRecords=[]});
 fetch('./data/term-exams-2026-2027.json').then(r=>{if(!r.ok)throw new Error('Term exam library unavailable');return r.json()}).then(data=>{termExamPapers=Array.isArray(data.papers)?data.papers:[];if(page==='tests')renderTestBankHome()}).catch(()=>{termExamPapers=[]});
 fetch('./data/integrative-assessments-2026-2027.json').then(r=>{if(!r.ok)throw new Error('Integrative assessment library unavailable');return r.json()}).then(data=>{integrativeAssessments=Array.isArray(data.situations)?data.situations:[];if(page==='tests')renderTestBankHome()}).catch(()=>{integrativeAssessments=[]});
 }
