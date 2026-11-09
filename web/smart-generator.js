@@ -147,6 +147,15 @@
   return out.slice(0,5000);
  }
 
+ async function autoRef(s){
+  const all=refsFor(s).filter(x=>x&&x.file);
+  const pool=all.filter(x=>x.solution).concat(all.filter(x=>!x.solution)).slice(0,8);
+  for(let k=0;k<3&&pool.length;k++){
+   const it=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+   try{const t=await refText(it);if(t&&t.replace(/\s/g,'').length>200)return t}catch(e){}
+  }
+  return '';
+ }
  /* ---------- AI simulation (optional) ---------- */
  const aiReady=()=>!!(ls.get('smSchoolGroqKey')||(typeof apiBase==='function'&&apiBase()));
  function parseAI(text,s){
@@ -183,7 +192,7 @@
   mount.innerHTML='<p class="notice">جارٍ إعداد الموضوع بالذكاء الاصطناعي…</p>';
   let ref='',refNote='';
   try{
-   if(refIdx!=null&&lastRefs[refIdx]){try{ref=await refText(lastRefs[refIdx])}catch(e){refNote='تعذّرت قراءة نص ملف المرجع (قد يكون ممسوحاً ضوئياً أو بلا اتصال)، فتم التوليد دون محاكاة نصه.'}}
+   if(refIdx==null){try{ref=await autoRef(s)}catch(e){}}else if(lastRefs[refIdx]){try{ref=await refText(lastRefs[refIdx])}catch(e){refNote='تعذّرت قراءة نص ملف المرجع (قد يكون ممسوحاً ضوئياً أو بلا اتصال)، فتم التوليد دون محاكاة نصه.'}}
    const {groups,raw}=await aiCall(s,s.count,ref);
    if(!groups){mount.innerHTML=`<div class="learning-meta"><b>ناتج الذكاء الاصطناعي (نص خام — يحتاج مراجعة)</b></div><div class="gen-paper" style="white-space:pre-wrap">${esc(raw)}</div>`;return}
    groups.forEach(gr=>gr.qs.forEach(q=>{q.ai=true;q.topic='ذكاء اصطناعي'}));
@@ -198,7 +207,7 @@
   busy=true;const s=Object.assign({},lastLocal.s),need=Math.max(1,s.count-lastLocal.items.length);
   mount.insertAdjacentHTML('afterbegin','<p class="notice">جارٍ استكمال النقص بالذكاء الاصطناعي…</p>');
   try{
-   const {groups}=await aiCall(Object.assign({},s,{points:0}),need,'');
+   const {groups}=await aiCall(Object.assign({},s,{points:0}),need,await autoRef(s).catch(()=>''));
    if(!groups)throw new Error('تعذّر فهم ناتج الذكاء الاصطناعي');
    const extra=groups.flatMap(gr=>gr.qs).slice(0,need).map(q=>({id:null,ai:true,topic:'ذكاء اصطناعي',question:q.question,answer:q.answer,steps:q.steps,explanation:q.explanation,choices:q.choices}));
    saveAi(extra,s);

@@ -203,7 +203,50 @@
   delete G.vec; // لا يُدرج: إجابة غير مضمونة
 
   const BY = { '1AS': ['system', 'parallelogram', 'canon'], '2AS': ['compose', 'system', 'canon'], '3AS': ['arithSum', 'geoSum', 'compose'], '2AM': ['order', 'relative', 'decdiv2', 'shares', 'abscissa'], '1AM': ['div', 'euclid', 'decdiv', 'angle'], '3AM': ['sci', 'power', 'exprInt', 'frame'], '4AM': ['expandSq', 'factorSq', 'solveProd', 'rect'] };
-  const PHYS = { '2AS': ['molarity', 'dilution', 'dissolve'], '3AS': ['incline'] };
+  // ---- فيزياء (1AM..1AS): قوانين أساسية؛ توزيعها على المستويات مبدئي يحتاج مراجعة بالبرنامج الرسمي ----
+  G.ohm = r => {
+    const R = pick(r, [10, 20, 22, 47, 100, 220]), I = pick(r, [0.1, 0.2, 0.25, 0.5, 1, 2]);
+    const U = rd(R * I, 2), w = rd(U * I, 3);
+    return { type: 'phys-ohm', q: `ناقل أومي مقاومته R = ${R} Ω يجتازه تيار كهربائي شدته I = ${I} A. احسب التوتر U بين طرفيه ثم الاستطاعة المستهلكة فيه.`,
+      a: `U = ${U} V ، P = ${w} W`, steps: ['قانون أوم: U = R × I', `U = ${R} × ${I} = ${U} V`, `P = U × I = ${U} × ${I} = ${w} W`], _chk: [R, I, U, w] };
+  };
+  G.power = r => {
+    const P = pick(r, [40, 60, 75, 100, 1500, 2000]), t = pick(r, [0.5, 1, 2, 3, 4, 5]);
+    const Wh = P * t, kWh = Wh / 1000;
+    return { type: 'phys-power', q: `جهاز كهربائي استطاعته P = ${P} W يشتغل مدة t = ${t} h. احسب الطاقة الكهربائية المستهلكة بـ Wh ثم بـ kWh.`,
+      a: `E = ${rd(Wh, 2)} Wh = ${rd(kWh, 4)} kWh`, steps: ['E = P × t', `E = ${P} × ${t} = ${rd(Wh, 2)} Wh`, `E = ${rd(Wh, 2)} / 1000 = ${rd(kWh, 4)} kWh`], _chk: [P, t, Wh, kWh] };
+  };
+  G.density = r => {
+    const d = pick(r, [0.8, 1, 2.7, 7.8, 11.3, 13.6]), V = pick(r, [10, 20, 25, 50, 100]);
+    const m = rd(d * V, 2);
+    return { type: 'phys-density', q: `قطعة من مادة حجمها V = ${V} cm³ وكتلتها m = ${m} g. احسب الكتلة الحجمية ρ لهذه المادة بـ g/cm³.`,
+      a: `ρ = ${d} g/cm³`, steps: ['ρ = m / V', `ρ = ${m} / ${V} = ${d} g/cm³`], _chk: [d, V, m] };
+  };
+  G.weight = r => {
+    const m = pick(r, [0.2, 0.5, 2, 5, 10, 50]), g = pick(r, [9.8, 10]);
+    const P = rd(m * g, 2);
+    return { type: 'phys-weight', q: `جسم كتلته m = ${m} kg. احسب وزنه P علماً أن شدة الجاذبية g = ${g} N/kg.`,
+      a: `P = ${P} N`, steps: ['P = m × g', `P = ${m} × ${g} = ${P} N`], _chk: [m, g, P] };
+  };
+  G.speed = r => {
+    const v = pick(r, [36, 54, 72, 90, 108, 120]), t = pick(r, [0.5, 1, 2, 3]);
+    const d = v * t, ms = v / 3.6;
+    return { type: 'phys-speed', q: `تقطع سيارة مسافة d = ${d} km خلال مدة t = ${t} h بسرعة ثابتة. احسب سرعتها v بـ km/h ثم بـ m/s.`,
+      a: `v = ${v} km/h = ${rd(ms, 2)} m/s`, steps: ['v = d / t', `v = ${d} / ${t} = ${v} km/h`, `v = ${v} / 3.6 = ${rd(ms, 2)} m/s`], _chk: [d, t, v, ms] };
+  };
+  G.mole = r => {
+    const [name, M] = pick(r, [['H₂O', 18], ['CO₂', 44], ['NaCl', 58.5], ['HCl', 36.5], ['NaOH', 40], ['H₂SO₄', 98]]), n = pick(r, [0.1, 0.2, 0.5, 1, 2, 3]);
+    const m = rd(M * n, 2);
+    return { type: 'phys-mole', q: `عيّنة من ${name} كتلتها m = ${m} g. الكتلة المولية M = ${M} g/mol. احسب كمية المادة n في هذه العيّنة.`,
+      a: `n = ${n} mol`, steps: ['n = m / M', `n = ${m} / ${M} = ${n} mol`], _chk: [M, n, m] };
+  };
+  G.molconc = r => {
+    const [name, M] = pick(r, [['NaCl', 58.5], ['NaOH', 40], ['H₂SO₄', 98], ['KMnO₄', 158]]), m = ri(r, 2, 20), V = pick(r, [100, 250, 500, 1000]);
+    const n = m / M, C = n / (V / 1000);
+    return { type: 'phys-molconc', q: `نذيب كتلة m = ${m} g من ${name} (M = ${M} g/mol) في الماء للحصول على محلول حجمه V = ${V} mL. احسب كمية المادة n ثم التركيز المولي C.`,
+      a: `n = ${rd(n, 4)} mol ، C = ${rd(C, 3)} mol/L`, steps: ['n = m / M', `n = ${m} / ${M} = ${rd(n, 4)} mol`, `C = n / V = ${rd(n, 4)} / ${V / 1000} = ${rd(C, 3)} mol/L`], _chk: [M, n, V, m, C] };
+  };
+  const PHYS = { '1AM': ['density'], '2AM': ['density', 'weight'], '3AM': ['mole', 'ohm', 'power'], '4AM': ['speed', 'weight', 'ohm', 'power'], '1AS': ['mole', 'molconc', 'speed', 'weight', 'ohm'], '2AS': ['molarity', 'dilution', 'dissolve', 'power'], '3AS': ['incline'] };
   const SUBJ = { math: BY, physics: PHYS };
   function generate(grade, count, rng, subject) {
     const r = rng || mk(Date.now()), names = (SUBJ[subject || 'math'] || {})[grade]; if (!names) return [];

@@ -10,7 +10,13 @@
  ['setGrade','selectLearner','showGrades'].forEach(n=>{const f=window[n];if(typeof f!=='function'||f.__orig)return;const w=function(){if(locked()){say('🔒 المستوى مقفل — يلزم رمز الأولياء');return}return f.apply(this,arguments)};w.__orig=f;window[n]=w});
 
  function shrink(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const S=160,c=document.createElement('canvas');c.width=c.height=S;const m=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,S,S);res(c.toDataURL('image/jpeg',0.8))};im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
- function apply(){const s=document.getElementById('gradeSwitch');if(s)s.disabled=locked();const b=document.getElementById('smStudentBtn');if(b){const ph=get(K.photo);b.innerHTML=(ph?'<img src="'+ph+'" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-inline-end:6px">':'')+esc(locked()?('🔒 وضع التلميذ'+(get(K.name)?' — '+get(K.name):'')):'👤 تفعيل وضع التلميذ')}}
+ function sideCard(){
+  const a=document.querySelector('.profile-mini .avatar'),b=document.querySelector('.profile-mini b');
+  const ph=get(K.photo),nm=get(K.name);
+  if(a&&ph)a.innerHTML='<img src="'+ph+'" alt="" style="width:100%;height:100%;border-radius:inherit;object-fit:cover;display:block">';
+  if(b&&nm)b.textContent=nm;
+ }
+ function apply(){sideCard();const s=document.getElementById('gradeSwitch');if(s)s.disabled=locked();const b=document.getElementById('smStudentBtn');if(b){const ph=get(K.photo);b.innerHTML=(ph?'<img src="'+ph+'" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-inline-end:6px">':'')+esc(locked()?('🔒 وضع التلميذ'+(get(K.name)?' — '+get(K.name):'')):'👤 تفعيل وضع التلميذ')}}
  function openDlg(){
   const old=document.getElementById('smStudentDlg');if(old)old.remove();
   const o=document.createElement('div');o.id='smStudentDlg';o.dir='rtl';

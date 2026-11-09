@@ -1,6 +1,6 @@
 const assert=require('assert'),M=require(process.cwd()+'/web/math-middle-gen.js');
 const near=(a,b)=>Math.abs(a-b)<1e-6*Math.max(1,Math.abs(b));
-for(const g of ['3AM','4AM','1AS','2AS','3AS']){
+for(const g of ['1AM','2AM','3AM','4AM','1AS','2AS','3AS']){
   assert(M.has(g,'physics'),'physics missing '+g);
   for(let s=1;s<=300;s++){
     const out=M.generate(g,3,(()=>{let x=s*7919;return()=>(x=(x*1664525+1013904223)>>>0)/4294967296})(),'physics');

@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Fetch files (polite: robots.txt, pauses, allowed hosts only)
+      - name: "Fetch files (polite: robots.txt, pauses, allowed hosts only)"
         env:
           PAGES: ${{ inputs.pages }}
           DEEP: ${{ inputs.deep }}
