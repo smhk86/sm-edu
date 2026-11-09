@@ -24,7 +24,7 @@
  const records=()=>typeof exerciseBankRecords!=='undefined'&&Array.isArray(exerciseBankRecords)?exerciseBankRecords:[];
  const gradeNow=()=>{const c=typeof grade!=='undefined'?grade:null;return GRADES.includes(c)?c:GRADES[0]};
  const kindsFor=gr=>Object.keys(KINDS).filter(k=>!KINDS[k].only||KINDS[k].only===gr);
- const subjectsFor=gr=>[...new Set(records().filter(x=>x.grade===gr).map(x=>x.subject))].sort((a,b)=>a.localeCompare(b,'ar'));
+ const subjectsFor=gr=>[...new Set([].concat(records(),CUR||[],RJ||[]).filter(x=>x.grade===gr&&x.subject).map(x=>x.subject))].sort((a,b)=>a.localeCompare(b,'ar'));
  const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
  const fmt=n=>{const r=Math.round(n*4)/4;return Number.isInteger(r)?String(r):String(r).replace(/0+$/,'')};
  const used=()=>{try{return JSON.parse(ls.get('smGenUsedIds')||'[]')}catch(e){return[]}};

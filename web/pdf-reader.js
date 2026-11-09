@@ -18,7 +18,7 @@
    const h=Math.abs(it.transform[3])||it.height||10,y=it.transform[5];
    let row=rows.find(r=>Math.abs(r.y-y)<=Math.max(2,r.h*0.5));
    if(!row){row={y,h,items:[]};rows.push(row)}
-   row.items.push({s:it.str,x:it.transform[4],w:it.width||0,h});
+   row.items.push({s:it.str,x:it.transform[4],w:it.width||(it.str.length*h*0.45),h});
   });
   rows.sort((a,b)=>b.y-a.y);
   return rows.map(r=>{
@@ -30,7 +30,7 @@
     if(prev){
      const gap=rtl?(prev.x-(i.x+i.w)):(i.x-(prev.x+prev.w));
      const endsSp=/\s$/.test(out),startsSp=/^\s/.test(i.s);
-     if(gap>r.h*0.18&&!endsSp&&!startsSp)out+=' ';
+     if(gap>r.h*0.3&&!endsSp&&!startsSp)out+=' ';
     }
     out+=i.s;prev=i;
    });
