@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = "2.9.1"
+EXPECTED = "2.9.7"
 
 def run():
     package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
