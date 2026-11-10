@@ -1,0 +1,15 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const teacher=fs.readFileSync('web/smart-teacher.js','utf8');
+assert(teacher.includes("if(!extracted.trim()&&file&&/\\.pdf$/i.test(file.name))"),'OCR must run for scanned local PDFs even when vision pages exist');
+assert(teacher.includes('try{const ocr=await smartTeacherOcrPdf(file'),'OCR should be attempted');
+assert(teacher.includes('if(!visionImages.length)throw ocrError'),'keep visual fallback if OCR is unavailable');
+assert(teacher.includes('أُرفقت صفحات/صور للتحليل البصري'),'show correct source status');
+assert(teacher.includes("'\\n'+(ocrFallbackNote?'ملاحظة OCR: '+ocrFallbackNote:'' )") || teacher.includes("(ocrFallbackNote?'ملاحظة OCR: '+ocrFallbackNote:'' )") || teacher.includes("(ocrFallbackNote?'ملاحظة OCR: '+ocrFallbackNote:'')"),'include OCR fallback note in model context');
+const html=fs.readFileSync('web/index.html','utf8'),sw=fs.readFileSync('web/sw.js','utf8');
+assert(html.includes('v2-9-11.js')&&html.includes('v2.9.19'));
+assert(sw.includes('./v2-9-11.js')&&sw.includes('v2.9.19-shell'));
+const w={};vm.runInNewContext(fs.readFileSync('web/v2-9-11.js','utf8'),{window:w});
+assert.equal(w.SM_EDUCATION_RELEASE.version,'2.9.11');
+const w12={};vm.runInNewContext(fs.readFileSync('web/v2-9-12.js','utf8'),{window:w12});
+assert.equal(w12.SM_EDUCATION_RELEASE.version,'2.9.12');
+console.log('PASS: scanned PDF OCR attempt, visual fallback, status and release wiring');

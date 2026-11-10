@@ -1,0 +1,13 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const root=process.cwd();
+const backend=fs.readFileSync(root+'/backend/app/main.py','utf8');
+assert(backend.includes('def _normalize_difficulty(value):'));
+assert(backend.includes('def _build_question_rubric(question, points):'));
+assert(backend.includes('_normalize_difficulty(q.get("difficulty")) == payload.difficulty'));
+assert(backend.includes('"criteria": _build_question_rubric(x, x["points"])'));
+const html=fs.readFileSync(root+'/web/index.html','utf8'),sw=fs.readFileSync(root+'/web/sw.js','utf8');
+assert(html.includes('v2-9-13.js')&&html.includes('v2.9.19'));
+assert(sw.includes('./v2-9-13.js')&&sw.includes('v2.9.19-shell'));
+const w={};vm.runInNewContext(fs.readFileSync(root+'/web/v2-9-13.js','utf8'),{window:w});
+assert.equal(w.SM_EDUCATION_RELEASE.version,'2.9.13');
+console.log('PASS: localized difficulty, exact marking rubric and v2.9.13 release wiring');

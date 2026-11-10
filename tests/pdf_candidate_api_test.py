@@ -91,8 +91,8 @@ def run():
         assert "OCR" in ocr.json()["document"]["extracted_text"].upper()
         assert client.get("/api/v1/archive/pdf-review").status_code == 200
 
-        assert client.get("/health").json()["version"] == "2.9.1"
-        assert client.get("/api/v1/catalog").json()["version"] == "2.9.1"
+        assert client.get("/health").json()["version"] == "2.9.19"
+        assert client.get("/api/v1/catalog").json()["version"] == "2.9.19"
 
         for route in (
             "/health", "/api/v1/catalog", "/api/v1/learning/structure", "/api/v1/learning/coverage",

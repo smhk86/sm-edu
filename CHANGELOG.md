@@ -1,3 +1,36 @@
+## [2.9.16] - 2026-11-10
+
+- تطوير محرك التصحيح الموجود: تحليل معايير وخطوات الحل، وتحديد أول خطأ وتصنيفه.
+- عرض دليل الإجابة وتعليل النقاط الممنوحة لكل معيار، مع تطبيع مجموع المعايير إلى نقاط السؤال.
+- الإبقاء على التصحيح التكويني ومراجعة الأستاذ، دون إضافة أداة تصحيح مكررة أو تغيير واجهات الخادم.
+
+## [2.9.15] - 2026-11-10
+### Improved
+- Integrated Claude original educational draft generation into the existing smart-generator page; removed the separate Claude panel from the test-bank page.
+- Reused the generator's grade, subject, term, difficulty, count, duration and score settings for AI drafts.
+- Required explicit solution steps for each generated question and added rubric-total validation against the requested score.
+- Displayed integrative context, model solutions and suggested rubric in the same generator preview; local paper saving remains separate from the exercise bank.
+- Preserved admin-token protection, server-side Anthropic key handling, no-auto-publication policy and existing server routes.
+### Validation
+- Added backend draft-validation and frontend generator-integration regression tests.
+
+## [2.9.14] - 2026-11-10
+- Validate AI-generated educational drafts before display; reject missing questions or model answers.
+- Add structured teacher preview and explicit non-publication / curriculum-verification guardrails.
+
+## [2.9.13] - 2026-11-10
+
+- Normalize exercise difficulty labels across Arabic, French and English.
+- Apply requested difficulty filters to localized bank records and report accurate difficulty distributions.
+- Build teacher marking rubrics from solution steps with exact hundredth-point allocation.
+- Preserve API compatibility and teacher-review/curriculum-verification safeguards.
+
+## v2.9.10
+- إضافة ثلاثة أوضاع لتحليل الملفات والصور: استخراج الأسئلة والمعطيات دون اشتراط إجابة التلميذ، حل التمرين خطوة بخطوة، وتصحيح إجابة التلميذ مع شرح الأخطاء.
+- دعم إبقاء مسار PDF النصي وPDF المصوّر والصور وDOCX ومصادر PDF من مكتبات DzExams وRaji3DZ كما هو، مع استخدام التحليل البصري عند توفر الصور.
+- منع تخمين الرموز والقياسات غير الواضحة، وإظهار حدود OCR/الرؤية ضمن توجيهات التحليل.
+- تحديث الإصدار وذاكرة Service Worker وإضافة اختبارات انحدار للميزة.
+
 ## v2.9.1
 - Dedicated multi-grade generator with term, subject, difficulty, duration, marks, solutions and marking scheme.
 - Removed progress and textbook navigation entries.
@@ -151,3 +184,34 @@
 - إضافة حفظ مواضيع المولّد محلياً مع العرض والحذف الفردي.
 - إبقاء بنك التمارين ومراجع المكتبة الأصلية دون تعديل عند حذف موضوع مولّد.
 - توثيق نطاق السنوات والمواد المتاحة والتنبيه إلى خرائط الشعب غير الموثقة رسمياً.
+
+## v2.9.11
+- إصلاح مسار PDF المصوّر: تشغيل OCR حتى عند تجهيز الصفحات للتحليل البصري.
+- الجمع بين النص المستخرج والصور المرئية، مع استمرار التحليل البصري عند تعذر OCR.
+- توضيح مصدر المحتوى في نتائج المعلم الذكي وإضافة اختبار انحدار.
+
+## [2.9.12] - 2026-11-10
+### Improved
+- Balanced exam question selection across topics and cognitive-process tags.
+- Added filtering for duplicate, blank, and unanswerable exam-bank records.
+- Added server-side quality metadata and a visible quality-gate result in the exam generator.
+- Synchronized frontend/backend release metadata and PWA cache version.
+### Validation
+- Full `npm test` suite passed; one unsafe-host repository test case was intentionally skipped.
+
+## [2.9.17] - 2026-11-10
+### Added
+- Diagram-aware visual grading guidance for geometry, graphs, scientific drawings, axes, labels, units and relations.
+- Structured visual observations with evidence and per-observation confidence.
+- Visual uncertainty now triggers teacher review; image/PDF page preparation uses a higher resolution.
+### Safety
+- The model is instructed not to infer measurements from drawing proportions or guess unreadable symbols. Grades remain formative and require teacher review.
+
+## 2.9.18
+- PDF visual hints now classify likely tables, charts, geometry and scientific diagrams using conservative text/layout heuristics.
+- Added review reasons, confidence state and explicit no-scale-measurement policy.
+
+
+## 2.9.19
+- Structured visual/text conflict reporting in image-based grading.
+- Conflicts with separate text and diagram evidence are shown to teachers and force manual review.

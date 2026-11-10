@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from . import parent_auth
 
 load_dotenv()
-app = FastAPI(title="SM éducation API", version="2.9.1")
+app = FastAPI(title="SM éducation API", version="2.9.19")
 parent_auth.init_db()
 allowed_origins = [item.strip() for item in os.getenv("CORS_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080,https://localhost,capacitor://localhost").split(",") if item.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_credentials=False, allow_methods=["GET", "POST", "PUT"], allow_headers=["Content-Type", "Authorization", "X-Admin-Token"])
@@ -84,8 +84,13 @@ class ClaudeContentRequest(BaseModel):
     grade: str = Field(min_length=3, max_length=80)
     subject: str = Field(min_length=2, max_length=100)
     topic: str = Field(min_length=2, max_length=500)
-    term: int = Field(default=1, ge=1, le=3)
+    term: int = Field(default=1, ge=0, le=3)
     language: Literal["ar", "fr", "en"] = "ar"
+    stream: str = Field(default="", max_length=100)
+    difficulty: Literal["mixed", "easy", "medium", "hard"] = "mixed"
+    question_count: int = Field(default=5, ge=3, le=20)
+    total_points: int = Field(default=20, ge=0, le=100)
+    duration_minutes: int = Field(default=60, ge=0, le=300)
 
 
 class ParentRegisterRequest(BaseModel):
@@ -183,11 +188,11 @@ async def parent_sync_redeem(payload: ParentSyncRedeemRequest, request: Request)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "app": "SM éducation", "version": "2.9.1"}
+    return {"status": "ok", "app": "SM éducation", "version": "2.9.19"}
 
 @app.get("/api/v1/catalog")
 async def catalog():
-    return {"version": "2.9.1", "curriculum": "Algeria", "academic_year": "2026-2027", "levels": CATALOG}
+    return {"version": "2.9.19", "curriculum": "Algeria", "academic_year": "2026-2027", "levels": CATALOG}
 
 @app.get("/api/v1/learning/structure")
 async def learning_structure():
@@ -633,6 +638,27 @@ def _analyze_pdf_page_layout(page, page_number):
         drawings = len(page.get_drawings())
     except Exception:
         drawings = 0
+    page_text = " ".join(text_blocks)
+    visual_types = []
+    if table_count or re.search(r"\b(?:جدول|table|tabular)\b", page_text, re.I):
+        visual_types.append("table")
+    if re.search(r"(?:محور|منحنى|مبيان|رسم بياني|courbe|graph|axis|axes)", page_text, re.I):
+        visual_types.append("chart_or_graph")
+    if re.search(r"(?:مثلث|دائرة|زاوية|مستقيم|هندسة|triangle|cercle|angle|geometry)", page_text, re.I):
+        visual_types.append("geometry")
+    if re.search(r"(?:خلية|نسيج|عضو|دارة|مخطط|schéma|cellule|circuit|diagram)", page_text, re.I):
+        visual_types.append("scientific_diagram")
+    if (image_blocks or drawings > 8) and not visual_types:
+        visual_types.append("unclassified_visual")
+    review_reasons = []
+    if image_blocks:
+        review_reasons.append("embedded_images_need_visual_interpretation")
+    if drawings > 8:
+        review_reasons.append("complex_vector_drawing_needs_visual_interpretation")
+    if table_count:
+        review_reasons.append("table_cells_and_headers_need_visual_verification")
+    if math_regions:
+        review_reasons.append("math_symbols_and_layout_need_visual_verification")
     return {
         "page": page_number,
         "text_block_count": len(text_blocks),
@@ -642,8 +668,12 @@ def _analyze_pdf_page_layout(page, page_number):
         "estimated_table_cells": table_cells,
         "embedded_image_count": image_blocks,
         "vector_drawing_count": drawings,
-        "visual_review_recommended": bool(image_blocks or drawings > 8 or table_count),
-        "limitations": ["math_detection_is_heuristic", "equations_may_lose_layout_or_symbols", "tables_and_figures_require_visual_human_review"]
+        "visual_content_types": visual_types,
+        "review_reasons": review_reasons,
+        "visual_confidence": "low" if visual_types or math_regions else "not_assessed",
+        "measurement_policy": "never_infer_lengths_or_angles_from_drawing_scale",
+        "visual_review_recommended": bool(image_blocks or drawings > 8 or table_count or math_regions),
+        "limitations": ["classification_is_heuristic_not_vision_recognition", "equations_may_lose_layout_or_symbols", "measurements_must_come_from_explicit_labels_or_text", "tables_and_figures_require_human_visual_review"]
     }
 
 
@@ -979,6 +1009,73 @@ class CurriculumExamRequest(BaseModel):
     exclude_question_ids: list[str] = Field(default_factory=list, max_length=120)
 
 
+def _validate_claude_educational_draft(draft, payload):
+    """Validate AI output before exposing it as a teacher-review draft."""
+    if not isinstance(draft, dict):
+        raise ValueError("AI output must be a JSON object.")
+    questions = draft.get("questions")
+    if not isinstance(questions, list):
+        raise ValueError("AI output is missing a questions list.")
+    minimum, maximum = (3, 5) if payload.task == "integrative" else (payload.question_count, payload.question_count)
+    if not minimum <= len(questions) <= maximum:
+        raise ValueError("AI output has an invalid question count.")
+    normalized = []
+    for index, question in enumerate(questions, 1):
+        if not isinstance(question, dict):
+            raise ValueError(f"Question {index} must be an object.")
+        prompt = str(question.get("question") or question.get("prompt") or "").strip()
+        answer = str(question.get("model_answer") or question.get("answer") or question.get("solution") or "").strip()
+        steps = question.get("solution_steps", [])
+        if not prompt or not answer:
+            raise ValueError(f"Question {index} is missing its prompt or model answer.")
+        if steps is not None and not isinstance(steps, list):
+            raise ValueError(f"Question {index} has invalid solution steps.")
+        clean_steps = [str(step).strip() for step in (steps or []) if str(step).strip()]
+        if not clean_steps:
+            raise ValueError(f"Question {index} is missing step-by-step reasoning.")
+        normalized.append({**question, "question": prompt, "model_answer": answer, "solution_steps": clean_steps})
+    if payload.task == "integrative":
+        situation = str(draft.get("situation") or draft.get("task") or "").strip()
+        if len(situation) < 20:
+            raise ValueError("Integrative draft is missing a sufficiently detailed situation.")
+        draft["situation"] = situation
+    rubric = draft.get("marking_rubric")
+    rubric_status = "missing_teacher_rubric"
+    rubric_total = None
+    if isinstance(rubric, list) and rubric:
+        try:
+            if not all(isinstance(item, dict) and isinstance(item.get("points"), (int, float)) and float(item["points"]) >= 0 for item in rubric):
+                raise ValueError("Invalid rubric criterion.")
+            rubric_total = round(sum(float(item["points"]) for item in rubric), 2)
+            expected_total = payload.total_points or 20
+            rubric_status = "total_matches" if rubric_total == expected_total else "teacher_adjustment_required"
+        except (TypeError, ValueError):
+            rubric_status = "teacher_adjustment_required"
+    expected_total = payload.total_points or 20
+    draft.update({
+        "grade": payload.grade, "subject": payload.subject, "term": payload.term,
+        "topic": payload.topic, "task_type": payload.task, "language": payload.language,
+        "difficulty": payload.difficulty, "duration_minutes": payload.duration_minutes,
+        "total_points": payload.total_points,
+        "questions": normalized,
+        "content_status": "ai_generated_practice_pending_teacher_review",
+        "curriculum_alignment_status": "pending_official_annual_progression_verification",
+        "teacher_review_required": True,
+        "published_to_bank": False,
+        "quality_validation": {
+            "status": "structure_validated" if rubric_status == "total_matches" else "teacher_adjustment_required",
+            "question_count": len(normalized),
+            "all_questions_have_model_answers": True,
+            "all_questions_have_solution_steps": True,
+            "rubric_status": rubric_status,
+            "rubric_total": rubric_total,
+            "rubric_expected_total": expected_total,
+            "official_curriculum_alignment_verified": False
+        }
+    })
+    return draft
+
+
 def _load_curriculum_exercise_bank():
     path = Path(__file__).resolve().parents[2] / "web" / "data" / "exercise-bank-2026-2027.json"
     try:
@@ -1001,6 +1098,91 @@ def _grade_stage(grade):
     if "متوسط" in grade: return "middle"
     if "ثانوي" in grade: return "secondary"
     return None
+
+
+_DIFFICULTY_ALIASES = {
+    "easy": {"easy", "beginner", "مبتدئ", "سهل", "facile"},
+    "medium": {"medium", "متوسط", "moyen", "moderate"},
+    "hard": {"hard", "advanced", "متقدم", "صعب", "difficile"},
+}
+
+
+def _normalize_difficulty(value):
+    normalized = str(value or "").strip().lower()
+    for canonical, aliases in _DIFFICULTY_ALIASES.items():
+        if normalized in aliases:
+            return canonical
+    return "unclassified"
+
+
+def _build_question_rubric(question, points):
+    """Build a teacher-facing rubric whose hundredth-point total is exact."""
+    steps = [str(step).strip() for step in question.get("solution_steps", []) if str(step).strip()]
+    answer = str(question.get("solution") or "").strip()
+    accepted = [str(value).strip() for value in question.get("accepted_answers", []) if str(value).strip()]
+    choices = question.get("choices") if isinstance(question.get("choices"), list) else []
+    answer_index = question.get("answer_index")
+    valid_choice = isinstance(answer_index, int) and 0 <= answer_index < len(choices)
+    if not steps:
+        if answer:
+            steps = ["الإجابة النهائية الصحيحة مع احترام المطلوب."]
+        elif accepted:
+            steps = ["تقديم إحدى الإجابات المقبولة."]
+        elif valid_choice:
+            steps = ["اختيار الإجابة الصحيحة."]
+        else:
+            steps = ["حل صحيح ومبرر وفق المطلوب."]
+    total_units = max(0, int(round(float(points) * 100)))
+    base, remainder = divmod(total_units, len(steps))
+    criteria = []
+    for index, step in enumerate(steps):
+        units = base + (1 if index < remainder else 0)
+        criteria.append({"criterion": step, "points": units / 100, "criterion_type": "solution_step" if len(steps) > 1 or question.get("solution_steps") else "correct_answer"})
+    return criteria
+
+
+def _select_balanced_exam_questions(matches, question_count, rng=None):
+    """Select unique, answerable questions with topic and cognitive-process balance."""
+    import random
+    rng = rng or random.SystemRandom()
+    by_topic = defaultdict(lambda: defaultdict(list))
+    seen_ids = set()
+    for item in matches:
+        question_id = str(item.get("id") or "").strip()
+        question = str(item.get("question") or "").strip()
+        choices = item.get("choices") if isinstance(item.get("choices"), list) else []
+        answer_index = item.get("answer_index")
+        has_choice_answer = isinstance(answer_index, int) and 0 <= answer_index < len(choices)
+        has_answer = bool(str(item.get("solution") or "").strip() or item.get("accepted_answers") or has_choice_answer)
+        if not question_id or question_id in seen_ids or not question or not has_answer:
+            continue
+        seen_ids.add(question_id)
+        topic = str(item.get("topic") or item.get("lesson") or "غير مصنف").strip() or "غير مصنف"
+        process = str(item.get("cognitive_process") or "unclassified").strip() or "unclassified"
+        by_topic[topic][process].append(item)
+
+    topic_names = list(by_topic)
+    rng.shuffle(topic_names)
+    for processes in by_topic.values():
+        for rows in processes.values():
+            rng.shuffle(rows)
+
+    selected = []
+    while len(selected) < question_count:
+        progressed = False
+        for topic in topic_names:
+            processes = by_topic[topic]
+            available = [name for name, rows in processes.items() if rows]
+            if not available:
+                continue
+            rng.shuffle(available)
+            selected.append(processes[available[0]].pop())
+            progressed = True
+            if len(selected) >= question_count:
+                break
+        if not progressed:
+            break
+    return selected
 
 
 @app.post("/api/v1/learning/exam-builder")
@@ -1034,32 +1216,15 @@ async def build_curriculum_exam(payload: CurriculumExamRequest):
         resolved_language = matches[0].get("language", "ar")
     matches = [q for q in matches if q.get("language", "ar") == resolved_language]
     if payload.difficulty != "mixed":
-        difficulty_matches = [q for q in matches if str(q.get("difficulty", "")).lower() == payload.difficulty]
+        difficulty_matches = [q for q in matches if _normalize_difficulty(q.get("difficulty")) == payload.difficulty]
         if len(difficulty_matches) >= payload.question_count:
             matches = difficulty_matches
-    # Never silently substitute another grade, subject, term, or stream.
-    if len(matches) < payload.question_count:
-        raise HTTPException(status_code=422, detail={"message": "Not enough exact-match questions for this selection.", "available": len(matches), "requested": payload.question_count, "fallback": "No cross-grade, cross-term or cross-language substitution is allowed."})
+    # Never silently substitute another grade, subject, term, stream or language.
     import random, uuid
     rng = random.SystemRandom()
-    # Stratify by platform cognitive_process labels where possible. These are an
-    # internal practice taxonomy, not Ministry-defined competencies.
-    buckets = defaultdict(list)
-    for item in matches:
-        buckets[item.get("cognitive_process") or "unclassified"].append(item)
-    for values in buckets.values():
-        rng.shuffle(values)
-    selected = []
-    bucket_names = list(buckets.keys())
-    rng.shuffle(bucket_names)
-    while len(selected) < payload.question_count and bucket_names:
-        remaining = []
-        for name in bucket_names:
-            if buckets[name] and len(selected) < payload.question_count:
-                selected.append(buckets[name].pop())
-            if buckets[name]:
-                remaining.append(name)
-        bucket_names = remaining
+    selected = _select_balanced_exam_questions(matches, payload.question_count, rng)
+    if len(selected) < payload.question_count:
+        raise HTTPException(status_code=422, detail={"message": "Not enough complete, answerable exact-match questions for this selection.", "available": len(selected), "requested": payload.question_count, "fallback": "No cross-grade, cross-term or cross-language substitution is allowed."})
     base, remainder = divmod(payload.total_points, payload.question_count)
     teacher_questions, student_questions = [], []
     for i, q in enumerate(selected):
@@ -1080,8 +1245,11 @@ async def build_curriculum_exam(payload: CurriculumExamRequest):
     cognitive_distribution = defaultdict(int)
     for item in selected:
         cognitive_distribution[item.get("cognitive_process") or "unclassified"] += 1
-    common_meta = {"id": paper_id, "academic_year": "2026-2027", "grade": payload.grade, "stage": stage, "subject": payload.subject, "term": payload.term, "question_count": len(selected), "total_points": payload.total_points, "duration_minutes": payload.duration_minutes, "difficulty_requested": payload.difficulty, "difficulty_distribution": dict((d, sum(1 for x in selected if str(x.get("difficulty", "")).lower()==d)) for d in ("easy", "medium", "hard")), "language": resolved_language, "content_status": "platform_authored_practice_not_official_ministry_exam", "curriculum_alignment_status": curriculum_status, "curriculum_policy_note": policy_note, "official_ministry_exam": False, "pathway_specific": False, "teacher_review_required": True, "assessment_blueprint": {"selection_method": "balanced_platform_cognitive_process_stratification", "cognitive_process_distribution": dict(cognitive_distribution), "taxonomy_status": "platform_practice_tags_not_official_ministry_competencies", "official_competency_alignment_verified": False}, "policy_sources": [{"id": "ministry-2026-2027-reform-update", "url": "https://www.education.gov.dz/2026/07/30/وزير-التربية-الوطنية-ينشّط-ندوة-صحفية-يقدّم-فيها-توضيحات-حول-الترتيبات-البيداغوجية-الجديدة-الخاصة-بالدخول-المدرسي-2026-2027/"}, {"id": "ministry-decision-36-2026-09-09", "url": "https://www.education.gov.dz/2026/09/10/قرار-رقم-36-مؤرخ-في-27-ربيع-الأول-عام-1448-الموافق-9-سبتمبر-سنة-2026-يتضمن-إلغاء-القرار-رقم-20-المؤرخ-في-13-صفر-عام-1448-الموافق-28-جويلية-سنة-2026-المتضمن-المواقيت-والمعاملات-لمرحلة-التعليم-الثانوي-العام-والتكنولوجي/"}]}
-    return {"paper": {**common_meta, "student_version": {"title": f"Practice assessment — {payload.grade} — {payload.subject}", "instructions": f"Answer all questions. Duration: {payload.duration_minutes} minutes. Total: {payload.total_points} points.", "questions": student_questions}, "teacher_version": {"title": f"Teacher copy — {payload.grade} — {payload.subject}", "marking_scheme": [{"question_number": x["number"], "points": x["points"], "criteria": ([{"criterion": step, "points": round(x["points"] / max(1, len(x.get("solution_steps", []))), 2)} for step in x.get("solution_steps", [])] or [{"criterion": "Correct answer with valid reasoning", "points": x["points"]}])} for x in teacher_questions], "answer_key": teacher_questions}}, "curriculum_guardrails": {"exact_grade_subject_term_match": True, "cross_grade_substitution": False, "cross_term_substitution": False, "cross_language_substitution": False, "resolved_question_language": resolved_language, "unverified_stream_mapping_used": False, "official_sequence_verified": False, "policy_note": policy_note}}
+    topic_distribution = defaultdict(int)
+    for item in selected:
+        topic_distribution[item.get("topic") or item.get("lesson") or "غير مصنف"] += 1
+    common_meta = {"id": paper_id, "academic_year": "2026-2027", "grade": payload.grade, "stage": stage, "subject": payload.subject, "term": payload.term, "question_count": len(selected), "total_points": payload.total_points, "duration_minutes": payload.duration_minutes, "difficulty_requested": payload.difficulty, "difficulty_distribution": dict((d, sum(1 for x in selected if _normalize_difficulty(x.get("difficulty")) == d)) for d in ("easy", "medium", "hard")), "language": resolved_language, "content_status": "platform_authored_practice_not_official_ministry_exam", "curriculum_alignment_status": curriculum_status, "curriculum_policy_note": policy_note, "official_ministry_exam": False, "pathway_specific": False, "teacher_review_required": True, "quality_check": {"status": "passed", "unique_question_ids": len({str(x.get('id')) for x in selected}) == len(selected), "all_questions_answerable": all(bool(str(x.get('solution') or '').strip() or x.get('accepted_answers') or (isinstance(x.get('answer_index'), int) and 0 <= x.get('answer_index') < len(x.get('choices', [])))) for x in selected), "selected_question_count": len(selected), "requested_question_count": payload.question_count}, "assessment_blueprint": {"selection_method": "balanced_topic_and_cognitive_process_round_robin", "topic_distribution": dict(topic_distribution), "cognitive_process_distribution": dict(cognitive_distribution), "taxonomy_status": "platform_practice_tags_not_official_ministry_competencies", "official_competency_alignment_verified": False}, "policy_sources": [{"id": "ministry-2026-2027-reform-update", "url": "https://www.education.gov.dz/2026/07/30/وزير-التربية-الوطنية-ينشّط-ندوة-صحفية-يقدّم-فيها-توضيحات-حول-الترتيبات-البيداغوجية-الجديدة-الخاصة-بالدخول-المدرسي-2026-2027/"}, {"id": "ministry-decision-36-2026-09-09", "url": "https://www.education.gov.dz/2026/09/10/قرار-رقم-36-مؤرخ-في-27-ربيع-الأول-عام-1448-الموافق-9-سبتمبر-سنة-2026-يتضمن-إلغاء-القرار-رقم-20-المؤرخ-في-13-صفر-عام-1448-الموافق-28-جويلية-سنة-2026-المتضمن-المواقيت-والمعاملات-لمرحلة-التعليم-الثانوي-العام-والتكنولوجي/"}]}
+    return {"paper": {**common_meta, "student_version": {"title": f"Practice assessment — {payload.grade} — {payload.subject}", "instructions": f"Answer all questions. Duration: {payload.duration_minutes} minutes. Total: {payload.total_points} points.", "questions": student_questions}, "teacher_version": {"title": f"Teacher copy — {payload.grade} — {payload.subject}", "marking_scheme": [{"question_number": x["number"], "points": x["points"], "criteria": _build_question_rubric(x, x["points"])} for x in teacher_questions], "answer_key": teacher_questions}}, "curriculum_guardrails": {"exact_grade_subject_term_match": True, "cross_grade_substitution": False, "cross_term_substitution": False, "cross_language_substitution": False, "resolved_question_language": resolved_language, "unverified_stream_mapping_used": False, "official_sequence_verified": False, "policy_note": policy_note}}
 
 # Structured exam-question understanding assistant. Groq is optional; fallback is explicitly heuristic.
 PDF_ANALYSES_META = PDF_REVIEW_ROOT / "review" / "question-analyses.json"
@@ -1188,12 +1356,13 @@ async def claude_content_draft(payload: ClaudeContentRequest):
         raise HTTPException(status_code=503, detail="Claude غير مفعّل: أضف ANTHROPIC_API_KEY إلى بيئة الخادم فقط.")
     language = {"ar": "Arabic", "fr": "French", "en": "English"}[payload.language]
     if payload.task == "integrative":
-        spec = ("Create one original age-appropriate integrative situation with a realistic context, clear student task, 3-5 questions, worked model answers, step-by-step reasoning and a 20-point suggested rubric.")
+        spec = (f"Create one original age-appropriate integrative situation with a realistic context, clear student task, 3-5 questions, worked model answers, explicit step-by-step reasoning and a suggested rubric totaling exactly {payload.total_points or 20} points.")
     else:
-        spec = ("Create five original progressive practice questions with choices, one unambiguous correct answer, explanations and solution steps.")
+        spec = (f"Create exactly {payload.question_count} original progressive practice questions with choices where useful, one unambiguous correct answer, explanations, explicit step-by-step reasoning, and a suggested rubric totaling exactly {payload.total_points or 20} points.")
+    term_text = "all academic terms" if payload.term == 0 else str(payload.term)
     prompt = (f"You are an expert educational content designer. Create a supplemental practice draft for Algeria. "
-              f"Grade: {payload.grade}. Subject: {payload.subject}. Term: {payload.term}. Topic: {payload.topic}. "
-              f"Write in {language}. Respect age and subject level. Do not claim official Ministry approval or invent official curriculum sequence. "
+              f"Grade: {payload.grade}. Subject: {payload.subject}. Stream/common trunk: {payload.stream or 'not specified'}. Term: {term_text}. Topic: {payload.topic}. "
+              f"Write in {language}. Respect age and subject level. Difficulty: {payload.difficulty}. Duration: {payload.duration_minutes} minutes. Total score: {payload.total_points or 20}. Do not claim official Ministry approval or invent official curriculum sequence. "
               f"Return valid JSON only. Include content_status='claude_generated_practice_pending_teacher_review', curriculum_alignment_status='pending_official_annual_progression_verification', "
               f"grade, subject, term, topic, task, questions, model_solution, marking_rubric, and teacher_review_required=true. {spec}")
     model = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
@@ -1207,10 +1376,11 @@ async def claude_content_draft(payload: ClaudeContentRequest):
             raise ValueError("Empty Claude response")
         try:
             draft = json.loads(text)
-        except json.JSONDecodeError:
-            draft = {"raw_draft": text}
+            draft = _validate_claude_educational_draft(draft, payload)
+        except (json.JSONDecodeError, ValueError, TypeError) as exc:
+            raise HTTPException(status_code=502, detail="أنتج نموذج الذكاء الاصطناعي مسودة غير مكتملة أو غير مطابقة لبنية التقييم. أعد المحاولة أو راجع إعدادات النموذج.") from exc
         return {"mode": "claude", "model": model, "draft": draft, "status": "pending_teacher_review", "published_to_bank": False}
-    except (httpx.HTTPError, ValueError, TypeError) as exc:
+    except httpx.HTTPError as exc:
         raise HTTPException(status_code=502, detail="تعذر إنشاء مسودة Claude حالياً.") from exc
 
 

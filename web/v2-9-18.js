@@ -1,0 +1,2 @@
+/* SM EDUCATION v2.9.18 — visual evidence classification and review safeguards. */
+(function(root){'use strict';root.SM_EDUCATION_RELEASE=root.SM_EDUCATION_RELEASE||{};root.SM_EDUCATION_RELEASE.version='2.9.18';root.SM_EDUCATION_RELEASE.features=Object.assign({},root.SM_EDUCATION_RELEASE.features||{},{pdfVisualClassification:true,explicitMeasurementPolicy:true,visualReviewReasons:true});})(window);

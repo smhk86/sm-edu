@@ -17,7 +17,7 @@
  const DIFF={easy:'مبتدئ',medium:'متوسط',hard:'متقدم'};
  const DIFF_AR={easy:'سهل',medium:'متوسط',hard:'صعب',mixed:'متدرج'};
  const st={grade:'',subject:'',term:1,kind:'exercises',difficulty:'mixed',count:8,minutes:0,points:0,topics:null,stream:'',useSaved:true};
- let CUR=null,RJ=null,PATHS=null,lastLocal=null,curTopics=[],lastRefs=[],busy=false;
+ let CUR=null,RJ=null,PATHS=null,lastLocal=null,curTopics=[],lastRefs=[],busy=false,claudeBusy=false;
  const ls={get:k=>{try{return g.localStorage.getItem(k)||''}catch(e){return ''}},set:(k,v)=>{try{g.localStorage.setItem(k,v)}catch(e){}}};
  const say=m=>{if(typeof g.toast==='function')g.toast(m)};
 
@@ -105,17 +105,17 @@
  function qHtml(q,i,withPts){return `<div class="gen-q"><b>${i}.</b> ${withPts&&q.points?`<span class="gen-pts">(${fmt(q.points)} ن)</span> `:''}${q.ai?'<span title="يحتاج تدقيقاً">🤖</span> ':''}${esc(q.question)}${q.choices&&q.choices.length?`<ul>${q.choices.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`:''}</div>`}
  function paperHtml(m){
   const s=m.s;let n=0;
-  return `<article class="gen-paper"><header class="gen-head"><small>الجمهورية الجزائرية الديمقراطية الشعبية — وزارة التربية الوطنية</small><h3>${esc(m.title)}</h3><p>المستوى: ${esc(s.grade)}${s.stream?' · '+esc(s.stream)+' (تصنيف مؤقت)':''} · ${termLabel(s.term)}${s.minutes?' · المدة: '+s.minutes+' دقيقة':''}${s.points?' · العلامة: '+fmt(s.points):''}</p><p class="gen-warn">نموذج تدريبي من إعداد المنصة وليس موضوعاً رسمياً.</p>${m.comp.length?`<p><b>الكفاءات المستهدفة:</b> ${m.comp.map(esc).join(' — ')}</p>`:''}</header>${m.groups.map(gr=>`<section class="gen-ex"><h4>${esc(gr.title)}${s.points?` <span class="gen-pts">(${fmt(gr.points)} ن)</span>`:''}</h4>${gr.qs.map(q=>qHtml(q,++n,!!s.points)).join('')}</section>`).join('')}</article>`;
+  return `<article class="gen-paper"><header class="gen-head"><small>الجمهورية الجزائرية الديمقراطية الشعبية — وزارة التربية الوطنية</small><h3>${esc(m.title)}</h3><p>المستوى: ${esc(s.grade)}${s.stream?' · '+esc(s.stream)+' (تصنيف مؤقت)':''} · ${termLabel(s.term)}${s.minutes?' · المدة: '+s.minutes+' دقيقة':''}${s.points?' · العلامة: '+fmt(s.points):''}</p><p class="gen-warn">نموذج تدريبي من إعداد المنصة وليس موضوعاً رسمياً.</p>${m.comp.length?`<p><b>الكفاءات المستهدفة:</b> ${m.comp.map(esc).join(' — ')}</p>`:''}</header>${m.situation?`<section class="gen-ex gen-situation"><h4>الوضعية / السياق</h4><p>${esc(m.situation)}</p></section>`:''}${m.groups.map(gr=>`<section class="gen-ex"><h4>${esc(gr.title)}${s.points?` <span class="gen-pts">(${fmt(gr.points)} ن)</span>`:''}</h4>${gr.qs.map(q=>qHtml(q,++n,!!s.points)).join('')}</section>`).join('')}</article>`;
  }
  function keyHtml(m){
   let n=0;
-  return `<article class="gen-paper gen-key"><header class="gen-head"><h3>الحل النموذجي وسلم التنقيط</h3><p>${esc(m.title)} — ${esc(m.s.grade)}</p></header>${m.groups.map(gr=>`<section class="gen-ex"><h4>${esc(gr.title)}</h4>${gr.qs.map(q=>{n++;const steps=(q.steps||[]);const sp=q.points&&steps.length?q.points/steps.length:0;return `<div class="gen-q"><b>${n}.</b> ${q.points?`<span class="gen-pts">(${fmt(q.points)} ن)</span> `:''}<b>الإجابة:</b> ${esc(q.answer||'راجع خطوات الحل')}${steps.length?`<ol>${steps.map(x=>`<li>${esc(x)}${sp?` <small>(${fmt(sp)} ن)</small>`:''}</li>`).join('')}</ol>`:''}${q.explanation?`<p><small>${esc(q.explanation)}</small></p>`:''}</div>`}).join('')}</section>`).join('')}</article>`;
+  return `<article class="gen-paper gen-key"><header class="gen-head"><h3>الحل النموذجي وسلم التنقيط</h3><p>${esc(m.title)} — ${esc(m.s.grade)}</p></header>${m.groups.map(gr=>`<section class="gen-ex"><h4>${esc(gr.title)}</h4>${gr.qs.map(q=>{n++;const steps=(q.steps||[]);const sp=q.points&&steps.length?q.points/steps.length:0;return `<div class="gen-q"><b>${n}.</b> ${q.points?`<span class="gen-pts">(${fmt(q.points)} ن)</span> `:''}<b>الإجابة:</b> ${esc(q.answer||'راجع خطوات الحل')}${steps.length?`<ol>${steps.map(x=>`<li>${esc(x)}${sp?` <small>(${fmt(sp)} ن)</small>`:''}</li>`).join('')}</ol>`:''}${q.explanation?`<p><small>${esc(q.explanation)}</small></p>`:''}</div>`}).join('')}</section>`).join('')}${Array.isArray(m.markingRubric)&&m.markingRubric.length?`<section class="gen-ex"><h4>شبكة التقييم المقترحة</h4>${m.markingRubric.map(x=>`<p>${esc(x.criterion||x.description||'معيار')} — ${fmt(Number(x.points)||0)} ن</p>`).join('')}<p><b>المجموع: ${fmt(m.markingRubric.reduce((a,x)=>a+(Number(x.points)||0),0))} ن</b></p></section>`:''}</article>`;
  }
  function showResult(m){
   const mount=$('smGeneratorResult');if(!mount)return;
   g.SM_GENERATOR.last=m;
   const cnt=m.groups.reduce((a,x)=>a+x.qs.length,0);
-  mount.innerHTML=`<div class="learning-meta"><b>${esc(m.source)} · ${cnt} سؤالاً</b><span class="pill">${esc(m.s.grade)}</span></div>${m.note?`<p class="notice">${esc(m.note)}</p>`:''}${paperHtml(m)}<details class="gen-keybox"><summary><b>إظهار الحل النموذجي وسلم التنقيط</b></summary>${keyHtml(m)}</details>${m.need>0?`<div class="generator-actions"><button class="primary-btn" onclick="SM_GENERATOR.fill()">استكمال النقص (${m.need} سؤالاً) بالذكاء الاصطناعي${aiReady()?'':' 🔒'}</button></div>`:''}<div class="generator-actions"><button class="primary-btn" onclick="SM_GENERATOR.keep()">💾 الاحتفاظ بالموضوع</button>${m.savedId?`<button class="secondary-btn danger" onclick="SM_GENERATOR.deleteSaved('${esc(m.savedId)}')">حذف الموضوع المحفوظ</button>`:``}<button class="secondary-btn" onclick="SM_GENERATOR.print('student')">طباعة نسخة التلميذ</button><button class="secondary-btn" onclick="SM_GENERATOR.print('both')">طباعة مع الحل</button><button class="secondary-btn" onclick="SM_GENERATOR.generate()">موضوع جديد</button></div>`;
+  mount.innerHTML=`<div class="learning-meta"><b>${esc(m.source)} · ${cnt} سؤالاً</b><span class="pill">${esc(m.s.grade)}</span></div>${m.reviewRequired?`<p class="notice">مسودة مولّدة بالذكاء الاصطناعي. مراجعة الأستاذ إلزامية قبل استعمالها أو اعتمادها. ${m.quality&&m.quality.rubric_status==='total_matches'?'مجموع شبكة التقييم مطابق للعلامة المطلوبة.':'شبكة التقييم تحتاج إلى مراجعة أو استكمال.'}</p>`:''}${m.note?`<p class="notice">${esc(m.note)}</p>`:''}${paperHtml(m)}<details class="gen-keybox"><summary><b>إظهار الحل النموذجي وسلم التنقيط</b></summary>${keyHtml(m)}</details>${m.need>0?`<div class="generator-actions"><button class="primary-btn" onclick="SM_GENERATOR.fill()">استكمال النقص (${m.need} سؤالاً) بالذكاء الاصطناعي${aiReady()?'':' 🔒'}</button></div>`:''}<div class="generator-actions"><button class="primary-btn" onclick="SM_GENERATOR.keep()">💾 الاحتفاظ بالموضوع</button>${m.savedId?`<button class="secondary-btn danger" onclick="SM_GENERATOR.deleteSaved('${esc(m.savedId)}')">حذف الموضوع المحفوظ</button>`:``}<button class="secondary-btn" onclick="SM_GENERATOR.print('student')">طباعة نسخة التلميذ</button><button class="secondary-btn" onclick="SM_GENERATOR.print('both')">طباعة مع الحل</button><button class="secondary-btn" onclick="SM_GENERATOR.generate()">موضوع جديد</button></div>`;
   renderSavedPapers();
   try{mount.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){}
  }
@@ -217,6 +217,33 @@
   finally{busy=false}
  }
 
+ /* ---------- integrated original-draft generation ---------- */
+ async function generateClaudeDraft(){
+  if(claudeBusy)return;
+  const mount=$('smGeneratorResult'),topic=$('smGenAiTopic');if(!mount)return;
+  const topicValue=String(topic&&topic.value||'').trim();
+  if(topicValue.length<2){say('اكتب موضوع الدرس أو المحور أولاً.');topic&&topic.focus();return}
+  const base=typeof apiBase==='function'?apiBase():'';
+  const token=ls.get('smSchoolAdminToken');
+  if(!base){mount.innerHTML='<p class="notice">يلزم ربط التطبيق بخادم المنصة لتوليد المسودة.</p>';return}
+  if(!token){mount.innerHTML='<p class="notice">توليد Claude يتطلب صلاحية الأستاذ/الإدارة. أدخل رمز الإدارة في إعدادات المعلّم الذكي، ولا تضع مفتاح Anthropic داخل التطبيق.</p>';return}
+  claudeBusy=true;mount.innerHTML='<p class="notice">جارٍ إنشاء مسودة ضمن إعدادات المولّد الحالية…</p>';
+  const task=$('smGenAiTask')?.value||'integrative';
+  const payload={task,grade:st.grade,subject:st.subject,topic:topicValue,term:Math.max(0,Number(st.term)||0),stream:st.stream||'',language:typeof lang==='string'&&['ar','fr','en'].includes(lang)?lang:'ar',difficulty:st.difficulty,question_count:task==='integrative'?Math.max(3,Math.min(5,Number(st.count)||5)):Math.max(3,Math.min(20,Number(st.count)||5)),total_points:Math.max(0,Math.min(100,Number(st.points)||20)),duration_minutes:Math.max(0,Math.min(300,Number(st.minutes)||0))};
+  try{
+   const r=await g.fetch(`${base}/api/v1/ai/claude-content`,{method:'POST',headers:{'Content-Type':'application/json','X-Admin-Token':token},body:JSON.stringify(payload)});
+   const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.detail||`HTTP ${r.status}`);
+   const draft=data.draft||{},questions=Array.isArray(draft.questions)?draft.questions:[];
+   if(!questions.length)throw new Error('لم يُرجع النموذج أسئلة قابلة للعرض.');
+   const items=questions.map((q,i)=>({ai:true,topic:topicValue,question:q.question||q.prompt||`السؤال ${i+1}`,answer:q.model_answer||q.answer||q.solution||'',steps:q.solution_steps||[],explanation:q.explanation||''}));
+   const groups=structure(items,Object.assign({},st,{points:payload.total_points}));
+   const m=model(Object.assign({},st),groups,'مسودة Claude داخل المولّد الذكي','هذه مسودة تدريبية وليست محتوى رسمياً؛ لا تُضاف تلقائياً إلى بنك التمارين.');
+   m.situation=draft.situation||'';m.reviewRequired=true;m.markingRubric=Array.isArray(draft.marking_rubric)?draft.marking_rubric:[];m.quality=draft.quality_validation||{};m.draftId=draft.id||null;
+   showResult(m);
+  }catch(e){mount.innerHTML=`<p class="notice">تعذّر إنشاء المسودة: ${esc(e&&e.message||'خطأ غير معروف')}</p>`}
+  finally{claudeBusy=false}
+ }
+
  /* ---------- generate (local) ---------- */
  function generate(){
   ensure();const mount=$('smGeneratorResult');if(!mount)return;
@@ -254,6 +281,7 @@
   <div class="gen-topics"><b>المحاور (${curTopics.length})</b>${curTopics.length?curTopics.map((t,i)=>`<label class="gen-chip"><input type="checkbox" ${sel.includes(t.name)?'checked':''} onchange="SM_GENERATOR.topic(${i},this.checked)"> ${esc(t.name)} <small>${t.n}</small></label>`).join(''):'<small>لا توجد محاور مسجلة لهذا الاختيار.</small>'}</div>
   <div class="gen-saved"><label class="gen-chip"><input type="checkbox" ${st.useSaved?'checked':''} onchange="SM_GENERATOR.set('useSaved',this.checked)"> استخدام أسئلتي المحفوظة من الذكاء الاصطناعي <small>${savedBank().filter(x=>x.grade===st.grade&&x.subject===st.subject).length}</small></label><button class="text-btn" onclick="SM_GENERATOR.clearSaved()">مسح المحفوظ</button></div>
   <div class="generator-actions"><button class="primary-btn" onclick="SM_GENERATOR.generate()">توليد من المنصة</button><button class="secondary-btn" onclick="SM_GENERATOR.ai()">توليد بالذكاء الاصطناعي${aiReady()?'':' 🔒'}</button></div>
+  <section class="gen-ai-draft"><div class="learning-meta"><b>✦ إنشاء أصلي بالذكاء الاصطناعي</b><span class="pill">داخل المولّد نفسه</span></div><p>يستخدم الطور والمادة والفصل والصعوبة والعدد والمدة والعلامة المحددة أعلاه. تُعرض النتيجة كمسودة للمراجعة ولا تُنشر في بنك التمارين.</p><div class="generator-grid"><label>نوع المحتوى<select id="smGenAiTask"><option value="integrative">وضعية إدماجية</option><option value="exercise">سلسلة تمارين</option></select></label><label>الموضوع / المحور<input id="smGenAiTopic" type="text" maxlength="500" placeholder="مثال: التناسبية أو التحولات الكيميائية"></label></div><div class="generator-actions"><button class="secondary-btn" onclick="SM_GENERATOR.claudeDraft()">إنشاء مسودة أصلية عبر Claude ✦</button></div><small>يتطلب خادم المنصة ورمز صلاحية الأستاذ/الإدارة، مع ضبط ANTHROPIC_API_KEY على الخادم فقط.</small></section>
   <details class="gen-refs" ${lastRefs.length?'open':''}><summary><b>مراجع Raji3DZ للمحاكاة (${RJ?lastRefs.length:'…'})</b></summary>${!RJ?'<small>جارٍ التحميل…</small>':lastRefs.length?lastRefs.slice(0,8).map((it,i)=>`<div class="gen-ref"><span>${esc(it.title)}${it.year?' · '+it.year:''}${it.solution?' · بحل':''}</span><span><button class="text-btn" onclick="SM_GENERATOR.openRef(${i})">فتح</button><button class="text-btn" onclick="SM_GENERATOR.ai(${i})">محاكاة بالذكاء الاصطناعي</button></span></div>`).join(''):'<small>لا توجد ملفات مرجعية مزامَنة لهذا الاختيار بعد.</small>'}<div class="generator-actions"><button class="secondary-btn" onclick="SM_GENERATOR.raji()">فتح مكتبة Raji3DZ كاملة</button></div></details>`;
  }
  function set(k,v){
@@ -278,7 +306,7 @@
  function injectStyle(){
   if(!doc||$('smGenStyle'))return;
   const s=doc.createElement('style');s.id='smGenStyle';
-  s.textContent='.sm-generator .generator-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.sm-generator label{display:flex;flex-direction:column;gap:4px;font-size:13px}.sm-generator select,.sm-generator input[type=number]{min-height:44px}.gen-topics{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.gen-topics>b{width:100%}.gen-chip{flex-direction:row!important;align-items:center;gap:6px!important;padding:8px 12px;border:1px solid var(--line,#ccd);border-radius:999px;min-height:40px}.gen-refs{margin-top:12px}.gen-ref{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line,#dde);font-size:13px}.gen-paper{padding:14px;border:1px solid var(--line,#dde);border-radius:14px;margin:10px 0;line-height:1.9}.gen-head{text-align:center;border-bottom:2px solid currentColor;margin-bottom:8px}.gen-ex h4{margin:14px 0 6px}.gen-pts{font-size:12px;opacity:.75}.gen-warn{font-size:12px;opacity:.8}.gen-q{margin:8px 0}.gen-saved-archive{margin-top:18px;padding:14px;border:1px solid var(--line,#ccd);border-radius:14px}.gen-saved-archive h3{margin:0 0 10px}.gen-saved-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line,#dde)}.gen-saved-row:last-child{border-bottom:0}.gen-saved-row small{display:block;opacity:.75;margin-top:4px}.danger{color:#b42318!important}';
+  s.textContent='.sm-generator .generator-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.sm-generator label{display:flex;flex-direction:column;gap:4px;font-size:13px}.sm-generator select,.sm-generator input[type=number]{min-height:44px}.gen-topics{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.gen-topics>b{width:100%}.gen-chip{flex-direction:row!important;align-items:center;gap:6px!important;padding:8px 12px;border:1px solid var(--line,#ccd);border-radius:999px;min-height:40px}.gen-refs{margin-top:12px}.gen-ref{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line,#dde);font-size:13px}.gen-paper{padding:14px;border:1px solid var(--line,#dde);border-radius:14px;margin:10px 0;line-height:1.9}.gen-head{text-align:center;border-bottom:2px solid currentColor;margin-bottom:8px}.gen-ex h4{margin:14px 0 6px}.gen-pts{font-size:12px;opacity:.75}.gen-warn{font-size:12px;opacity:.8}.gen-q{margin:8px 0}.gen-saved-archive{margin-top:18px;padding:14px;border:1px solid var(--line,#ccd);border-radius:14px}.gen-saved-archive h3{margin:0 0 10px}.gen-saved-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line,#dde)}.gen-saved-row:last-child{border-bottom:0}.gen-ai-draft{margin-top:16px;padding:14px;border:1px solid var(--line,#ccd);border-radius:14px;background:var(--surface-2,transparent)}.gen-ai-draft p,.gen-ai-draft small{font-size:12px;line-height:1.7}.gen-ai-draft .generator-grid{margin:10px 0}.gen-situation{border-style:dashed}.gen-saved-row small{display:block;opacity:.75;margin-top:4px}.danger{color:#b42318!important}';
   doc.head.appendChild(s);
  }
  function loadData(){
@@ -290,7 +318,7 @@
   injectStyle();loadData();setTimeout(()=>{refresh();renderSavedPapers()},0);
   return `<section class="panel sm-generator"><div class="generator-heading"><div class="generator-icon">✨</div><div><h2>المولّد الذكي</h2><p>تمارين وفروض واختبارات مع الحلول وسلم التنقيط، وفق المنهاج الجزائري 2026-2027.</p></div></div><div id="smGenForm"></div><div class="notice" style="margin-top:12px">المحتوى تدريبي من بنك المنصة، ويُنسَّق على شكل موضوع. عند نقص بنك مادة يظهر ذلك صراحة ولا يُختلق محتوى. مواضيع الذكاء الاصطناعي تحتاج تدقيق المعلم.</div><div id="smGeneratorResult" class="generator-result" aria-live="polite"></div><div id="smGenSavedPapers" class="gen-saved-archive-wrap"></div></section>`;
  }
- g.SM_GENERATOR={set,topic,generate,ai:aiGenerate,fill:aiFill,clearSaved,print:printPaper,openRef,raji,gradeChanged:()=>refresh(),keep:persistPaper,deleteSaved:deletePaper,openSaved:openSavedPaper,last:null};
+ g.SM_GENERATOR={set,topic,generate,ai:aiGenerate,fill:aiFill,claudeDraft:generateClaudeDraft,clearSaved,print:printPaper,openRef,raji,gradeChanged:()=>refresh(),keep:persistPaper,deleteSaved:deletePaper,openSaved:openSavedPaper,last:null};
  g.SM_GEN2={saveAi,savedBank,aiCall,setPaths:p=>{PATHS=p},streamsFor,setLast:x=>{lastLocal=x},st,pick,structure,poolFor,parseAI,joinPdfItems,setData:(c,r)=>{CUR=c;RJ=r},refsFor,model,paperHtml,keyHtml,ensure,applyKind};
  g.smGeneratorPage=page;
 })(typeof window!=='undefined'?window:globalThis);

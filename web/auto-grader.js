@@ -66,20 +66,56 @@
    let verdict=VERDICTS.includes(q.verdict)?q.verdict:'partial';
    let awarded=Math.min(max,Math.max(0,q4(num(q.awarded))));
    if(verdict==='unreadable'||verdict==='missing')awarded=0;
-   else verdict=max>0&&awarded>=max?'correct':awarded<=0?'wrong':'partial'; /* verdict always agrees with the points */
+   const rawCriteria=Array.isArray(q.criteria)?q.criteria:(Array.isArray(q.steps)?q.steps:[]);
+   const criteria=rawCriteria.slice(0,20).map((c,j)=>{
+    c=c||{};const cm=Math.max(0,q4(num(c.max)));
+    if(!cm)return null;
+    const ca=Math.min(cm,Math.max(0,q4(num(c.awarded))));
+    return {name:clip(c.name||c.step||`المعيار ${j+1}`,120),max:cm,awarded:ca,
+     evidence:clip(c.evidence||c.student_evidence,300),feedback:clip(c.feedback||c.comment,400)};
+   }).filter(Boolean);
+   if(criteria.length){
+    const rawMax=criteria.reduce((a,c)=>a+c.max,0),rawAward=criteria.reduce((a,c)=>a+c.awarded,0),targetMax=max;
+    let usedMax=0,usedAward=0;
+    criteria.forEach((c,j)=>{
+     c.max=j===criteria.length-1?q4(Math.max(0,targetMax-usedMax)):q4(targetMax*c.max/rawMax);
+     c.awarded=j===criteria.length-1?q4(Math.min(c.max,Math.max(0,Math.min(awarded,rawAward*(targetMax/rawMax)-usedAward)))):q4(Math.min(c.max,c.awarded*(targetMax/rawMax)));
+     usedMax+=c.max;usedAward+=c.awarded;
+    });
+    awarded=q4(criteria.reduce((a,c)=>a+c.awarded,0));
+   }
+   if(verdict==='unreadable'||verdict==='missing'){
+    awarded=0;
+    criteria.forEach(c=>c.awarded=0);
+   }else{
+    /* Preserve explicit no-answer / unreadable states; derive other labels from the final points. */
+    verdict=max>0&&awarded>=max?'correct':awarded<=0?'wrong':'partial';
+   }
    return {id:clip(q.id!=null&&q.id!==''?q.id:i+1,20),max,awarded,verdict,
     studentAnswer:clip(q.student_answer,600),
     errors:(Array.isArray(q.errors)?q.errors:[]).slice(0,6).map(e=>clip(e,400)).filter(Boolean),
-    correction:clip(q.correction,900)};
+    firstError:clip(q.first_error,400),errorType:['conceptual','method','calculation','sign','unit','notation','language','other'].includes(q.error_type)?q.error_type:'',
+    criteria,correction:clip(q.correction,900)};
   }).filter(x=>x.max>0);
   if(!items.length)throw new Error('bad-grade');
   const totalMax=q4(items.reduce((n,x)=>n+x.max,0)),total=q4(items.reduce((n,x)=>n+x.awarded,0));
   const mark=Math.min(maxMark,q4(total/totalMax*maxMark));
   const unreadable=(Array.isArray(raw.unreadable_parts)?raw.unreadable_parts:[]).slice(0,10).map(x=>clip(x,200)).filter(Boolean);
+  const visualObservations=(Array.isArray(raw.visual_observations)?raw.visual_observations:[]).slice(0,30).map((v)=>({
+   element:clip(v&&v.element,100),observedValue:clip(v&&v.observed_value,180),
+   confidence:['high','medium','low'].includes(v&&v.confidence)?v.confidence:'low',
+   evidence:clip(v&&v.evidence,220),role:clip(v&&v.role,80)
+  })).filter(v=>v.element||v.observedValue);
+  const diagramNotes=(Array.isArray(raw.diagram_notes)?raw.diagram_notes:[]).slice(0,12).map(x=>clip(x,300)).filter(Boolean);
+  const visualConflicts=(Array.isArray(raw.visual_conflicts)?raw.visual_conflicts:[]).slice(0,12).map((v)=>({
+   text:clip(v&&v.description,300),textEvidence:clip(v&&v.text_evidence,220),visualEvidence:clip(v&&v.visual_evidence,220),
+   confidence:['high','medium','low'].includes(v&&v.confidence)?v.confidence:'low'
+  })).filter(v=>v.text||v.textEvidence||v.visualEvidence);
   const confidence=['high','medium','low'].includes(raw.confidence)?raw.confidence:'medium';
+  const visualLow=visualObservations.some(v=>v.confidence==='low');
   return {items,total,totalMax,mark,maxMark,scaled:totalMax!==maxMark,
-   remarks:clip(raw.general_remarks,1500),unreadable,confidence,
-   needsReview:confidence==='low'||unreadable.length>0||items.some(x=>x.verdict==='unreadable')};
+   remarks:clip(raw.general_remarks,1500),unreadable,confidence,visualObservations,diagramNotes,visualConflicts,
+   needsReview:confidence==='low'||unreadable.length>0||visualLow||visualConflicts.length>0||items.some(x=>x.verdict==='unreadable')};
  }
 
  function buildGradingPrompt(p){
@@ -92,11 +128,12 @@
   `القواعد الصارمة:\n`+
   `1) اعتمد حصراً على ما هو مكتوب فعلاً في ورقة التلميذ وعلى الإجابة النموذجية المعطاة. لا تخترع نصاً أو قيماً أو خطوات.\n`+
   `2) امنح نقاطاً فقط لما هو ظاهر ومقروء. إذا تعذرت قراءة جزء فاجعل verdict="unreadable" وawarded=0 واذكره في unreadable_parts ولا تخمّن الرموز أو الأرقام. إذا لم يجب التلميذ فverdict="missing".\n`+
-  `3) اقبل الطرق والصيغ المختلفة المكافئة والصحيحة علمياً حتى لو خالفت صياغة الإجابة النموذجية، وامنح نقاطاً جزئية للخطوات الصحيحة. حدّد أول خطأ في كل سؤال (حسابي/منهجي/وحدات/إشارات/مفهومي/لغوي) واشرح سببه باختصار.\n`+
+  `3) اقبل الطرق والصيغ المختلفة المكافئة والصحيحة علمياً حتى لو خالفت صياغة الإجابة النموذجية. قسّم كل سؤال إلى معايير/خطوات تصحيح واضحة (criteria)، ولكل معيار حدّد max وawarded ودليل ما كتبه التلميذ وfeedback. اجعل مجموع max للمعايير مساوياً لنقاط السؤال، ومجموع awarded مساوياً للنقاط الممنوحة للسؤال. حدّد أول خطأ ومكانه ونوعه (conceptual|method|calculation|sign|unit|notation|language|other) واشرح سببه.\n`+
   `4) إذا كان سلم التنقيط موجوداً في الإجابة النموذجية فاستعمله؛ وإلا وزّع ${max} نقطة بالتساوي على الأسئلة الظاهرة. اجعل مجموع max لكل الأسئلة = ${max}. النقاط من مضاعفات 0.25.\n`+
   `5) العلامة تقديرية تكوينية وليست رسمية.\n`+
+  ((p.studentImageCount||p.modelImageCount)?`6) قبل التصحيح، حلّل الرسوم والصور المرفقة بصرياً: حدّد نوع الشكل (هندسي/بياني/علمي/جدول)، أسماء النقاط والحروف، الأرقام والوحدات، الزوايا والأطوال والعلاقات والعلامات، ومحاور المنحنى وتدرّجها. افصل بين ما تراه مباشرة وما تستنتجه. لا تستنتج الأطوال أو الزوايا من مظهر الرسم أو تناسبه؛ اعتمد القياسات المكتوبة والعلاقات المعطاة فقط. لا تخمّن الرمز المطموس أو قيمة غير مقروءة، واربط كل ملاحظة بدليل وثقة high/medium/low. إذا تعارض الرسم مع النص فاذكر التعارض ولا تحسمه بالتخمين، وسجّل كل تعارض في visual_conflicts مع دليل النص ودليل الرسم وثقة التقييم.\n`:'')+
   `أعد كائن JSON واحداً فقط، دون أي نص قبله أو بعده ودون علامات \`\`\`، بهذا الشكل بالضبط:\n`+
-  `{"questions":[{"id":"1","max":0,"awarded":0,"verdict":"correct|partial|wrong|missing|unreadable","student_answer":"ما كتبه التلميذ باختصار","errors":["الخطأ وسببه"],"correction":"التصحيح الصحيح باختصار"}],"general_remarks":"ملاحظات عامة وخطوات علاجية","unreadable_parts":["أجزاء غير مقروءة"],"confidence":"high|medium|low"}\n`+
+  `{"questions":[{"id":"1","max":0,"awarded":0,"verdict":"correct|partial|wrong|missing|unreadable","student_answer":"ما كتبه التلميذ باختصار","criteria":[{"name":"الخطوة/المعيار","max":0,"awarded":0,"evidence":"دليل من إجابة التلميذ","feedback":"سبب منح النقاط أو خصمها"}],"first_error":"موضع أول خطأ وسببه أو فارغ","error_type":"conceptual|method|calculation|sign|unit|notation|language|other","errors":["الخطأ وسببه"],"correction":"التصحيح الصحيح باختصار"}],"visual_observations":[{"element":"اسم النقطة/المحور/الرمز","observed_value":"ما يظهر فعلياً","confidence":"high|medium|low","evidence":"موضعه أو العلامة المرئية","role":"معطى/علاقة/وحدة/محور"}],"diagram_notes":["ملاحظة عن الرسم"],"visual_conflicts":[{"description":"وصف التعارض دون حسمه","text_evidence":"الدليل من نص السؤال","visual_evidence":"الدليل من الرسم","confidence":"low|medium|high"}],"general_remarks":"ملاحظات عامة وخطوات علاجية","unreadable_parts":["أجزاء غير مقروءة"],"confidence":"high|medium|low"}\n`+
   (imgs.length?imgs.join('، ')+'.\n':'')+
   (p.question?`\nنص الموضوع/السؤال:\n${clip(p.question,3000)}\n`:'')+
   (p.modelText?`\nالإجابة النموذجية (النص):\n${clip(p.modelText,9000)}\n`:'')+
@@ -135,7 +172,7 @@
  const VLABEL=()=>({correct:T('صحيح','Correct','Correct'),partial:T('جزئي','Partiel','Partial'),wrong:T('خاطئ','Faux','Wrong'),missing:T('بلا إجابة','Sans réponse','No answer'),unreadable:T('غير مقروء','Illisible','Unreadable')});
  function renderGrade(g){
   const vl=VLABEL();
-  const rows=g.items.map(x=>`<tr><td>${esc(x.id)}</td><td>${x.awarded} / ${x.max}</td><td>${ICON[x.verdict]} ${esc(vl[x.verdict])}</td><td>${x.studentAnswer?`<small>${esc(x.studentAnswer)}</small>`:''}${x.errors.length?`<ul>${x.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:''}${x.correction?`<div><b>${T('التصحيح','Correction','Correction')}:</b> ${esc(x.correction)}</div>`:''}</td></tr>`).join('');
+  const rows=g.items.map(x=>`<tr><td>${esc(x.id)}</td><td>${x.awarded} / ${x.max}</td><td>${ICON[x.verdict]} ${esc(vl[x.verdict])}</td><td>${x.studentAnswer?`<small>${esc(x.studentAnswer)}</small>`:''}${x.criteria.length?`<details><summary>${T('تفصيل الخطوات والمعايير','Détail des critères','Step-by-step rubric')} (${x.criteria.reduce((a,c)=>a+c.awarded,0)} / ${x.criteria.reduce((a,c)=>a+c.max,0)})</summary><ul>${x.criteria.map(c=>`<li><b>${esc(c.name)}</b> — ${c.awarded} / ${c.max}${c.evidence?`<div><small>${T('الدليل','Preuve','Evidence')}: ${esc(c.evidence)}</small></div>`:''}${c.feedback?`<div>${esc(c.feedback)}</div>`:''}</li>`).join('')}</ul></details>`:''}${x.firstError?`<p><b>${T('أول خطأ','Première erreur','First error')}:</b> ${esc(x.firstError)}${x.errorType?` <small>(${esc(x.errorType)})</small>`:''}</p>`:''}${x.errors.length?`<ul>${x.errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>`:''}${x.correction?`<div><b>${T('التصحيح','Correction','Correction')}:</b> ${esc(x.correction)}</div>`:''}</td></tr>`).join('');
   const warns=[];
   if(g.needsReview)warns.push(T('بعض أجزاء الورقة غير واضحة أو ثقة النموذج منخفضة؛ العلامة مؤقتة وتحتاج مراجعة الأستاذ.','Certaines parties sont peu lisibles ou la confiance est faible : note provisoire, à vérifier par l’enseignant.','Some parts are unclear or confidence is low: provisional mark, teacher review needed.'));
   if(g.scaled)warns.push(T(`مجموع نقاط الأسئلة (${g.totalMax}) لا يساوي ${g.maxMark}؛ حُوِّلت العلامة إلى ${g.maxMark}.`,`Le total des questions (${g.totalMax}) ≠ ${g.maxMark} : note ramenée sur ${g.maxMark}.`,`Question points total (${g.totalMax}) ≠ ${g.maxMark}: mark rescaled to ${g.maxMark}.`));
@@ -144,6 +181,9 @@
    `<p><small>${T('علامة تكوينية غير رسمية. تُحسب من نقاط الأسئلة أدناه.','Note formative non officielle, calculée à partir des points ci-dessous.','Unofficial formative mark computed from the per-question points below.')}</small></p>`+
    warns.map(w=>`<p class="notice">⚠️ ${esc(w)}</p>`).join('')+
    `<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>#</th><th>${T('النقاط','Points','Points')}</th><th>${T('الحكم','Verdict','Verdict')}</th><th>${T('الأخطاء والتصحيح','Erreurs et correction','Errors and correction')}</th></tr></thead><tbody>${rows}</tbody></table></div>`+
+   (g.visualObservations&&g.visualObservations.length?`<section class="visual-observation-review"><h4>${T('قراءة الرسم والصورة','Lecture du schéma et de l’image','Diagram and image observations')}</h4><ul>${g.visualObservations.map(v=>`<li><b>${esc(v.element)}</b>: ${esc(v.observedValue)} <small>(${esc(v.confidence)})</small>${v.role?` — ${esc(v.role)}`:''}${v.evidence?`<div><small>${T('الدليل المرئي','Indice visuel','Visual evidence')}: ${esc(v.evidence)}</small></div>`:''}</li>`).join('')}</ul></section>`:'')+
+   (g.diagramNotes&&g.diagramNotes.length?`<p><b>${T('ملاحظات الرسم','Notes sur le schéma','Diagram notes')}:</b> ${g.diagramNotes.map(esc).join(' · ')}</p>`:'')+
+   (g.visualConflicts&&g.visualConflicts.length?`<section class=\"visual-conflict-review notice\"><h4>${T('تعارضات تحتاج مراجعة الأستاذ','Conflits à vérifier par l’enseignant','Conflicts requiring teacher review')}</h4><ul>${g.visualConflicts.map(v=>`<li>${esc(v.text)} <small>(${esc(v.confidence)})</small>${v.textEvidence?`<div>${T('دليل النص','Preuve du texte','Text evidence')}: ${esc(v.textEvidence)}</div>`:''}${v.visualEvidence?`<div>${T('دليل الرسم','Preuve du schéma','Diagram evidence')}: ${esc(v.visualEvidence)}</div>`:''}</li>`).join('')}</ul></section>`:'')+
    (g.unreadable.length?`<p><b>${T('أجزاء غير مقروءة','Parties illisibles','Unreadable parts')}:</b> ${g.unreadable.map(esc).join('، ')}</p>`:'')+
    (g.remarks?`<p style="white-space:pre-wrap"><b>${T('ملاحظات وخطوات علاجية','Remarques et remédiation','Remarks and next steps')}:</b> ${esc(g.remarks)}</p>`:'')+`</article>`;
  }

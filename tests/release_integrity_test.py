@@ -4,7 +4,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = "2.9.1"
+FRONTEND_EXPECTED = "2.9.19"
+BACKEND_EXPECTED = "2.9.19"
 
 def run():
     package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
@@ -14,13 +15,13 @@ def run():
     app = (ROOT / "web/app.js").read_text(encoding="utf-8")
     manifest = json.loads((ROOT / "web/manifest.webmanifest").read_text(encoding="utf-8"))
 
-    assert package["version"] == EXPECTED, package["version"]
+    assert package["version"] == FRONTEND_EXPECTED, package["version"]
     capacitor = json.loads((ROOT / "capacitor.config.json").read_text(encoding="utf-8"))
     assert capacitor["appName"] == "SM éducation", "Capacitor display name is out of sync"
-    assert f'version="{EXPECTED}"' in backend, "FastAPI version is out of sync"
-    assert f'"version": "{EXPECTED}"' in backend, "API response version is out of sync"
-    assert readme.startswith(f"# SM éducation v{EXPECTED}"), "README title is out of sync"
-    assert f"sm-school-ai-v{EXPECTED}-shell-r1" in sw, "PWA cache key is out of sync"
+    assert f'version="{BACKEND_EXPECTED}"' in backend, "FastAPI version is out of sync"
+    assert f'"version": "{BACKEND_EXPECTED}"' in backend, "API response version is out of sync"
+    assert readme.startswith(f"# SM éducation v{FRONTEND_EXPECTED}"), "README title is out of sync"
+    assert f"sm-school-ai-v{FRONTEND_EXPECTED}-shell-r1" in sw, "PWA cache key is out of sync"
     index = (ROOT / "web/index.html").read_text(encoding="utf-8")
     runtime = (ROOT / "web/platform-enhancements.js").read_text(encoding="utf-8")
     assert 'src="platform-enhancements.js"' in index and "./platform-enhancements.js" in sw, "Runtime status module is not wired"
@@ -59,7 +60,7 @@ def run():
     assert "AES-256-GCM" in sync and "PBKDF2-SHA256-310000" in sync, "Client-side encrypted transfer is missing"
     assert '@app.post("/api/v1/parents/sync/create")' in backend and '@app.post("/api/v1/parents/sync/redeem")' in backend, "Parent sync endpoints are missing"
     assert (ROOT / "tests/parent_sync_test.py").exists() and (ROOT / "tests/parent_sync_ui_test.js").exists(), "Parent sync regression tests are missing"
-    print(f"PASS: release metadata, long-term learning memory, adaptive learning engine and retained integrations are pinned to v{EXPECTED}")
+    print(f"PASS: release metadata, long-term learning memory, adaptive learning engine and retained integrations are frontend v{FRONTEND_EXPECTED} and backend API v{BACKEND_EXPECTED}")
 
 if __name__ == "__main__":
     run()

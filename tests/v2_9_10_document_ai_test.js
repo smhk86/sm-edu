@@ -1,0 +1,18 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const teacher=fs.readFileSync('web/smart-teacher.js','utf8');
+assert(teacher.includes('smartTeacherDocumentMode'));
+assert(teacher.includes('value="extract"'));
+assert(teacher.includes('value="solve"'));
+assert(teacher.includes('value="correct"'));
+assert(teacher.includes("documentMode==='correct'&&!answer"),'only correction mode requires student answer');
+assert(teacher.includes('استخرج محتوى التمرين من الملف بدقة'));
+assert(teacher.includes('حل كل سؤال خطوة بخطوة'));
+assert(teacher.includes('صحّح إجابة التلميذ'));
+assert(teacher.includes('لا تخمّن الرموز أو القياسات'));
+assert(teacher.includes('vision_images:visionImages'));
+const html=fs.readFileSync('web/index.html','utf8'),sw=fs.readFileSync('web/sw.js','utf8');
+assert(html.includes('v2-9-10.js')&&html.includes('v2.9.19')); 
+assert(sw.includes('./v2-9-10.js')&&sw.includes('v2.9.19-shell')); 
+const w={};vm.runInNewContext(fs.readFileSync('web/v2-9-10.js','utf8'),{window:w});
+assert.equal(w.SM_EDUCATION_RELEASE.version,'2.9.10');
+console.log('PASS: document extraction, stepwise solving, optional answer for extract/solve, vision handoff and release wiring');

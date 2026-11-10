@@ -11,7 +11,7 @@ os.environ["ALLOW_OPEN_REVIEW_API"] = "1"
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 from fastapi.testclient import TestClient
-from app.main import app, _segment_curriculum_evidence
+from app.main import app, _segment_curriculum_evidence, _select_balanced_exam_questions, _normalize_difficulty, _build_question_rubric
 sys.path.insert(0, str(ROOT / "tools"))
 from validate_curriculum_evidence import validate_row
 
@@ -74,6 +74,33 @@ class CurriculumApiTests(unittest.TestCase):
             self.assertEqual(saved.json()["candidate"]["official_alignment"], "not_verified")
             self.assertFalse(saved.json()["official_registry_updated"])
 
+
+    def test_exam_selection_skips_duplicate_and_unanswerable_questions(self):
+        rows = [
+            {"id": "a", "question": "Q1", "solution": "A1", "topic": "T1", "cognitive_process": "recall"},
+            {"id": "a", "question": "Duplicate", "solution": "A", "topic": "T2"},
+            {"id": "b", "question": "Q2", "solution": "A2", "topic": "T2", "cognitive_process": "reason"},
+            {"id": "c", "question": "No answer", "topic": "T3"},
+            {"id": "d", "question": "Q4", "choices": ["x", "y"], "answer_index": 1, "topic": "T3", "cognitive_process": "understand"},
+        ]
+        selected = _select_balanced_exam_questions(rows, 3)
+        self.assertEqual(len(selected), 3)
+        self.assertEqual(len({x["id"] for x in selected}), 3)
+        self.assertNotIn("c", {x["id"] for x in selected})
+        self.assertNotIn("Duplicate", {x["question"] for x in selected})
+
+    def test_localized_difficulty_and_exact_rubric_points(self):
+        self.assertEqual(_normalize_difficulty("مبتدئ"), "easy")
+        self.assertEqual(_normalize_difficulty("متوسط"), "medium")
+        self.assertEqual(_normalize_difficulty("متقدم"), "hard")
+        self.assertEqual(_normalize_difficulty("difficile"), "hard")
+        rubric = _build_question_rubric({"solution_steps": ["Step one", "Step two", "Step three"]}, 6.67)
+        self.assertEqual(sum(x["points"] for x in rubric), 6.67)
+        self.assertEqual([x["points"] for x in rubric], [2.23, 2.22, 2.22])
+        fallback = _build_question_rubric({"solution": "Correct answer"}, 5)
+        self.assertEqual(len(fallback), 1)
+        self.assertEqual(fallback[0]["points"], 5)
+
     def test_exam_builder_and_guardrails(self):
         bank = json.loads((ROOT / "web/data/exercise-bank-2026-2027.json").read_text(encoding="utf-8"))["records"]
         groups = defaultdict(list)
@@ -87,6 +114,22 @@ class CurriculumApiTests(unittest.TestCase):
         self.assertEqual(len(paper["student_version"]["questions"]), 3)
         self.assertEqual(sum(x["points"] for x in paper["teacher_version"]["answer_key"]), 20)
         self.assertFalse(paper["assessment_blueprint"]["official_competency_alignment_verified"])
+        self.assertEqual(paper["quality_check"]["status"], "passed")
+        self.assertTrue(paper["quality_check"]["unique_question_ids"])
+        self.assertTrue(paper["quality_check"]["all_questions_answerable"])
+        self.assertEqual(paper["assessment_blueprint"]["selection_method"], "balanced_topic_and_cognitive_process_round_robin")
+        self.assertTrue(paper["assessment_blueprint"]["topic_distribution"])
+        self.assertEqual(sum(x["points"] for row in paper["teacher_version"]["marking_scheme"] for x in row["criteria"]), 20)
+        easy_groups = defaultdict(list)
+        for item in bank:
+            if _normalize_difficulty(item.get("difficulty")) == "easy":
+                easy_groups[(item["grade"], item["subject"], item["term"], item.get("language", "ar"))].append(item)
+        easy_key = next((k for k, values in easy_groups.items() if len(values) >= 3), None)
+        if easy_key:
+            easy_response = self.client.post("/api/v1/learning/exam-builder", json={"grade": easy_key[0], "subject": easy_key[1], "term": easy_key[2], "question_count": 3, "language": easy_key[3], "difficulty": "easy"})
+            self.assertEqual(easy_response.status_code, 200)
+            easy_paper = easy_response.json()["paper"]
+            self.assertEqual(easy_paper["difficulty_distribution"]["easy"], 3)
         advanced_payload = dict(payload, duration_minutes=75, total_points=30, difficulty="mixed", exclude_question_ids=[])
         advanced = self.client.post("/api/v1/learning/exam-builder", json=advanced_payload)
         self.assertEqual(advanced.status_code, 200)

@@ -1,0 +1,18 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const root=process.cwd();
+const backend=fs.readFileSync(root+'/backend/app/main.py','utf8');
+const app=fs.readFileSync(root+'/web/app.js','utf8');
+const html=fs.readFileSync(root+'/web/index.html','utf8');
+const sw=fs.readFileSync(root+'/web/sw.js','utf8');
+const pkg=JSON.parse(fs.readFileSync(root+'/package.json','utf8'));
+assert.equal(pkg.version,'2.9.19');
+assert(backend.includes('def _validate_claude_educational_draft(draft, payload):'));
+assert(backend.includes('all_questions_have_model_answers'));
+assert(backend.includes('published_to_bank": False'));
+assert(app.includes('function renderClaudeDraftPreview(draft)'));
+assert(app.includes('teacher review required')||app.includes('تتطلب مراجعة الأستاذ'));
+assert(html.includes('v2-9-14.js')&&html.includes('v2.9.19'));
+assert(sw.includes('./v2-9-14.js')&&sw.includes('v2.9.19-shell'));
+const w={};vm.runInNewContext(fs.readFileSync(root+'/web/v2-9-14.js','utf8'),{window:w});
+assert.equal(w.SM_EDUCATION_RELEASE.version,'2.9.14');
+console.log('PASS: validated AI draft release wiring and teacher review preview');
