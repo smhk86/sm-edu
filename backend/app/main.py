@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from . import parent_auth
 
 load_dotenv()
-app = FastAPI(title="SM éducation API", version="2.9.19")
+app = FastAPI(title="SM éducation API", version="2.9.38")
 parent_auth.init_db()
 allowed_origins = [item.strip() for item in os.getenv("CORS_ORIGINS", "http://localhost:8080,http://127.0.0.1:8080,https://localhost,capacitor://localhost").split(",") if item.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=allowed_origins, allow_credentials=False, allow_methods=["GET", "POST", "PUT"], allow_headers=["Content-Type", "Authorization", "X-Admin-Token"])
@@ -77,6 +77,7 @@ class TutorRequest(BaseModel):
     subject: str = Field(default="عام", max_length=100)
     learner_name: str = Field(default="", max_length=50)
     learning_context: str = Field(default="", max_length=1200)
+    book_context: str = Field(default="", max_length=18000)
 
 
 class ClaudeContentRequest(BaseModel):
@@ -188,11 +189,11 @@ async def parent_sync_redeem(payload: ParentSyncRedeemRequest, request: Request)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "app": "SM éducation", "version": "2.9.19"}
+    return {"status": "ok", "app": "SM éducation", "version": "2.9.38"}
 
 @app.get("/api/v1/catalog")
 async def catalog():
-    return {"version": "2.9.19", "curriculum": "Algeria", "academic_year": "2026-2027", "levels": CATALOG}
+    return {"version": "2.9.38", "curriculum": "Algeria", "academic_year": "2026-2027", "levels": CATALOG}
 
 @app.get("/api/v1/learning/structure")
 async def learning_structure():

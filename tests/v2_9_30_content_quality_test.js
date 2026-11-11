@@ -1,0 +1,13 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const quality=JSON.parse(fs.readFileSync('web/data/teacher-content-quality-2026-2027.json','utf8'));
+const deep=JSON.parse(fs.readFileSync('web/data/teacher-deep-content-2026-2027.json','utf8'));
+assert.equal(quality.records.length,1250);
+assert.equal(new Set(quality.records.map(x=>x.record_id)).size,quality.records.length,'review IDs must be unique');
+assert(quality.records.every(x=>x.record_id&&x.initial_status==='draft'&&x.officially_verified===false));
+assert.equal(quality.summary.teacher_reviewed,0);assert.equal(quality.summary.officially_verified,0);
+assert(quality.summary.records_with_flags>0);assert(quality.records.some(x=>x.flags.some(f=>f.code==='generic_example_question')));
+assert(quality.records.every(x=>deep.records.some(d=>d.lesson_id===x.record_id)));
+const store={};const localStorage={getItem:k=>store[k]||null,setItem:(k,v)=>{store[k]=v}};
+const g={fetch:async()=>({ok:true,json:async()=>quality}),localStorage,SM_EDUCATION_RELEASE:{},smTeacherDeepContentContext:()=> 'deep context',smTeacherDeepContentSearch:()=>[{lesson_id:quality.records[0].record_id}],smTeacherBuildExamPrompt:()=> 'exam prompt',smTeacherBuildReviewContext:()=> 'review prompt',smartTeacherPage:()=>'<main>teacher</main>',document:null};
+vm.runInNewContext(fs.readFileSync('web/v2-9-30.js','utf8'),{window:g,Promise,Number,String,Math,Date});
+(async()=>{await g.smTeacherContentQualityReady;assert.equal(g.SM_EDUCATION_RELEASE.version,'2.9.30');assert(g.smartTeacherPage().includes('teacherQualityReview'));assert(g.smTeacherDeepContentContext({}).includes('لا توجد سجلات مثبتة المطابقة الوزارية'));assert(g.smTeacherBuildExamPrompt({}).includes('لا تقدّم المثال أو خطواته كحل نموذجي'));assert(g.smTeacherBuildReviewContext({}).includes('علامة المراجعة المحلية لا تثبت المطابقة الوزارية'));const id=quality.records[0].record_id;assert.equal(g.smTeacherContentReviewStatus(id),'draft');assert.equal(g.smTeacherSetContentReviewed(id,true),true);assert.equal(g.smTeacherContentReviewStatus(id),'teacher_reviewed');assert.equal(g.smTeacherContentQualityCounts().reviewed,1);assert.equal(g.smTeacherSetContentReviewed(id,false),true);assert.equal(g.smTeacherContentReviewStatus(id),'draft');console.log(`PASS: ${quality.records.length} unique draft records, automated flags, local teacher-review lifecycle, prompt guardrails and release integration`);})().catch(e=>{console.error(e);process.exit(1)});

@@ -1,4 +1,4 @@
-// v2.9.19 — stepwise formative grading and release wiring.
+// v2.9.38 — stepwise formative grading and release wiring.
 const fs=require('fs'),path=require('path'),assert=require('assert'),vm=require('vm');
 const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const els={};const ctx={console,Response,lang:'ar',grade:'الثانية متوسط',toast(){},document:{getElementById:id=>els[id]||null},SM_GROQ:{enabled:()=>true},apiBase:()=>''};
@@ -35,11 +35,11 @@ assert(!html.includes('<script'));
 const prompt=t.buildGradingPrompt({subject:'رياضيات',grade:'الثانية متوسط',maxMark:20,modelText:'x=3',studentText:'x=4'});
 assert(prompt.includes('criteria')&&prompt.includes('first_error')&&prompt.includes('error_type'));
 const pkg=JSON.parse(read('package.json')),main=read('backend/app/main.py'),htmlApp=read('web/index.html'),sw=read('web/sw.js');
-assert.equal(pkg.version,'2.9.19');assert(main.includes('version="2.9.19"'));
-assert(htmlApp.includes('v2.9.19')&&htmlApp.includes('v2-9-16.js'));
+assert.equal(pkg.version,'2.9.38');assert(main.includes('version="2.9.38"'));
+assert(htmlApp.includes('v2.9.38')&&htmlApp.includes('v2-9-16.js'));
 assert(htmlApp.includes('v2-9-17.js'));
 assert(sw.includes('./v2-9-17.js'));
-assert(sw.includes('sm-school-ai-v2.9.19-shell-r1')&&sw.includes('./v2-9-16.js'));
+assert(sw.includes('sm-school-ai-v2.9.38-shell-r1')&&sw.includes('./v2-9-16.js'));
 const release={};vm.runInNewContext(read('web/v2-9-16.js'),{window:release});
 assert.equal(release.SM_EDUCATION_RELEASE.version,'2.9.16');
-console.log('PASS: v2.9.19 stepwise rubric, point normalization, missing/unreadable verdicts, error localization, rendering and release wiring');
+console.log('PASS: v2.9.38 stepwise rubric, point normalization, missing/unreadable verdicts, error localization, rendering and release wiring');

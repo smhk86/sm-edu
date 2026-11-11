@@ -1,4 +1,4 @@
-// v2.9.19 — diagram-aware image grading and confidence safeguards.
+// v2.9.38 — diagram-aware image grading and confidence safeguards.
 const fs=require('fs'),path=require('path'),assert=require('assert'),vm=require('vm');
 const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 const ctx={console,Response,lang:'ar',grade:'الثانية متوسط',toast(){},document:{getElementById(){return null}},SM_GROQ:{enabled:()=>true}};
@@ -31,9 +31,9 @@ assert(smart.includes('maxSide=2000'));
 assert(smart.includes('2000/Math.max(page.view[2],page.view[3])'));
 assert(smart.includes("toDataURL('image/jpeg',0.84)"));
 const pkg=JSON.parse(read('package.json')),main=read('backend/app/main.py'),index=read('web/index.html'),sw=read('web/sw.js');
-assert.equal(pkg.version,'2.9.19');assert(main.includes('version="2.9.19"'));
-assert(index.includes('v2-9-17.js')&&index.includes('v2.9.19'));
-assert(sw.includes('sm-school-ai-v2.9.19-shell-r1')&&sw.includes('./v2-9-17.js'));
+assert.equal(pkg.version,'2.9.38');assert(main.includes('version="2.9.38"'));
+assert(index.includes('v2-9-17.js')&&index.includes('v2.9.38'));
+assert(sw.includes('sm-school-ai-v2.9.38-shell-r1')&&sw.includes('./v2-9-17.js'));
 const release={};vm.runInNewContext(read('web/v2-9-17.js'),{window:release});
 assert.equal(release.SM_EDUCATION_RELEASE.version,'2.9.17');
-console.log('PASS: v2.9.19 diagram-aware vision prompt, structured observations, confidence escalation, high-resolution image preparation and release wiring');
+console.log('PASS: v2.9.38 diagram-aware vision prompt, structured observations, confidence escalation, high-resolution image preparation and release wiring');

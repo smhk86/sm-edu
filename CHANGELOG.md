@@ -1,3 +1,33 @@
+## v2.9.35 — Smart Teacher textbook knowledge library
+
+- Added a textbook catalogue panel inside Smart Teacher, grouped by the active grade and available subjects.
+- Added in-app access to the official ONPS website; no unverified direct PDF URLs are fabricated.
+- Added local PDF import and text extraction (up to 18 pages / 18,000 characters) into device-only IndexedDB storage.
+- Added explicit consent before imported textbook text is sent with a Smart Teacher request; Groq prompts now treat it as user-provided reference material and avoid unsupported official claims.
+- Scanned/image-only PDFs are identified as requiring OCR; no false claim of full-book ingestion.
+
+## [2.9.33] - 2026-11-11
+
+- إضافة محرك تدقيق بنيوي/تحريري لقاعدة المعلم الذكي يفحص الموسوعة والمحتوى العميق وبنك التمارين وسجلات المعرفة.
+- ربط أمثلة الدروس ومصادر المحتوى العميق بمراجع بنك التمارين، ورصد النقص والتكرار والاختلافات المحتملة التي تستحق مراجعة الأستاذ.
+- إضافة لوحة نتائج داخل المعلم الذكي مع تصفية حسب الأولوية والبحث في اسم الدرس ونوع الملاحظة.
+- توضيح أن إشارات التدقيق ليست إثباتاً لخطأ علمي، وأن المطابقة الوزارية غير مثبتة.
+- تحديث إصدار الواجهة والخادم وذاكرة PWA دون تغيير مسارات API أو منطق الخادم التشغيلي.
+
+## [2.9.29] - 2026-11-11
+
+- إضافة محتوى تعليمي عميق لـ 1,250 بطاقة درس: شرح منظم، قاعدة/فكرة محورية، مثال تطبيقي جديد بصيغة موجهة، خريطة ذهنية، وثلاثة أنشطة علاجية.
+- إضافة 60 بطاقة تجربة علمية آمنة منخفضة المخاطر حيث تتوافر موضوعات مناسبة، مع خطوات وملاحظات واستنتاجات وتنبيهات سلامة.
+- ربط المكتبة بسياق المعلم عند إعداد الاختبارات ومراجعة الأعمال، وإضافة واجهة بحث داخل صفحة المعلم.
+- وسم المحتوى بوضوح على أنه مسودات مشتقة من بنك المنصة وغير معتمدة كتدرجات وزارية.
+
+## [2.9.28] - 2026-11-11
+
+- إضافة موسوعة دروس منظمة تضم 1,250 وحدة درس مرتبطة بـ1,581 تمريناً من بنك المنصة.
+- فهرسة الشروح وخطوات الحل والأمثلة التدريبية وأهداف التعلم المتاحة لكل وحدة.
+- دمج استرجاع الموسوعة في سياق إنشاء الاختبارات ومراجعة أعمال التلاميذ، مع ضوابط تمنع نسبة المحتوى إلى الوزارة دون مصدر رسمي.
+- إضافة اختبار تكامل خاص بالموسوعة وتحديث موارد التخزين المؤقت وإصدار التطبيق.
+
 ## [2.9.16] - 2026-11-10
 
 - تطوير محرك التصحيح الموجود: تحليل معايير وخطوات الحل، وتحديد أول خطأ وتصنيفه.
@@ -215,3 +245,65 @@
 ## 2.9.19
 - Structured visual/text conflict reporting in image-based grading.
 - Conflicts with separate text and diagram evidence are shown to teachers and force manual review.
+
+
+## 2.9.21
+- Smart Teacher uses the exact-grade/subject curated exercise bank when valid questions exist.
+- Adaptive sessions use learner-scoped results from the last 30 days and avoid assigning a level with fewer than five answers.
+- Repeated topic errors prioritize matching tagged exercises; learning-memory snapshots refresh after assessment.
+
+## 2.9.20
+- دمج محادثة المساعد التعليمي وسجلها الخاص بكل تلميذ داخل صفحة المعلم الذكي، مع إبقاء مسار API والردود المحلية الاحتياطية.
+- إزالة مدخل المساعد الذكي من القائمة الرئيسية والتنقل السفلي، وتحويل الروابط القديمة `#tutor` إلى المعلم الذكي.
+- تجميع إنشاء الاختبارات وتحليل PDF وDOCX والصور والتصحيح الآلي ضمن أدوات إضافية قابلة للفتح عند الحاجة لتبسيط الشاشة الأساسية.
+- تحديث إصدار التطبيق والخادم وذاكرة التخزين المؤقت وإضافة اختبار انحدار للدمج.
+
+## v2.9.24 — Evidence-based topic diagnosis
+- Added per-topic session diagnosis from tagged exercise-bank questions.
+- Persisted incorrect-answer evidence locally per learner and subject with a bounded history.
+- Added targeted remedial sessions using only existing matching bank items.
+- Added conservative explanatory language to avoid presenting a short quiz as a definitive diagnosis.
+- Updated frontend/backend release metadata and service-worker cache/assets.
+
+
+## v2.9.25 — Longitudinal learning progress
+- Added learner-isolated comparison of saved learning snapshots across different calendar days.
+- Shows overall accuracy change in percentage points and per-subject changes when comparable evidence exists.
+- Explicitly withholds trend claims when only one snapshot exists, snapshots are from the same day, or accuracy evidence is missing.
+- Added focused regression coverage and updated release metadata.
+
+
+## [2.9.27] - 2026-11-11
+### Added
+- Expanded Smart Teacher local knowledge index with 948 grade/subject/term/topic records derived from the platform exercise bank, practice exams and integrative assessments.
+- Context retrieval for exam generation and document-based correction, including worked examples, answer explanations and solution steps.
+- Evidence labels and safeguards against presenting platform-authored material as officially verified curriculum content.
+
+
+## v2.9.31 — Teacher content quality gate
+- Added an automated screening report for all 1,250 deep-content lesson records, flagging generic example prompts, weak answers/rules, insufficient solution steps, and incomplete experiment safety fields.
+- Added a teacher review queue in the Smart Teacher page with local per-device review markers; these markers are explicitly not official curriculum verification.
+- Added prompt guardrails that distinguish drafts, locally teacher-reviewed records, and official verification; no record is auto-approved.
+- Added reproducible quality-audit builder and regression tests; added the audit report to offline cache assets.
+
+
+## [2.9.32] - 2026-11-11
+### Added
+- Evidence-aware concept graph for 1,250 Smart Teacher lesson records.
+- 724 title/topic terms and 776 structural or lexical candidate relations.
+- Searchable related-lesson suggestions and graph context for teaching, review and exam prompts.
+- Coverage summary across 105 grade/subject groups and one human-review divergence candidate.
+### Guardrails
+- No prerequisite or official sequence is inferred from lexical overlap.
+- Coverage counts describe the platform database, not completeness against the Ministry curriculum.
+- No backend API behavior was changed.
+### Validation
+- Full npm test suite passed, including the new graph regression test.
+
+## [2.9.34] - 2026-11-11
+
+- إضافة فهرس استرجاع موحد لقاعدة المعلم الذكي يربط 1,250 درساً بمفردات البحث والتمارين والمحتوى العميق وسجلات المعرفة.
+- بناء الفهرس بصورة حتمية مع بصمات SHA-256 للمصادر، ومطابقة سجلات المعرفة بالاسم والمرحلة والمادة والفصل فقط دون تخمين الروابط.
+- إضافة البحث الموحد داخل صفحة المعلم الذكي ودمج نتائج الاسترجاع في سياق مراجعة الإجابات وإعداد الاختبارات.
+- إضافة اختبارات سلامة الإحالات والفهرس، وتحديث الواجهة وذاكرة PWA وإصدار API دون تغيير مسارات API أو منطق الخادم التشغيلي.
+- التأكيد أن المطابقة اللفظية أداة استرجاع وليست إثباتاً لصحة علمية أو اعتماد وزاري.

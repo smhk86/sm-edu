@@ -1,0 +1,2 @@
+/* SM EDUCATION v2.9.22 — unified smart-teacher workspace. */
+(function(root){'use strict';root.SM_EDUCATION_RELEASE=root.SM_EDUCATION_RELEASE||{};root.SM_EDUCATION_RELEASE.version='2.9.22';root.SM_EDUCATION_RELEASE.features=Object.assign({},root.SM_EDUCATION_RELEASE.features||{},{unifiedSmartTeacher:true,legacyTutorRouteRedirect:true,advancedTeacherToolsCollapsible:true,learnerScopedTutorHistory:true});})(window);

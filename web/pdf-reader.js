@@ -92,6 +92,16 @@
   await show(mode0);
  }
 
+ async function readAllPages(blob,maxChars){
+  const pdf=await open(blob),pageTexts=[];let chars=0;
+  for(let n=1;n<=pdf.numPages;n++){
+   const t=itemsToText((await (await pdf.getPage(n)).getTextContent()).items);
+   if(t){const remaining=Math.max(0,(maxChars||1200000)-chars);const clipped=t.slice(0,remaining);pageTexts.push({page:n,text:clipped});chars+=clipped.length}
+   else pageTexts.push({page:n,text:''});
+   if(chars>=(maxChars||1200000))break;
+  }
+  return {pageTexts,pages:pdf.numPages,chars};
+ }
  async function readText(blob,maxPages,maxChars){
   const pdf=await open(blob),out=[];
   for(let n=1;n<=Math.min(pdf.numPages,maxPages||18);n++){

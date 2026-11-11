@@ -1,0 +1,16 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const books=fs.readFileSync('web/smart-teacher-books.js','utf8');
+const teacher=fs.readFileSync('web/smart-teacher.js','utf8');
+const app=fs.readFileSync('web/app.js','utf8');
+const groq=fs.readFileSync('web/groq-direct.js','utf8');
+const backend=fs.readFileSync('backend/app/main.py','utf8');
+assert(books.includes("https://www.onps.dz/"),'official ONPS source is present');
+assert(books.includes('SM_PDF.readAllPages(file,MAX_TEXT)'),'PDF text extraction is bounded');
+assert(books.includes("if(!document.getElementById('smTbAiConsent')?.checked)return ''"),'AI sharing requires explicit consent');
+assert(books.includes('indexedDB.open(DB,2)'),'imported text persists in IndexedDB');
+assert(!/https?:\/\/[^'"` ]+\.pdf/i.test(books),'catalogue does not hard-code direct PDF links');
+assert(teacher.includes('SM_TEACHER_BOOKS.panelHtml()'),'book library is integrated in Smart Teacher');
+assert(app.includes('book_context:bookContext'),'book text is passed with the tutor request only after consent');
+assert(groq.includes('TEXTBOOK EXCERPT')&&groq.includes('user-provided reference material'),'Groq prompt uses book context with source caution');
+assert(backend.includes('book_context: str = Field(default="", max_length=18000)'),'backend accepts bounded book context');
+console.log('v2.9.35 smart teacher books tests: PASS');

@@ -4,8 +4,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_EXPECTED = "2.9.19"
-BACKEND_EXPECTED = "2.9.19"
+FRONTEND_EXPECTED = "2.9.38"
+BACKEND_EXPECTED = "2.9.38"
 
 def run():
     package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
@@ -22,7 +22,28 @@ def run():
     assert f'"version": "{BACKEND_EXPECTED}"' in backend, "API response version is out of sync"
     assert readme.startswith(f"# SM éducation v{FRONTEND_EXPECTED}"), "README title is out of sync"
     assert f"sm-school-ai-v{FRONTEND_EXPECTED}-shell-r1" in sw, "PWA cache key is out of sync"
+    assert "v2-9-26.js" in (ROOT / "web/index.html").read_text(encoding="utf-8"), "v2.9.38 parent comparison module is not loaded"
+    assert "parentMonthlyComparison:true" in (ROOT / "web/v2-9-26-marker.js").read_text(encoding="utf-8"), "v2.9.38 feature metadata is missing"
+    assert "v2-9-27.js" in (ROOT / "web/index.html").read_text(encoding="utf-8"), "v2.9.38 Smart Teacher knowledge module is not loaded"
+    assert "teacher-knowledge-2026-2027.json" in sw, "Smart Teacher knowledge database is not cached"
     index = (ROOT / "web/index.html").read_text(encoding="utf-8")
+    assert "v2-9-28.js" in index, "v2.9.38 lesson encyclopedia module is not loaded"
+    assert "teacher-encyclopedia-2026-2027.json" in sw, "Smart Teacher encyclopedia is not cached"
+    assert "teacher-deep-content-2026-2027.json" in sw, "Deep teacher content is not cached"
+    assert "./v2-9-29.js" in sw, "Deep teacher content module is not cached"
+    assert "v2-9-29.js" in index, "Deep teacher content module is not loaded"
+    assert "v2-9-30.js" in index, "Teacher content quality review module is not loaded"
+    assert "./v2-9-30.js" in sw, "Teacher content quality review module is not cached"
+    assert "teacher-content-quality-2026-2027.json" in sw, "Teacher content quality audit is not cached"
+    assert "v2-9-31.js" in index and "./v2-9-31.js" in sw, "Teacher knowledge traceability module is not wired"
+    assert "teacher-knowledge-integrity-2026-2027.json" in sw, "Teacher knowledge integrity index is not cached"
+    assert "v2-9-32.js" in index and "./v2-9-32.js" in sw, "Teacher knowledge graph module is not wired"
+    assert "teacher-knowledge-graph-2026-2027.json" in sw, "Teacher knowledge graph is not cached"
+    assert "v2-9-33.js" in index and "./v2-9-33.js" in sw, "Teacher scientific audit module is not wired"
+    assert "teacher-scientific-audit-2026-2027.json" in sw, "Teacher scientific audit data is not cached"
+    assert "v2-9-34.js" in index and "./v2-9-34.js" in sw, "Unified retrieval module is not wired"
+    assert "teacher-retrieval-index-2026-2027.json" in sw, "Unified retrieval index is not cached"
+    assert 'src="smart-teacher-books.js"' in index and "./smart-teacher-books.js" in sw, "Smart Teacher textbook library is not wired into app/PWA"
     runtime = (ROOT / "web/platform-enhancements.js").read_text(encoding="utf-8")
     assert 'src="platform-enhancements.js"' in index and "./platform-enhancements.js" in sw, "Runtime status module is not wired"
     assert "skip-link" in index and "connectionStatus" in runtime, "Accessibility or connection status enhancement is missing"

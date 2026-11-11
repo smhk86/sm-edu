@@ -31,6 +31,19 @@ function learningMemoryEvidence(learnerId){
   firstActivity:dates[0]||null,lastActivity:dates[dates.length-1]||null,subjects:subjectRows,recurringMistakes,
   reasoningEntries:reasoning.length,reasoningBySubject:reasoningCounts,generatedAt:new Date().toISOString()};
 }
+function learningMemoryTrend(learnerId){
+ const id=String(learnerId||'default');
+ const history=learningMemoryRead().filter(x=>x&&x.learnerId===id&&x.at&&Number.isFinite(Number(x.totalAnswers))&&Number(x.totalAnswers)>0).sort((a,b)=>String(a.at).localeCompare(String(b.at)));
+ if(history.length<2)return {available:false,reason:'insufficient_snapshots',snapshots:history.length};
+ const previous=history[history.length-2],current=history[history.length-1];
+ if(String(previous.at).slice(0,10)===String(current.at).slice(0,10))return {available:false,reason:'same_day',snapshots:history.length};
+ const before=Number(previous.overallAccuracy),after=Number(current.overallAccuracy);
+ if(!Number.isFinite(before)||!Number.isFinite(after))return {available:false,reason:'missing_accuracy',snapshots:history.length};
+ const delta=Math.round((after-before)*10)/10;
+ const beforeSubjects=Array.isArray(previous.subjects)?previous.subjects:[],afterSubjects=Array.isArray(current.subjects)?current.subjects:[];
+ const subjects=afterSubjects.map(now=>{const old=beforeSubjects.find(x=>x.subject===now.subject);return old&&Number.isFinite(Number(old.accuracy))&&Number.isFinite(Number(now.accuracy))?{subject:now.subject,previous:Number(old.accuracy),current:Number(now.accuracy),delta:Math.round((Number(now.accuracy)-Number(old.accuracy))*10)/10}:null}).filter(Boolean).sort((a,b)=>a.delta-b.delta);
+ return {available:true,previousAt:previous.at,currentAt:current.at,previousAccuracy:before,currentAccuracy:after,delta,previousAnswers:Number(previous.totalAnswers),currentAnswers:Number(current.totalAnswers),subjects};
+}
 function learningMemorySnapshot(learnerId,now=new Date()){
  const id=String(learnerId||'default'),e=learningMemoryEvidence(id);
  const snapshots=learningMemoryRead().filter(x=>x.learnerId===id);
@@ -48,13 +61,13 @@ function learningMemoryPanel(learner){
  const id=learner?.id||'default',e=learningMemoryEvidence(id),ar=typeof lang!=='undefined'&&lang==='ar',fr=typeof lang!=='undefined'&&lang==='fr';
  const L=(a,f,en)=>ar?a:fr?f:en,esc=x=>typeof escapeReviewText==='function'?escapeReviewText(String(x??'')):String(x??'');
  const history=learningMemoryRead().filter(x=>x.learnerId===id).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
- const saved=history[0];
+ const saved=history[0],trend=learningMemoryTrend(id);
  const subjectHtml=e.subjects.slice(0,6).map(x=>`<div class="sp-subject"><div><b>${esc(x.subject)}</b><small>${x.total} ${L('إجابة مسجلة','réponses','answers')} · ${x.evidence==='strong'?L('دليل قوي','preuve forte','strong evidence'):x.evidence==='moderate'?L('دليل متوسط','preuve modérée','moderate evidence'):L('بيانات محدودة','données limitées','limited evidence')}</small></div><strong>${x.accuracy===null?'—':x.accuracy+'%'}</strong></div>`).join('');
  const mistakes=e.recurringMistakes.map(x=>`<li>${esc(x.label)} <small>(${x.count} ${L('مرات','fois','times')})</small></li>`).join('');
  return `<section class="panel learning-memory"><div class="learning-meta"><h3>🧠 ${L('الذاكرة التعليمية طويلة المدى','Mémoire pédagogique à long terme','Long-term learning memory')}</h3><span class="pill">v1.9.0</span></div>
  <p>${L('ملخص تراكمي مشتق من نتائج هذا التلميذ فقط. تُحفظ البيانات على هذا الجهاز ولا تُرسل إلى أي خدمة خارجية.','Synthèse longitudinale calculée uniquement à partir des résultats de cet élève. Stockée sur cet appareil.','A longitudinal summary derived only from this learner’s recorded results. Stored on this device.')}</p>
  <div class="stats-grid"><div class="stat-card"><b>${e.activities}</b><small>${L('نشاطاً تاريخياً','activités','recorded activities')}</small></div><div class="stat-card"><b>${e.totalAnswers}</b><small>${L('إجابة','réponses','answers')}</small></div><div class="stat-card"><b>${e.overallAccuracy===null?'—':e.overallAccuracy+'%'}</b><small>${L('الدقة التراكمية','précision cumulée','long-term accuracy')}</small></div></div>
- <h4>${L('ملف الذاكرة حسب المادة','Mémoire par matière','Subject memory')}</h4>${subjectHtml||`<p class="sp-muted">${L('لا توجد بيانات كافية لبناء ذاكرة تعليمية بعد.','Pas encore assez de données.','Not enough learning history yet.')}</p>`}
+ <h4>${L('التطور بين لقطات الذاكرة','Évolution entre instantanés','Progress between memory snapshots')}</h4>${trend.available?`<div class="sp-status"><b>${L('التغير في الدقة المسجلة','Évolution de la précision','Recorded accuracy change')}: ${trend.delta>0?'+':''}${trend.delta} ${L('نقطة مئوية','points','percentage points')}</b><small>${L('من','De','From')} ${esc(String(trend.previousAt).slice(0,10))} ${L('إلى','à','to')} ${esc(String(trend.currentAt).slice(0,10))} · ${trend.previousAnswers} → ${trend.currentAnswers} ${L('إجابة في اللقطتين','réponses dans les deux instantanés','answers in the two snapshots')}</small></div>${trend.subjects.length?`<ul>${trend.subjects.map(x=>`<li>${esc(x.subject)}: ${x.delta>0?'+':''}${x.delta} ${L('نقطة','pts','pts')}</li>`).join('')}</ul>`:''}`:`<p class="sp-muted">${L('احفظ لقطة في يومين مختلفين على الأقل لعرض مقارنة زمنية. لا نستنتج التحسن من لقطة واحدة.','Enregistrez des instantanés sur au moins deux jours différents pour comparer. Une seule capture ne suffit pas.','Save snapshots on at least two different days to compare progress. One snapshot is not enough.')}</p>`}<h4>${L('ملف الذاكرة حسب المادة','Mémoire par matière','Subject memory')}</h4>${subjectHtml||`<p class="sp-muted">${L('لا توجد بيانات كافية لبناء ذاكرة تعليمية بعد.','Pas encore assez de données.','Not enough learning history yet.')}</p>`}
  <h4>${L('الأخطاء المتكررة المسجلة','Erreurs récurrentes enregistrées','Recorded recurring mistakes')}</h4>${mistakes?`<ul>${mistakes}</ul>`:`<p class="sp-muted">${L('لم يُكتشف تكرار موثق بعد. لا يعني ذلك عدم وجود صعوبات.','Aucune répétition documentée pour le moment.','No repeated recorded error found yet; this does not prove there are no difficulties.')}</p>`}
  <p class="sp-muted">${L('خطوات التفكير المكتوبة','Raisonnements écrits','Written reasoning entries')}: ${e.reasoningEntries}. ${e.firstActivity?L('أول نشاط:','Premier exercice :','First activity:')+' '+esc(e.firstActivity):''} ${e.lastActivity?L('آخر نشاط:','Dernière activité :','Latest activity:')+' '+esc(e.lastActivity):''}</p>
  <div class="sp-actions"><button class="primary-btn" onclick="learningMemorySaveActive()">${L('تحديث لقطة الذاكرة','Actualiser la mémoire','Save memory snapshot')}</button></div>

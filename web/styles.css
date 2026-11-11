@@ -548,3 +548,32 @@ button,.nav-item,.bn-item,.icon-btn{touch-action:manipulation}
 @media(max-width:760px){
 .sidebar{height:100dvh;max-height:100dvh;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 }
+
+/* v2.9.21 — unified smart teacher, progressive disclosure for advanced tools */
+.teacher-advanced-tools{padding:0;overflow:hidden}.teacher-advanced-tools>summary{cursor:pointer;list-style:none;padding:16px;font-weight:700;color:var(--ink);font-size:14px}.teacher-advanced-tools>summary::-webkit-details-marker{display:none}.teacher-advanced-tools>summary:after{content:'＋';float:inline-end;color:var(--blue)}.teacher-advanced-tools[open]>summary:after{content:'−'}.teacher-advanced-content{display:grid;gap:12px;padding:0 12px 12px}.teacher-advanced-content>.panel{box-shadow:none}.smart-teacher-wrap>.chat-box{margin:10px 0 14px}.smart-teacher-wrap>.chat-box .tutor-form{grid-template-columns:1fr auto}.smart-teacher-wrap>.chat-box .tutor-form .tutor-mode-label{grid-column:1/-1}
+
+/* v2.9.22 — focused, one-question-at-a-time teaching flow */
+.smart-teacher-step-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+.step-progress-label{font-weight:800;color:var(--primary,#174b75);font-variant-numeric:tabular-nums}
+.step-progress{height:8px;background:var(--surface-2,#e8edf2);border-radius:99px;overflow:hidden;margin:8px 0 18px}
+.step-progress>span{display:block;height:100%;background:var(--primary,#174b75);border-radius:inherit;transition:width .2s ease}
+.smart-teacher-step-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px}
+.smart-teacher-step-actions button{min-width:130px}
+.smart-teacher-lesson-intro{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border,#dce3ea)}
+.smart-teacher-session .question-card{margin-top:12px}
+@media(max-width:520px){.smart-teacher-step-actions{display:grid;grid-template-columns:1fr}.smart-teacher-step-actions button{width:100%}}
+.smart-teacher-review-list{display:grid;gap:10px;margin:14px 0}
+.smart-teacher-review-list .answer-review-card{margin:0}
+
+/* v2.9.24 — immediate formative feedback without exposing the answer */
+.smart-teacher-feedback{margin:12px 0;padding:12px 14px;border:1px solid var(--border,#dce3ea);border-radius:12px;background:var(--surface-2,#f4f7fa)}.smart-teacher-feedback p{margin:6px 0 0;line-height:1.65}.smart-teacher-feedback.is-correct{border-inline-start:4px solid #198754}.smart-teacher-feedback.is-hint{border-inline-start:4px solid var(--primary,#174b75)}
+
+/* v2.9.24 — evidence-based topic diagnosis and remedial practice */
+.smart-teacher-diagnosis{margin:14px 0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.smart-teacher-diagnosis h4{margin:0 0 8px}.smart-teacher-diagnosis>p{font-size:13px;line-height:1.7;color:var(--muted)}
+.smart-teacher-diagnosis-topic{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.smart-teacher-diagnosis-topic small{display:block;margin-top:4px;color:var(--muted)}
+@media(max-width:520px){.smart-teacher-diagnosis-topic{align-items:stretch;flex-direction:column}.smart-teacher-diagnosis-topic button{width:100%}}
+
+/* v2.9.26 parent comparison */
+.fd-comparison{margin-top:18px;padding-top:14px;border-top:1px solid var(--border,rgba(128,128,128,.22))}.fd-comparison>p{font-size:12px;color:var(--muted);line-height:1.7}.fd-compare-card{border:1px solid var(--border,rgba(128,128,128,.2));border-radius:14px;padding:13px;margin:10px 0;background:var(--card-bg,transparent)}.fd-compare-title{display:flex;align-items:center;justify-content:space-between;gap:8px}.fd-compare-title>span{font-weight:800;font-size:13px}.fd-compare-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.fd-compare-grid>div{display:flex;flex-direction:column;gap:4px}.fd-compare-grid strong{font-size:19px}.fd-compare-grid small,.fd-compare-card>small{font-size:11px;color:var(--muted)}.fd-compare-card p{font-size:13px;line-height:1.7;margin:8px 0}.trend-up{color:#16834b}.trend-down{color:#b45309}.trend-flat{color:var(--muted)}
