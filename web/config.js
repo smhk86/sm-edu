@@ -8,7 +8,9 @@ window.SM_SCHOOL_CONFIG = Object.freeze({
   examRepositoryIndex: '', // Optional override; otherwise publicContentBase + /data/dzexams-repository-index.json.
   examRepositoryPath: '/repository/exams/', // Curated DzExams files approved for redistribution in GitHub Pages.
   raji3dzRepositoryIndex: '', // Optional override; otherwise publicContentBase + /data/raji3dz-repository-index.json.
-  raji3dzRepositoryPath: '/repository/raji3dz/' // Curated Raji3DZ files approved for redistribution in GitHub Pages.
+  raji3dzRepositoryPath: '/repository/raji3dz/', // Curated Raji3DZ files approved for redistribution in GitHub Pages.
+  textbookHosts: [], // HTTPS hosts the Smart Teacher may download textbooks from, one book at a time (empty = disabled). Add a host only if its owner allows it.
+  textbookCatalogueIndex: '' // Optional override; otherwise publicContentBase + /data/textbook-repository-index.json is used.
 });
 /* v1.12.0: shared JSON loader (each big data file is downloaded and parsed once). */
 (function(){

@@ -4,8 +4,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_EXPECTED = "2.9.38"
-BACKEND_EXPECTED = "2.9.38"
+FRONTEND_EXPECTED = "2.9.40"
+BACKEND_EXPECTED = "2.9.40"
 
 def run():
     package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
@@ -22,12 +22,12 @@ def run():
     assert f'"version": "{BACKEND_EXPECTED}"' in backend, "API response version is out of sync"
     assert readme.startswith(f"# SM éducation v{FRONTEND_EXPECTED}"), "README title is out of sync"
     assert f"sm-school-ai-v{FRONTEND_EXPECTED}-shell-r1" in sw, "PWA cache key is out of sync"
-    assert "v2-9-26.js" in (ROOT / "web/index.html").read_text(encoding="utf-8"), "v2.9.38 parent comparison module is not loaded"
-    assert "parentMonthlyComparison:true" in (ROOT / "web/v2-9-26-marker.js").read_text(encoding="utf-8"), "v2.9.38 feature metadata is missing"
-    assert "v2-9-27.js" in (ROOT / "web/index.html").read_text(encoding="utf-8"), "v2.9.38 Smart Teacher knowledge module is not loaded"
+    assert "v2-9-26.js" in (ROOT / "web/index.html").read_text(encoding="utf-8"), "v2.9.40 parent comparison module is not loaded"
+    assert "parentMonthlyComparison:true" in (ROOT / "web/v2-9-26-marker.js").read_text(encoding="utf-8"), "v2.9.40 feature metadata is missing"
+    assert "v2-9-27.js" in (ROOT / "web/index.html").read_text(encoding="utf-8"), "v2.9.40 Smart Teacher knowledge module is not loaded"
     assert "teacher-knowledge-2026-2027.json" in sw, "Smart Teacher knowledge database is not cached"
     index = (ROOT / "web/index.html").read_text(encoding="utf-8")
-    assert "v2-9-28.js" in index, "v2.9.38 lesson encyclopedia module is not loaded"
+    assert "v2-9-28.js" in index, "v2.9.40 lesson encyclopedia module is not loaded"
     assert "teacher-encyclopedia-2026-2027.json" in sw, "Smart Teacher encyclopedia is not cached"
     assert "teacher-deep-content-2026-2027.json" in sw, "Deep teacher content is not cached"
     assert "./v2-9-29.js" in sw, "Deep teacher content module is not cached"

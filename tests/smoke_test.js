@@ -60,14 +60,14 @@ assert(js.includes('TERM_LABELS')&&js.includes('CONTENT_STATUS')&&js.includes('t
 assert(fs.existsSync(root+'/web/index.html')&&fs.existsSync(root+'/web/config.js'));
 assert(fs.readFileSync(root+'/web/index.html','utf8').includes('config.js'));
 assert(fs.existsSync(root+'/backend/app/main.py'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
 const sources=JSON.parse(fs.readFileSync(root+'/web/data/official-source-register-2026-2027.json','utf8'));
 assert(sources.sources.some(x=>x.status==='current_policy_notice'));
 assert(sources.sources.some(x=>x.status==='historical_reference_requires_2026_2027_confirmation'));
 assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('official-source-register-2026-2027.json'));
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
 assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('secondary-pathways-2026-2027.json'));
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
 const pathways=JSON.parse(fs.readFileSync(root+'/web/data/secondary-pathways-2026-2027.json','utf8'));
 assert.equal(pathways.first_year_common_trunks.length,2);assert.equal(pathways.second_third_year_streams.length,7);
 assert(pathways.first_year_common_trunks.concat(pathways.second_third_year_streams).every(x=>x.status==='provisional_label_pending_current_year_confirmation'));
@@ -85,7 +85,7 @@ assert(curriculum.records.filter(x=>x.stage==='secondary').every(x=>x.secondary_
 assert(js.includes('SECONDARY_PATHWAYS')&&js.includes('setSecondaryPathway')&&js.includes('secondaryPathwayNotice'));
 assert.equal(exerciseBank.coverage.secondary_pathway_catalogs,9);assert.equal(exerciseBank.coverage.secondary_pathway_subject_matrices_verified,0);
 assert(js.includes('extractCurriculumEvidenceCandidates')&&js.includes('loadCurriculumEvidenceCandidates')&&js.includes('saveCurriculumEvidenceCandidate'));assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('/extract-curriculum-candidates'));
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('version="2.9.38"'));
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('version="2.9.40"'));
 
 new vm.Script(js);
 assert(!fs.readFileSync(root+'/web/index.html','utf8').includes('data-page="progress"'));
@@ -99,7 +99,7 @@ assert(data.records.every(x=>x.terms.length===3&&x.lessons.length===0&&x.status=
 assert(data.verified_curriculum_rules.some(x=>x.rule==='primary_english_start'));
 assert(data.verified_curriculum_rules.some(x=>x.rule==='primary_french_start'));
 const backend=fs.readFileSync(root+'/backend/app/main.py','utf8');
-assert(backend.includes('version="2.9.38"')&&backend.includes('/api/v1/learning/structure')&&backend.includes('/api/v1/curriculum/secondary-pathways'));
+assert(backend.includes('version="2.9.40"')&&backend.includes('/api/v1/learning/structure')&&backend.includes('/api/v1/curriculum/secondary-pathways'));
 assert(backend.includes('provisional_platform_mapping_not_official_ministry_progression')&&backend.includes('official_lesson_sequence_verified_pairs'));
 assert(backend.includes('secondary_pathway_catalog')&&backend.includes('subject_matrices_verified'));
 assert(js.includes('startExerciseSession')&&js.includes('finishExerciseSession')&&js.includes('smSchoolExerciseMistakes'));
@@ -129,10 +129,10 @@ assert(js.includes('smSchoolTestHistory')&&js.includes('bankTestGrade')&&js.incl
 assert(js.includes('mark.toFixed(2)')&&js.includes('test-analysis-grid')&&js.includes('changeBankTestGrade'));
 assert(js.includes("q.question_type==='numeric'")&&js.includes('normalizeTypedAnswer(a)===normalizeTypedAnswer(entered)'));
 assert(fs.readFileSync(root+'/web/styles.css','utf8').includes('.test-builder-grid'));
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('version="2.9.38"'));
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('version="2.9.40"'));
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
 const examPairs={};for(const q of exerciseBank.records){const k=q.grade+'|'+q.subject;(examPairs[k]??=[]).push(q)}
 assert.equal(Object.keys(examPairs).length,105);assert(Object.values(examPairs).every(xs=>xs.length>=8));
 assert(Object.values(examPairs).every(xs=>xs.every(q=>q.question_type==='numeric'?Array.isArray(q.accepted_answers)&&q.accepted_answers.length>0:Array.isArray(q.choices)&&q.answer_index>=0&&q.answer_index<q.choices.length)));
@@ -160,8 +160,8 @@ for(const paper of termExams.papers){assert(paper.question_count>=3);assert.equa
 assert(js.includes('function startPreparedTermExam()')&&js.includes('termExamPapers.filter')&&js.includes('startPreparedTermExam()'));
 assert(backend.includes('/api/v1/learning/term-exams'));
 assert(fs.readFileSync(root+'/web/app.js','utf8').includes('term-exams-2026-2027.json')||fs.readFileSync(root+'/backend/app/main.py','utf8').includes('term-exams-2026-2027.json'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
 console.log('PASS: retained v1.4.2 — 327 prepared term papers (315 base + 12 ST-1AS variants), 20-point answer keys, exact grade/subject/term question matching, solution metadata and offline cache');
 
 
@@ -173,8 +173,8 @@ for(const situation of integrative.situations){assert(situation.situation&&situa
 assert(js.includes('function startIntegrativeAssessment()')&&js.includes('integrativeAssessments.find')&&js.includes('startIntegrativeAssessment()')&&js.includes('integrativeWrittenResponse'));
 assert(backend.includes('/api/v1/learning/integrative-assessments'));
 assert(fs.readFileSync(root+'/web/app.js','utf8').includes('integrative-assessments-2026-2027.json')||fs.readFileSync(root+'/backend/app/main.py','utf8').includes('integrative-assessments-2026-2027.json'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
 console.log('PASS: retained v1.6.3 — 342 integrative situations, exact grade/subject/term question references, model solution outlines, written self-review rubric and offline cache');
 
 // v1.5.7 offline PDF inbox safety and review-only workflow
@@ -185,9 +185,9 @@ assert(inboxTool.includes("'auto_published': False"));
 assert(inboxTool.includes("'reuse_permission': 'unknown_pending_rights_review'"));
 assert(inboxTool.includes("'extraction_status': 'text_extracted' if text_pages else 'ocr_required'"));
 assert(inboxTool.includes('duplicate_skipped'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
 console.log('PASS: v1.5.7 offline PDF inbox — size/signature validation, SHA-256 duplicate detection, text extraction, OCR-required flags, private rights-review queue and no auto-publication');
 
 // v1.5.7 PDF review workspace
@@ -210,9 +210,9 @@ assert(backend.includes('heuristic_text_segmentation_requires_human_review'));
 assert(backend.includes('approved_for_manual_entry') && backend.includes('reuse_permission') && backend.includes('auto_published'));
 assert(js.includes('function extractPdfCandidates(id)') && js.includes('function loadPdfQuestionCandidates(id)') && js.includes('function savePdfCandidate(id)'));
 assert(fs.readFileSync(root+'/web/styles.css','utf8').includes('.candidate-card'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
 console.log('PASS: v1.5.7 heuristic PDF question/solution candidates, metadata review, explicit rights gate, no auto-publication and multilingual UI');
 
 // v1.5.7 rights-cleared searchable exam excerpt library
@@ -258,9 +258,9 @@ assert(v154backend.includes('platform_authored_practice_not_official_ministry_ex
 assert(v154ui.includes('function curriculumExamBuilderPanel()')&&v154ui.includes('function generateCurriculumExam()')&&v154ui.includes('function showCurriculumExamVersion(kind)'));
 assert(v154ui.includes('curriculum-exam-builder')&&v154ui.includes('curriculum_policy_note'));
 assert(fs.readFileSync(root+'/web/styles.css','utf8').includes('.curriculum-exam-builder'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
 console.log('PASS: v1.5.7 curriculum-guarded exam builder, student/teacher views, exact matching, 20-point marking, primary language policy guards and secondary stream safeguard');
 
 
@@ -290,8 +290,8 @@ assert(js.includes('curriculum-governance-2026-2027.json')===false || fs.existsS
 assert(fs.readFileSync(root+'/web/app.js','utf8').includes('curriculum-governance-2026-2027.json')||fs.readFileSync(root+'/backend/app/main.py','utf8').includes('curriculum-governance-2026-2027.json'));
 assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('curriculum-verification-template-2026-2027.csv'));
 assert(backend.includes('balanced_topic_and_cognitive_process_round_robin')&&backend.includes('platform_practice_tags_not_official_ministry_competencies')&&backend.includes('quality_check'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
 console.log('PASS: v1.5.7 curriculum governance — 10 source-scoped Ministry facts, 105 grade/subject records, 16 provisional stream matrices, review CSV, coverage audit and no false official alignment');
 console.log('PASS: v1.5.7 assessment blueprint — balanced platform cognitive tags explicitly distinguished from official Ministry competencies');
 
@@ -309,8 +309,8 @@ assert(v156ui.includes('لم يتم اعتمادها في قاعدة المنه�
 assert(v156backend.includes('/api/v1/curriculum/evidence-policy'));
 assert(fs.existsSync(root+'/tools/validate_curriculum_evidence.py'));
 assert(fs.existsSync(root+'/CONTENT_QUALITY_AUDIT_v1.5.7.md'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
 console.log('PASS: v1.5.7 curriculum evidence CSV intake, Ministry-domain evidence checks, local-only review ledger, export and no automatic official promotion');
 
 // v1.5.9 local learner backup/restore safeguards.
@@ -323,16 +323,16 @@ assert(backupUi.includes('file.size>5*1024*1024'));
 assert(!backupUi.slice(backupUi.indexOf('const LOCAL_BACKUP_KEYS='),backupUi.indexOf('function localBackupPanel()')).includes('smSchoolApiBase'));
 assert(backupUi.includes('LOCAL_BACKUP_VERSION=1'));
 assert(backupUi.includes('function localBackupPanel()')&&backupUi.includes('localBackupPanel()'));
-assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.38');
-assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.38'));
-assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.38-shell-r1'));
-assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('version="2.9.38"'));
+assert.equal(JSON.parse(fs.readFileSync(root+'/package.json','utf8')).version,'2.9.40');
+assert(fs.readFileSync(root+'/web/index.html','utf8').includes('v2.9.40'));
+assert(fs.readFileSync(root+'/web/sw.js','utf8').includes('sm-school-ai-v2.9.40-shell-r1'));
+assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('version="2.9.40"'));
 assert(fs.existsSync(root+'/CONTENT_QUALITY_AUDIT_v1.5.9.md'));
 console.log('PASS: v1.5.9 local JSON backup/restore allowlist, validation, size guard, API credential exclusion, UI and version metadata');
 // v1.6.3 — offline translator + AI course
 {const fs2=require('fs'),vm2=require('vm');const w=root+'/web/';
 const idxHtml=fs2.readFileSync(w+'index.html','utf8');assert(idxHtml.includes('data-page="translate"')&&idxHtml.includes('translate.js')&&idxHtml.includes('ai-course.js')&&idxHtml.includes('lexicon.js'));
-const sw=fs2.readFileSync(w+'sw.js','utf8');assert(sw.includes('v2.9.38')&&sw.includes('./lexicon.js')&&sw.includes('./translate.js')&&sw.includes('./ai-course.js'));
+const sw=fs2.readFileSync(w+'sw.js','utf8');assert(sw.includes('v2.9.40')&&sw.includes('./lexicon.js')&&sw.includes('./translate.js')&&sw.includes('./ai-course.js'));
 const ctx={window:{},dict:{ar:{},fr:{},en:{}},lang:'ar',LOCAL_BACKUP_KEYS:[],document:{querySelectorAll:()=>[]},localStorage:{getItem:()=>null},t:k=>k,escapeReviewText:s=>s};ctx.SM_LEXICON=null;vm2.createContext(ctx);
 vm2.runInContext(fs2.readFileSync(w+'lexicon.js','utf8'),ctx);ctx.SM_LEXICON=ctx.window.SM_LEXICON;
 vm2.runInContext(fs2.readFileSync(w+'translate.js','utf8'),ctx);vm2.runInContext(fs2.readFileSync(w+'ai-course-i18n.js','utf8'),ctx);vm2.runInContext(fs2.readFileSync(w+'ai-course.js','utf8'),ctx);

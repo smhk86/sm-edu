@@ -6,8 +6,8 @@ assert(teacher.includes('if(!visionImages.length)throw ocrError'),'keep visual f
 assert(teacher.includes('أُرفقت صفحات/صور للتحليل البصري'),'show correct source status');
 assert(teacher.includes("'\\n'+(ocrFallbackNote?'ملاحظة OCR: '+ocrFallbackNote:'' )") || teacher.includes("(ocrFallbackNote?'ملاحظة OCR: '+ocrFallbackNote:'' )") || teacher.includes("(ocrFallbackNote?'ملاحظة OCR: '+ocrFallbackNote:'')"),'include OCR fallback note in model context');
 const html=fs.readFileSync('web/index.html','utf8'),sw=fs.readFileSync('web/sw.js','utf8');
-assert(html.includes('v2-9-11.js')&&html.includes('v2.9.38'));
-assert(sw.includes('./v2-9-11.js')&&sw.includes('v2.9.38-shell'));
+assert(html.includes('v2-9-11.js')&&html.includes('v2.9.40'));
+assert(sw.includes('./v2-9-11.js')&&sw.includes('v2.9.40-shell'));
 const w={};vm.runInNewContext(fs.readFileSync('web/v2-9-11.js','utf8'),{window:w});
 assert.equal(w.SM_EDUCATION_RELEASE.version,'2.9.11');
 const w12={};vm.runInNewContext(fs.readFileSync('web/v2-9-12.js','utf8'),{window:w12});

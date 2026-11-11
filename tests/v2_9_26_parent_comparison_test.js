@@ -16,4 +16,4 @@ assert.equal(insufficient.delta,null,'comparison must be withheld when previous 
 const html=ctx.familyDashboardPanel();for(const token of ['Monthly comparison & guidance','Learner A','Learner B','Previous 30 days','Recommendation:'])assert(html.includes(token),`missing ${token}`);
 let clicked=false;ctx.document.createElement=()=>({click(){clicked=true},remove(){}});ctx.downloadFamilyDashboardReport();assert(clicked,'family comparison CSV export should trigger download');
 const index=fs.readFileSync(__dirname+'/../web/index.html','utf8'),sw=fs.readFileSync(__dirname+'/../web/sw.js','utf8');assert(index.includes('src="v2-9-26.js"'));assert(sw.includes('./v2-9-26.js'));
-console.log('PASS: v2.9.38 parent comparison, insufficient-evidence guard, support recommendation, CSV export and offline wiring');
+console.log('PASS: v2.9.40 parent comparison, insufficient-evidence guard, support recommendation, CSV export and offline wiring');

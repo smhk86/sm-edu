@@ -1,3 +1,20 @@
+## v2.9.40 — Textbook knowledge base for the Smart Teacher
+
+- New textbook-knowledge.js: all saved textbooks form one local page-level search index; the Smart Teacher chat, offline answers, document review and prompt builders use the best matching pages with book title + page number.
+- Consent is now persistent ("use my books automatically"); only matching pages (max ~9,000 chars) are sent, never a whole book.
+- Fixed: chat never used the books (consent box existed only in the books panel); context() without a query sent up to 1.2M characters.
+- Readiness checklist, retrieval self-test and 1 KB connectivity probe in the app; tools/textbook_catalogue.js (Termux) to add/check catalogue entries.
+
+## v2.9.39 — Direct in-app textbook download for the Smart Teacher
+
+- New module textbook-downloader.js: the student picks one book, it downloads inside the app (no browser) with a progress bar, is checked as a PDF, saved in IndexedDB and indexed page by page.
+- Book list is data (data/textbook-repository-index.json); hosts must be listed in config.js textbookHosts (empty = disabled); user confirmation required; no bulk download.
+- smart-teacher-books.js: new importBlob() shared by manual import and downloads.
+
+## v2.9.38 — Alignement et nettoyage
+
+- Version unifiée, tests 2.9.35 corrigés, test 2.9.36/37 ajouté, fichiers inutiles supprimés.
+
 ## v2.9.35 — Smart Teacher textbook knowledge library
 
 - Added a textbook catalogue panel inside Smart Teacher, grouped by the active grade and available subjects.

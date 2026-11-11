@@ -4,9 +4,9 @@ const html=fs.readFileSync(root+'/web/index.html','utf8'),sw=fs.readFileSync(roo
 const smart=fs.readFileSync(root+'/web/smart-teacher.js','utf8'),groq=fs.readFileSync(root+'/web/groq-direct.js','utf8'),pkg=require(root+'/package.json');
 const data=JSON.parse(fs.readFileSync(root+'/web/data/teacher-source-register-2026-2027.json','utf8'));
 const w={};vm.runInNewContext(runtime,{window:w});
-assert.equal(pkg.version,'2.9.38');assert.equal(w.SM_EDUCATION_RELEASE.version,'2.8.5');
-assert(html.includes('v2.9.38')&&html.includes('v2-8-5.js'));
-assert(sw.includes('sm-school-ai-v2.9.38-shell-r1')&&sw.includes('./v2-8-5.js'));
+assert.equal(pkg.version,'2.9.40');assert.equal(w.SM_EDUCATION_RELEASE.version,'2.8.5');
+assert(html.includes('v2.9.40')&&html.includes('v2-8-5.js'));
+assert(sw.includes('sm-school-ai-v2.9.40-shell-r1')&&sw.includes('./v2-8-5.js'));
 assert(smart.includes('smartExamTopics')&&smart.includes('smTeacherBuildExamPrompt'));
 assert(smart.includes('smTeacherBuildReviewContext'));
 assert(smart.includes('smartTeacherAiConsent')&&smart.includes('إرسال نص الملف والصور'));

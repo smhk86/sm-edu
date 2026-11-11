@@ -27,4 +27,4 @@ def test_complex_visuals_are_flagged_without_claiming_recognition():
 
 if __name__=='__main__':
     test_geometry_and_chart_classification();test_complex_visuals_are_flagged_without_claiming_recognition()
-    print('PASS: v2.9.38 PDF visual hint classification and conservative measurement safeguards')
+    print('PASS: v2.9.40 PDF visual hint classification and conservative measurement safeguards')
