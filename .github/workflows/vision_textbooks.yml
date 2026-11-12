@@ -10,6 +10,10 @@ on:
         description: 'Optionnel : partie du titre'
         default: ''
         required: false
+      subjects:
+        description: 'Matieres (separees par virgule)'
+        default: 'maths,physics,sciences'
+        required: false
 env:
   TEXTBOOKS_REPO: smhk86/sm-textbooks
   RELEASE_TAG: data
@@ -38,9 +42,11 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           BOOK: ${{ inputs.book }}
+          SUBJECTS: ${{ inputs.subjects }}
         run: |
           ARGS=()
           if [ -n "$BOOK" ]; then ARGS+=(--book "$BOOK"); fi
+          if [ -n "$SUBJECTS" ]; then ARGS+=(--subjects "$SUBJECTS"); fi
           SEED="seed/${{ matrix.level }}-sci.json.gz"
           if [ -f "$SEED" ]; then ARGS+=(--seed "$SEED"); fi
           python3 tools/vision_run.py --grade "${{ matrix.level }}" "${ARGS[@]}"
