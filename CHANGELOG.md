@@ -1,3 +1,12 @@
+## v2.9.40 (update) — Smart Teacher core rework
+
+- New smart-teacher-core.js: one local knowledge index over all platform sources (1,250 lesson packs + exercise bank), searched across every subject and nearby grades; the learner no longer has to pick the right subject.
+- Database first: when the base covers the question it answers instantly and offline; Groq is only used when the base cannot (or when the learner taps "go deeper with AI"). Mode switch in the assistant settings.
+- Groq failures are now shown in the chat with their real reason (invalid key, rate limit, model, network) before the local fallback — no more silent "offline mode".
+- Honest answers: generated filler is removed, thin lessons are flagged, unknown topics list the closest lessons instead of pretending.
+- AI requests are grounded with the retrieved lessons and carry the last turns (real conversation); subject is inferred when left on "عام".
+- New calm, borderless chat look (claude-chat.css), follow-up chips, status panel with self-test.
+
 - Improved textbook knowledge-base regression coverage: short indexable pages, empty pages, grade/book isolation, page counts, and self-test consistency. The knowledge-base self-test now uses the same 20-character minimum as indexing.
 
 ## v2.9.40 — Textbook knowledge base for the Smart Teacher

@@ -1,0 +1,51 @@
+/* SM EDUCATION — Smart Teacher chat, "calm assistant" look (warm paper background, borderless answers,
+   rounded user bubble, floating composer with a round send button). Overrides the .v240-* chat classes only. */
+.v240-chat{--cc-bg:#faf9f5;--cc-surface:#fff;--cc-user:#f0eee6;--cc-line:#e6e3d8;--cc-ink:#2b2a27;--cc-muted:#8a867b;--cc-accent:#c96442;--cc-accent-ink:#fff;
+ background:var(--cc-bg);color:var(--cc-ink);border:0;box-shadow:none}
+body[data-theme="dark"] .v240-chat{--cc-bg:#262624;--cc-surface:#30302e;--cc-user:#3a3935;--cc-line:#42413d;--cc-ink:#ece9e0;--cc-muted:#a19d92}
+.v240-chat-head{border-bottom:0;padding:10px 14px;background:transparent}
+.v240-chat-head .avatar{background:transparent;color:var(--cc-accent);font-size:22px;width:auto;height:auto}
+.v240-head-text b{font-weight:600;font-size:15px}
+.v240-head-text small{color:var(--cc-muted)}
+.v240-subject select{background:var(--cc-surface);border:1px solid var(--cc-line);border-radius:999px;color:var(--cc-ink)}
+.v240-settings{border-bottom:0;background:transparent}
+.v240-settings summary{color:var(--cc-muted)}
+/* messages */
+.v240-msgs{background:var(--cc-bg);padding:8px 16px 18px;gap:18px;max-width:760px;width:100%;margin-inline:auto}
+.v240-msgs .message{max-width:100%;font-size:16px;line-height:1.95}
+.v240-msgs .message.user{align-self:flex-start;max-width:86%;background:var(--cc-user);color:var(--cc-ink);border:0;border-radius:18px;padding:10px 16px}
+.v240-msgs .message.bot{align-self:stretch;background:transparent;border:0;border-radius:0;padding:0 2px;color:var(--cc-ink)}
+.v240-msgs .message.bot .msg-body{position:relative}
+.v240-msgs .message.bot:not(.typing) .msg-body::before{content:"✻";display:block;color:var(--cc-accent);font-size:18px;line-height:1;margin-bottom:6px}
+.v240-msgs .msg-body p{margin:0 0 10px}
+.v240-msgs .msg-body strong{font-weight:700}
+.v240-msgs .msg-h{margin:14px 0 6px;font-size:1.05em}
+.v240-msgs .msg-body ul,.v240-msgs .msg-body ol{margin:6px 0 12px}
+.v240-msgs .msg-body li{margin:3px 0}
+.v240-msgs .message time{display:none}
+.v240-msgs .message-tools{gap:2px;margin-top:4px}
+.v240-msgs .message-tools button{border:0;background:transparent;color:var(--cc-muted);padding:4px 8px;border-radius:8px}
+.v240-msgs .message-tools button:hover{background:var(--cc-user)}
+.v240-dots i{background:var(--cc-accent)}
+/* follow-up chips under an answer */
+.cc-follow{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.cc-follow button{border:1px solid var(--cc-line);background:var(--cc-surface);color:var(--cc-ink);border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;cursor:pointer}
+.cc-source{margin-top:8px;font-size:12px;color:var(--cc-muted)}
+/* suggestions */
+.v240-suggest{background:transparent;padding:6px 16px;flex-direction:column;align-items:stretch;max-width:760px;width:100%;margin-inline:auto}
+.v240-chip{background:transparent;border:1px solid var(--cc-line);border-radius:14px;color:var(--cc-ink);text-align:start;padding:12px 14px}
+/* composer */
+.v240-compose{background:transparent;border-top:0;padding:6px 12px calc(10px + env(safe-area-inset-bottom,0px));max-width:760px;width:100%;margin-inline:auto}
+.v240-modes{gap:6px}
+.v240-mode{background:transparent;border:1px solid var(--cc-line);color:var(--cc-muted);border-radius:999px}
+.v240-mode.on{background:var(--cc-user);border-color:var(--cc-line);color:var(--cc-ink);font-weight:600}
+.v240-inputrow{background:var(--cc-surface);border:1px solid var(--cc-line);border-radius:26px;padding:6px 6px 6px 10px;box-shadow:0 2px 12px rgba(0,0,0,.06);align-items:flex-end}
+.v240-inputrow textarea{border:0;background:transparent;outline:0;padding:9px 10px;max-height:140px;color:var(--cc-ink)}
+.v240-send{background:var(--cc-accent);color:var(--cc-accent-ink);flex:0 0 38px;width:38px;height:38px;font-size:17px}
+.v240-send[disabled]{opacity:.45}
+.v240-compose .tutor-answer{border:1px solid var(--cc-line);border-radius:16px;background:var(--cc-surface)}
+.cc-note{text-align:center;font-size:11px;color:var(--cc-muted);margin:2px 0 0}
+@media (min-width:900px){.v240-chat{max-width:900px;margin-inline:auto}}
+
+.v240-send span{font-size:0;transform:none!important}.v240-send span::after{content:"↑";font-size:19px;font-weight:700;display:inline-block}
+.cc-mode{display:grid;gap:4px;font-size:12px;margin:8px 0}.cc-mode select{font:inherit;padding:6px 8px;border-radius:10px;border:1px solid var(--cc-line,#ddd);background:var(--cc-surface,#fff);color:inherit}
