@@ -12,7 +12,25 @@ ap.add_argument("--limit", type=int, default=0)
 ap.add_argument("--seed", default="")
 a = ap.parse_args()
 G = a.grade.upper()
-KEY = os.environ["GEMINI_API_KEY"]
+import re
+# Several keys can be supplied (secret GEMINI_API_KEYS: separated by newline, space or comma); the script moves to the next one
+# when the current key has no daily quota left on either model. Keys are never printed, only their rank.
+KEYS = []
+for k in re.split(r"[\s,;]+", os.environ.get("GEMINI_API_KEYS", "") + " " + os.environ.get("GEMINI_API_KEY", "")):
+    if k and k not in KEYS:
+        KEYS.append(k)
+if not KEYS:
+    sys.exit("no Gemini API key (set GEMINI_API_KEYS or GEMINI_API_KEY)")
+kidx = [0]
+print("API keys available:", len(KEYS))
+
+def next_key(why):
+    if kidx[0] + 1 >= len(KEYS):
+        return False
+    kidx[0] += 1
+    model[0] = a.model  # a fresh key starts again on the primary model
+    print("  key %d/%d: %s -> switching to key %d/%d" % (kidx[0], len(KEYS), why, kidx[0] + 1, len(KEYS)))
+    return True
 WORK, OUT = "textbooks_work", "textbooks_out"
 VW = os.path.join(WORK, "vision")
 os.makedirs(VW, exist_ok=True); os.makedirs(OUT, exist_ok=True)
@@ -32,8 +50,9 @@ def ask(b64):
     body = {"contents": [{"parts": [{"text": PROMPT},
             {"inline_data": {"mime_type": "image/jpeg", "data": b64}}]}],
             "generationConfig": {"temperature": 0}}
-    hdr = {"Content-Type": "application/json", "x-goog-api-key": KEY}
+    hdr = {"Content-Type": "application/json", "x-goog-api-key": KEYS[kidx[0]]}
     for t in range(8):
+        hdr["x-goog-api-key"] = KEYS[kidx[0]]
         req = urllib.request.Request(URL % model[0], json.dumps(body).encode(), hdr)
         try:
             r = json.load(urllib.request.urlopen(req, timeout=120))
@@ -52,7 +71,12 @@ def ask(b64):
                 if model[0] != a.fallback:
                     print("  daily quota on", model[0], "-> switching to", a.fallback)
                     model[0] = a.fallback; continue
-                raise Quota("daily quota: " + msg)
+                if next_key("daily quota on both models"):
+                    continue
+                raise Quota("daily quota on all %d key(s): " % len(KEYS) + msg)
+            if e.code in (400, 403) and ("API key" in full or "API_KEY" in full or e.code == 403):
+                if next_key("key rejected (HTTP %d)" % e.code):
+                    continue
             if e.code in (429, 500, 503):
                 # rate limit or overload: wait and retry, never abort here
                 if t >= 3 and model[0] != a.fallback:
