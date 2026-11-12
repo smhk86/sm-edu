@@ -1,4 +1,4 @@
-import os, json, time, base64, gzip, argparse, subprocess
+import os, sys, json, time, base64, gzip, argparse, subprocess
 import urllib.request, urllib.error, urllib.parse
 
 ap = argparse.ArgumentParser()
@@ -33,7 +33,7 @@ def ask(b64):
             {"inline_data": {"mime_type": "image/jpeg", "data": b64}}]}],
             "generationConfig": {"temperature": 0}}
     hdr = {"Content-Type": "application/json", "x-goog-api-key": KEY}
-    for t in range(6):
+    for t in range(8):
         req = urllib.request.Request(URL % model[0], json.dumps(body).encode(), hdr)
         try:
             r = json.load(urllib.request.urlopen(req, timeout=120))
@@ -43,18 +43,26 @@ def ask(b64):
             parts = c[0].get("content", {}).get("parts", [])
             return "".join(p.get("text", "") for p in parts).strip()
         except urllib.error.HTTPError as e:
-            msg = e.read().decode("utf-8", "ignore")[:200]
+            full = e.read().decode("utf-8", "ignore")
+            msg = full[:300]
             if e.code == 404 and model[0] != a.fallback:
                 print("  model 404 -> fallback", a.fallback); model[0] = a.fallback; continue
+            if e.code == 429 and ("PerDay" in full or "per day" in full.lower()):
+                # true daily quota for this model (quota is counted per model)
+                if model[0] != a.fallback:
+                    print("  daily quota on", model[0], "-> switching to", a.fallback)
+                    model[0] = a.fallback; continue
+                raise Quota("daily quota: " + msg)
             if e.code in (429, 500, 503):
-                if t >= 2 and model[0] != a.fallback:
+                # rate limit or overload: wait and retry, never abort here
+                if t >= 3 and model[0] != a.fallback:
                     print("  switching to", a.fallback); model[0] = a.fallback; continue
-                if t == 5:
-                    raise Quota(msg)
-                print("  HTTP %d, wait %ds" % (e.code, 30 * (t + 1))); time.sleep(30 * (t + 1)); continue
+                w = min(30 * (t + 1), 120)
+                print("  HTTP %d, wait %ds" % (e.code, w)); time.sleep(w); continue
             print("  HTTP", e.code, msg); return None
         except Exception as e:
             print("  error:", e); time.sleep(5)
+    print("  gave up on this page")
     return None
 
 def get_pdf(b):
@@ -104,6 +112,8 @@ def pack():
         json.dump({"grade": G, "books": out}, z, ensure_ascii=False)
     print("Packed %d books -> %s" % (len(out), path))
 
+fails = 0
+stopped = False
 try:
     for b in books:
         print("Book:", b["title"])
@@ -122,7 +132,11 @@ try:
                 continue
             txt = ask(base64.b64encode(open(base + ".jpg", "rb").read()).decode())
             if txt is None:
+                fails += 1
+                if fails >= 5:
+                    raise Quota("5 consecutive failed pages (API unavailable)")
                 continue
+            fails = 0
             done[str(p)] = txt
             print("  page %d/%d: %d chars" % (p, last, len(txt)))
             if p % 5 == 0:
@@ -130,8 +144,11 @@ try:
             time.sleep(3)
         save(b)
 except Quota as e:
-    print("QUOTA reached, stopping:", e)
+    stopped = True
+    print("STOPPED early, partial results will be saved:", e)
 finally:
     for b in books:
         save(b)
     pack()
+if stopped:
+    sys.exit(1)  # make the run show red instead of a fake green check
