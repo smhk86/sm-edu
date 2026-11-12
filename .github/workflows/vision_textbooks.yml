@@ -1,0 +1,54 @@
+name: Vision textbooks (sciences)
+on:
+  workflow_dispatch:
+    inputs:
+      levels:
+        description: 'Niveaux (JSON)'
+        default: '["1AM"]'
+        required: true
+      book:
+        description: 'Optionnel : partie du titre'
+        default: ''
+        required: false
+env:
+  TEXTBOOKS_REPO: smhk86/sm-textbooks
+  RELEASE_TAG: data
+jobs:
+  vision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        level: ${{ fromJSON(inputs.levels) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install poppler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+      - name: Catalogue
+        run: python3 tools/fetch_textbooks.py catalogue --grade "${{ matrix.level }}"
+      - name: Seed from release
+        env:
+          GH_TOKEN: ${{ secrets.TEXTBOOKS_TOKEN }}
+        run: gh release download "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" -p "${{ matrix.level }}-sci.json.gz" -D seed || true
+      - name: Vision
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          BOOK: ${{ inputs.book }}
+        run: |
+          ARGS=()
+          if [ -n "$BOOK" ]; then ARGS+=(--book "$BOOK"); fi
+          SEED="seed/${{ matrix.level }}-sci.json.gz"
+          if [ -f "$SEED" ]; then ARGS+=(--seed "$SEED"); fi
+          python3 tools/vision_run.py --grade "${{ matrix.level }}" "${ARGS[@]}"
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.TEXTBOOKS_TOKEN }}
+        run: |
+          ls -lh textbooks_out
+          gh release view "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" >/dev/null 2>&1 || \
+            gh release create "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" --title "Textbooks data" --notes "Index texte des manuels par niveau"
+          gh release upload "$RELEASE_TAG" textbooks_out/*-sci.json.gz --repo "$TEXTBOOKS_REPO" --clobber
