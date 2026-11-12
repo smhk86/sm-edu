@@ -29,7 +29,9 @@ for n in "123":
     LEVELS[n + "AS"] = ["/ens-sec/%sas/textbooks/" % n]
 
 SUBJECTS = [("رياضيات", "maths"), ("الرياضيات", "maths"), ("فيزياء", "physics"),
-            ("الفيزياء", "physics"), ("علوم", "sciences"), ("عربية", "arabic"),
+            ("الفيزياء", "physics"), ("فيزيائية", "physics"),
+            ("إسلامية", "islamic"), ("اسلامية", "islamic"),  # before "علوم": «العلوم الإسلامية»
+            ("علوم", "sciences"), ("عربية", "arabic"),
             ("فرنسية", "french"), ("انجليزية", "english"), ("إنجليزية", "english"),
             ("إسلامية", "islamic"), ("اسلامية", "islamic"), ("تاريخ", "history"),
             ("جغرافيا", "geography"), ("مدنية", "civic"), ("أمازيغية", "tamazight"),
@@ -252,7 +254,7 @@ def cmd_pack(a):
     log("Packed %d books -> %s/%s.json.gz ; needs review: %d" % (len(books), OUT, g, len(report)))
 
 
-TEXT_SUBJECTS = {"arabic", "islamic", "history", "geography", "civic"}
+TEXT_SUBJECTS = {"physics", "sciences", "maths", "arabic", "islamic", "history", "geography", "civic"}
 
 
 def page_ok(text):
