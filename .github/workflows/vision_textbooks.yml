@@ -45,6 +45,7 @@ jobs:
           if [ -f "$SEED" ]; then ARGS+=(--seed "$SEED"); fi
           python3 tools/vision_run.py --grade "${{ matrix.level }}" "${ARGS[@]}"
       - name: Publish
+        if: ${{ always() }}
         env:
           GH_TOKEN: ${{ secrets.TEXTBOOKS_TOKEN }}
         run: |
