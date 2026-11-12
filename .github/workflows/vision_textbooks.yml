@@ -40,6 +40,7 @@ jobs:
         run: gh release download "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" -p "${{ matrix.level }}-sci.json.gz" -D seed || true
       - name: Vision
         env:
+          PYTHONUNBUFFERED: "1"
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           BOOK: ${{ inputs.book }}
           SUBJECTS: ${{ inputs.subjects }}
