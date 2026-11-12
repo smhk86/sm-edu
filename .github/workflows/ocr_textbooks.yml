@@ -1,0 +1,84 @@
+name: OCR textbooks
+
+# Lancement manuel : Actions -> OCR textbooks -> Run workflow
+on:
+  workflow_dispatch:
+    inputs:
+      levels:
+        description: 'Niveaux (JSON), ex: ["1AM"] ou ["1AM","2AM","3AM","4AM"]'
+        default: '["1AM"]'
+        required: true
+      book:
+        description: 'Optionnel : une partie du titre pour ne traiter qu un livre'
+        default: ''
+        required: false
+      publish:
+        description: 'Publier les resultats dans le depot des livres'
+        type: boolean
+        default: true
+
+env:
+  # >>> A MODIFIER : ton compte GitHub / nom du depot des livres <<<
+  TEXTBOOKS_REPO: smhk86/sm-textbooks
+  RELEASE_TAG: data
+
+jobs:
+  ocr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        level: ${{ fromJSON(inputs.levels) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tesseract + poppler
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr poppler-utils
+          mkdir -p "$HOME/tessdata"
+          curl -fsSL -o "$HOME/tessdata/ara.traineddata" \
+            https://github.com/tesseract-ocr/tessdata_best/raw/main/ara.traineddata
+          ls -lh "$HOME/tessdata"
+
+      - name: Catalogue
+        run: python3 tools/fetch_textbooks.py catalogue --grade "${{ matrix.level }}"
+
+      - name: OCR
+        env:
+          BOOK: ${{ inputs.book }}
+        run: |
+          ARGS=()
+          if [ -n "$BOOK" ]; then ARGS+=(--book "$BOOK"); fi
+          python3 tools/fetch_textbooks.py ocr --grade "${{ matrix.level }}" \
+            --jobs "$(nproc)" --dpi 200 --tessdata "$HOME/tessdata" "${ARGS[@]}"
+
+      - name: Pack
+        run: python3 tools/fetch_textbooks.py pack --grade "${{ matrix.level }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: textbooks-${{ matrix.level }}
+          path: textbooks_out/*
+          if-no-files-found: error
+
+  publish:
+    needs: ocr
+    if: ${{ inputs.publish }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Publish to the textbooks repo
+        env:
+          GH_TOKEN: ${{ secrets.TEXTBOOKS_TOKEN }}
+        run: |
+          ls -lh out
+          gh release view "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" >/dev/null 2>&1 || \
+            gh release create "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" \
+              --title "Textbooks data" --notes "Index texte des manuels par niveau"
+          gh release upload "$RELEASE_TAG" out/* --repo "$TEXTBOOKS_REPO" --clobber
