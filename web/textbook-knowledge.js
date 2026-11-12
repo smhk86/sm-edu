@@ -114,7 +114,7 @@
  async function selfTest(){
   const I=await ensure(),rep=[];
   for(const b of I.books){
-   const pages=pagesOf(b).filter(p=>clean(p.text).length>300);
+   const pages=pagesOf(b).filter(p=>clean(p.text).replace(/\s/g,'').length>=20);
    if(!pages.length){rep.push({id:b.id,title:b.title,ok:false,reason:'no-text'});continue}
    const p=pages[Math.floor(pages.length/2)];
    const toks=[...new Set(tokens(p.text))].filter(t=>t.length>=4&&I.post.has(t)).sort((a,c)=>I.post.get(a).length-I.post.get(c).length).slice(0,3);

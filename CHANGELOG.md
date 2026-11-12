@@ -1,3 +1,5 @@
+- Improved textbook knowledge-base regression coverage: short indexable pages, empty pages, grade/book isolation, page counts, and self-test consistency. The knowledge-base self-test now uses the same 20-character minimum as indexing.
+
 ## v2.9.40 — Textbook knowledge base for the Smart Teacher
 
 - New textbook-knowledge.js: all saved textbooks form one local page-level search index; the Smart Teacher chat, offline answers, document review and prompt builders use the best matching pages with book title + page number.

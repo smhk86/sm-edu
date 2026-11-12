@@ -77,9 +77,23 @@ const K=SM_TEXTBOOK_KB,T=K._t,D=SM_TEXTBOOK_DL;
  assert(big.length<9800&&big.includes('مرجع طويل'),'new book is indexed after the change event, context stays under the cap');
  K.setAuto(false);
 
- /* self-test */
+ /* indexing boundaries, book scoping, and self-test on short but valid pages */
+ const shortBook={id:'b-short',title:'ملخص قصير',grade:'الرابعة متوسط',subject:'الرياضيات',chars:75,pageTexts:[pg(7,'قاعدة التناسب في المثلث تساعد على حساب الأطوال المجهولة بسهولة.')]};
+ const emptyBook={id:'b-empty',title:'كتاب فارغ',grade:'الرابعة متوسط',subject:'عام',chars:0,pageTexts:[pg(1,'نص قصير')]};
+ BOOKS=BOOKS.concat([shortBook,emptyBook]);
+ listeners['sm-books-changed']();await new Promise(r=>setTimeout(r,20));
+ hits=await K.search('قاعدة التناسب المثلث');
+ assert(hits.some(h=>h.bookId==='b-short'&&h.page===7),'valid short pages are indexed and searchable');
+ assert(!hits.some(h=>h.bookId==='b-empty'),'pages shorter than the indexing minimum are ignored');
+ assert((await K.search('قاعدة التناسب',{bookId:'b-short'})).every(h=>h.bookId==='b-short'),'bookId filter never leaks another book');
+ const gradeHits=await K.search('معادلة الدرجة الأولى',{grade:'الأولى متوسط'});
+ assert(gradeHits.length>0&&gradeHits.every(h=>h.bookId==='b-other'),'explicit grade filter returns only the matching grade');
+ const st2=await K.stats();
+ assert(st2.books===BOOKS.length&&st2.pages===49,'stats count books and indexable pages, including legacy text split into pages');
+ /* self-test must test the same minimum-length pages that the index actually accepts */
  const rep=await K.selfTest();
- assert(rep.length===BOOKS.length&&rep.every(r=>r.ok),'self-test finds a page of every book: '+JSON.stringify(rep.filter(r=>!r.ok)));
+ assert(rep.length===BOOKS.length&&rep.filter(r=>r.id!=='b-empty').every(r=>r.ok),'self-test finds a page of every book with indexable text, including short pages: '+JSON.stringify(rep.filter(r=>!r.ok)));
+ assert(rep.find(r=>r.id==='b-empty')?.reason==='no-text','self-test clearly reports a book with no searchable text');
 
  /* offline answers + prompt builders (wrapped once all scripts have loaded) */
  global.offlineTutorReply=async()=>null;
