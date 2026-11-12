@@ -5,7 +5,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--grade", required=True)
 ap.add_argument("--subjects", default="maths,physics,sciences")
 ap.add_argument("--model", default="gemini-3.5-flash")
-ap.add_argument("--fallback", default="gemini-2.5-flash")
+ap.add_argument("--fallback", default="gemini-3.1-flash-lite")
 ap.add_argument("--dpi", type=int, default=150)
 ap.add_argument("--book", default="")
 ap.add_argument("--limit", type=int, default=0)
@@ -47,6 +47,8 @@ def ask(b64):
             if e.code == 404 and model[0] != a.fallback:
                 print("  model 404 -> fallback", a.fallback); model[0] = a.fallback; continue
             if e.code in (429, 500, 503):
+                if t >= 2 and model[0] != a.fallback:
+                    print("  switching to", a.fallback); model[0] = a.fallback; continue
                 if t == 5:
                     raise Quota(msg)
                 print("  HTTP %d, wait %ds" % (e.code, 30 * (t + 1))); time.sleep(30 * (t + 1)); continue
