@@ -26,11 +26,11 @@
   return aiBox()+_stp();
  };
 
- // 3) AI box on the smart-teacher page (uses the in-app Groq key).
+ // 3) AI box on the smart-teacher page (uses the in-app Gemini key).
  function aiBox(){
-  const on=window.SM_GROQ&&window.SM_GROQ.enabled();
+  const on=window.SM_AI&&window.SM_AI.enabled();
   const hasServer=false;
-  const setup=(!on&&!hasServer)?`<div class="notice">⚡ ${tr('لتفعيل الشرح بالذكاء الاصطناعي: افتحي صفحة «المساعد الذكي» ← «مفتاح Groq» وأدخلي المفتاح.','Pour activer l’IA : page « Assistant IA » → « Clé Groq ».','To enable AI explanations: open the AI assistant page → “Groq key” and enter your key.')} <button class="secondary-btn" type="button" onclick="go('tutor')">${tr('فتح الإعداد','Ouvrir','Open setup')}</button></div>`:'';
+  const setup=(!on&&!hasServer)?`<div class="notice">⚡ ${tr('لتفعيل الشرح بالذكاء الاصطناعي: افتحي صفحة «المساعد الذكي» ← «مفتاح Gemini» وأدخلي المفتاح.','Pour activer l’IA : page « Assistant IA » → « Clé Gemini ».','To enable AI explanations: open the AI assistant page → “Gemini key” and enter your key.')} <button class="secondary-btn" type="button" onclick="go('tutor')">${tr('فتح الإعداد','Ouvrir','Open setup')}</button></div>`:'';
   return `<section class="panel" id="stAiBox"><h3>🤖 ${tr('اسألي المعلم الذكي','Demandez à l’enseignant IA','Ask the AI teacher')}</h3>${setup}`+
    `<div class="toolbar"><input id="stAiTopic" placeholder="${tr('اكتبي الدرس أو السؤال…','Saisissez la leçon ou la question…','Type a lesson or question…')}" autocomplete="off"></div>`+
    `<div class="toolbar"><button class="primary-btn" type="button" onclick="stAiAsk('lesson')">${tr('اشرح الدرس','Expliquer','Explain')}</button><button class="secondary-btn" type="button" onclick="stAiAsk('practice')">${tr('5 تمارين','5 exercices','5 exercises')}</button></div>`+
@@ -44,7 +44,7 @@
   try{
    const base=typeof apiBase==='function'?apiBase():'';
    const r=await fetch(`${base}/api/v1/ai/tutor`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task,message:topic,student_answer:'',language:L(),grade,subject:subj,learning_context:''})});
-   let d;try{d=await r.json()}catch{throw new Error(tr('الذكاء الاصطناعي غير مفعّل. أدخلي مفتاح Groq في صفحة المساعد الذكي.','IA non activée : saisissez la clé Groq dans l’assistant IA.','AI is not enabled. Enter your Groq key in the AI assistant page.'))}
+   let d;try{d=await r.json()}catch{throw new Error(tr('الذكاء الاصطناعي غير مفعّل. أدخلي مفتاح Gemini في صفحة المساعد الذكي.','IA non activée : saisissez la clé Gemini dans l’assistant IA.','AI is not enabled. Enter your Gemini key in the AI assistant page.'))}
    if(!r.ok)throw new Error(typeof d.detail==='string'?d.detail:'AI error');
    out.textContent=d.answer||'';
   }catch(e){out.textContent=e.message}

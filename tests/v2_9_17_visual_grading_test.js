@@ -1,7 +1,7 @@
 // v2.9.40 — diagram-aware image grading and confidence safeguards.
 const fs=require('fs'),path=require('path'),assert=require('assert'),vm=require('vm');
 const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
-const ctx={console,Response,lang:'ar',grade:'الثانية متوسط',toast(){},document:{getElementById(){return null}},SM_GROQ:{enabled:()=>true}};
+const ctx={console,Response,lang:'ar',grade:'الثانية متوسط',toast(){},document:{getElementById(){return null}},SM_AI:{enabled:()=>true}};
 ctx.window=ctx;vm.createContext(ctx);vm.runInContext(read('web/auto-grader.js'),ctx);
 const t=ctx.SM_AUTOGRADER._t;
 const prompt=t.buildGradingPrompt({subject:'رياضيات',grade:'الثالثة متوسط',maxMark:20,studentImageCount:2,modelImageCount:1});

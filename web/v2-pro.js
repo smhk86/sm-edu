@@ -1,7 +1,7 @@
 /* SM SCHOOL AI v2.0.0 — professional pass. Loaded last; refines earlier scripts.
    1) exercise-bank quality filter + verified generated maths (3AP / 2AM / 1AS)
    2) smart teacher that works for every subject that has questions
-   3) AI assistant that always answers (local mode) and can use Groq or Groq keys
+   3) AI assistant that always answers (local mode) and can use Gemini or Gemini keys
    4) clean test bank (no archive / PDF / admin panels)
 */
 (function(){
@@ -110,7 +110,7 @@
   };
  }
 
- /* ================= 3) AI ASSISTANT: local mode + Groq option ================= */
+ /* ================= 3) AI ASSISTANT: local mode + Gemini option ================= */
  const lessonsFor=subject=>{
   const all=(typeof starterLessons!=='undefined'?starterLessons:[]);
   return all.filter(x=>(x.gr?x.gr===grade:x.g===level)&&(!subject||subject==='عام'||x.s===subject));
@@ -124,7 +124,7 @@
   const bank=(await otBank()).filter(r=>r.grade===grade&&(!subject||subject==='عام'||r.subject===subject));
   const tokens=otTokens(msg),lessons=lessonsFor(subject),rl=rankLessons(lessons,tokens);
   const rb=bank.map(r=>({r,s:otScore(r,tokens)})).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
-  const head=tr('🟢 وضع المنصة (دون إنترنت): الجواب من دروس وتمارين السنة المختارة. لشرح حرّ لأي سؤال فعّل مفتاح Groq أو Groq من أعلى الصفحة.','🟢 Mode plateforme (hors ligne) : réponse issue des leçons et exercices du niveau. Pour des explications libres, ajoutez une clé Groq ou Groq.','🟢 Platform mode (offline): answer comes from this grade’s lessons and exercises. Add a Groq or Groq key above for free-form explanations.');
+  const head=tr('🟢 وضع المنصة (دون إنترنت): الجواب من دروس وتمارين السنة المختارة. لشرح حرّ لأي سؤال فعّل مفتاح Gemini أو Gemini من أعلى الصفحة.','🟢 Mode plateforme (hors ligne) : réponse issue des leçons et exercices du niveau. Pour des explications libres, ajoutez une clé Gemini ou Gemini.','🟢 Platform mode (offline): answer comes from this grade’s lessons and exercises. Add a Gemini or Gemini key above for free-form explanations.');
   const lessonBlock=l=>`📘 ${arTxt(l.title)}\n🎯 ${arTxt(l.goal)}\n\n${arTxt(l.body)}\n\n✍️ ${tr('تطبيق','Application','Practice')}: ${arTxt(l.task)}\n✅ ${tr('الجواب','Réponse','Answer')}: ${arTxt(l.answer)}`;
   const pickQs=n=>{const base=rb.length?rb.map(x=>x.r):bank.slice();const seen=new Set();return base.filter(r=>{if(seen.has(r.question))return false;seen.add(r.question);return true}).slice(0,n)};
   if(task==='practice'){

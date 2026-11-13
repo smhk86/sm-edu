@@ -1,0 +1,23 @@
+const fs=require('fs'),assert=require('assert');
+const ls={};global.localStorage={getItem:k=>ls[k]??null,setItem:(k,v)=>{ls[k]=String(v)},removeItem:k=>{delete ls[k]}};
+global.document={querySelectorAll:()=>[],querySelector:()=>null,getElementById:()=>null};
+global.Response=class{constructor(b,o){this.b=b;this.status=o.status;this.ok=o.status<400}async json(){return JSON.parse(this.b)}};
+global.lang='ar';let calls=[];
+const K=n=>n.padEnd(24,'x');
+global.window={fetch:async(u,i)=>{const k=i.headers['x-goog-api-key'];calls.push(k);
+ if(k===K('K1'))return{ok:false,status:429,text:async()=>'RESOURCE_EXHAUSTED PerDay'};
+ if(k===K('K2'))return{ok:false,status:429,text:async()=>'per minute rate'};
+ return{ok:true,status:200,json:async()=>({candidates:[{content:{parts:[{text:'ok'}]}}]})}}};
+eval(fs.readFileSync(__dirname+'/../web/gemini-direct.js','utf8'));
+(async()=>{
+ const body=JSON.stringify({task:'lesson',message:'hi',language:'ar',grade:'1AM',subject:'maths'});
+ const go=async()=>{const r=await window.fetch('/api/v1/ai/tutor',{body});return {s:r.status,j:await r.json()}};
+ ls.smSchoolGeminiKeys=JSON.stringify([K('K1'),K('K2'),K('K3')]);
+ let r=await go();assert.strictEqual(r.s,200);assert.strictEqual(r.j.key,3,'K1 (per-day) and K2 (per-minute) skipped, K3 used');
+ calls=[];r=await go();assert.deepStrictEqual(calls.slice(0,1),[K('K3')],'rotation starts from the last working key');
+ assert.deepStrictEqual(JSON.parse(ls.smSchoolGeminiExhausted).i,[0],'only the per-day key is remembered as exhausted');
+ ls.smSchoolGeminiKeys=JSON.stringify([K('K1')]);delete ls.smSchoolGeminiIdx;
+ r=await go();assert.strictEqual(r.s,429,'all keys out of quota -> 429');
+ delete ls.smSchoolGeminiKeys;assert.strictEqual(window.SM_AI.enabled(),false);
+ console.log('gemini_direct_test ok');
+})().catch(e=>{console.error(e);process.exit(1)});

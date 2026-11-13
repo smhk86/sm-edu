@@ -1252,7 +1252,7 @@ async def build_curriculum_exam(payload: CurriculumExamRequest):
     common_meta = {"id": paper_id, "academic_year": "2026-2027", "grade": payload.grade, "stage": stage, "subject": payload.subject, "term": payload.term, "question_count": len(selected), "total_points": payload.total_points, "duration_minutes": payload.duration_minutes, "difficulty_requested": payload.difficulty, "difficulty_distribution": dict((d, sum(1 for x in selected if _normalize_difficulty(x.get("difficulty")) == d)) for d in ("easy", "medium", "hard")), "language": resolved_language, "content_status": "platform_authored_practice_not_official_ministry_exam", "curriculum_alignment_status": curriculum_status, "curriculum_policy_note": policy_note, "official_ministry_exam": False, "pathway_specific": False, "teacher_review_required": True, "quality_check": {"status": "passed", "unique_question_ids": len({str(x.get('id')) for x in selected}) == len(selected), "all_questions_answerable": all(bool(str(x.get('solution') or '').strip() or x.get('accepted_answers') or (isinstance(x.get('answer_index'), int) and 0 <= x.get('answer_index') < len(x.get('choices', [])))) for x in selected), "selected_question_count": len(selected), "requested_question_count": payload.question_count}, "assessment_blueprint": {"selection_method": "balanced_topic_and_cognitive_process_round_robin", "topic_distribution": dict(topic_distribution), "cognitive_process_distribution": dict(cognitive_distribution), "taxonomy_status": "platform_practice_tags_not_official_ministry_competencies", "official_competency_alignment_verified": False}, "policy_sources": [{"id": "ministry-2026-2027-reform-update", "url": "https://www.education.gov.dz/2026/07/30/وزير-التربية-الوطنية-ينشّط-ندوة-صحفية-يقدّم-فيها-توضيحات-حول-الترتيبات-البيداغوجية-الجديدة-الخاصة-بالدخول-المدرسي-2026-2027/"}, {"id": "ministry-decision-36-2026-09-09", "url": "https://www.education.gov.dz/2026/09/10/قرار-رقم-36-مؤرخ-في-27-ربيع-الأول-عام-1448-الموافق-9-سبتمبر-سنة-2026-يتضمن-إلغاء-القرار-رقم-20-المؤرخ-في-13-صفر-عام-1448-الموافق-28-جويلية-سنة-2026-المتضمن-المواقيت-والمعاملات-لمرحلة-التعليم-الثانوي-العام-والتكنولوجي/"}]}
     return {"paper": {**common_meta, "student_version": {"title": f"Practice assessment — {payload.grade} — {payload.subject}", "instructions": f"Answer all questions. Duration: {payload.duration_minutes} minutes. Total: {payload.total_points} points.", "questions": student_questions}, "teacher_version": {"title": f"Teacher copy — {payload.grade} — {payload.subject}", "marking_scheme": [{"question_number": x["number"], "points": x["points"], "criteria": _build_question_rubric(x, x["points"])} for x in teacher_questions], "answer_key": teacher_questions}}, "curriculum_guardrails": {"exact_grade_subject_term_match": True, "cross_grade_substitution": False, "cross_term_substitution": False, "cross_language_substitution": False, "resolved_question_language": resolved_language, "unverified_stream_mapping_used": False, "official_sequence_verified": False, "policy_note": policy_note}}
 
-# Structured exam-question understanding assistant. Groq is optional; fallback is explicitly heuristic.
+# Structured exam-question understanding assistant. Gemini is optional; fallback is explicitly heuristic.
 PDF_ANALYSES_META = PDF_REVIEW_ROOT / "review" / "question-analyses.json"
 
 class PDFQuestionAnalysisRequest(BaseModel):
@@ -1294,7 +1294,7 @@ def _heuristic_question_analysis(candidate, language):
         caveat="تحليل أولي قائم على قواعد نصية؛ لم يتم اشتقاق نتيجة نهائية موثوقة. راجع نص السؤال والوثائق والرسوم يدوياً."
         title="فهم السؤال — تحليل أولي"
         givens_label,req_label,concept_label,steps_label,answer_label,checks_label="المعطيات المرصودة","المطلوب المحتمل","مفاهيم ينبغي مراجعتها","خطة الحل المقترحة","الإجابة / الحل","التحقق والمراجعة"
-        answer="لم تُنشأ إجابة نهائية في الوضع المحلي. أكمل الحل يدوياً أو فعّل مفتاح Groq على الخادم للحصول على شرح مولّد يحتاج بدوره إلى مراجعة الأستاذ."
+        answer="لم تُنشأ إجابة نهائية في الوضع المحلي. أكمل الحل يدوياً أو فعّل مفتاح Gemini على الخادم للحصول على شرح مولّد يحتاج بدوره إلى مراجعة الأستاذ."
         checks=["هل نُقلت جميع المعطيات دون تغيير؟","هل الوحدات متجانسة؟","هل أجاب الحل عن كل أجزاء المطلوب؟","هل يمكن التحقق من النتيجة بطريقة مستقلة؟"]
     elif language == "fr":
         concepts=(["Mathématiques : vérifier les unités, les symboles et les relations avant le calcul."] if math_hint else [])+(["Physique : relever les données avec leurs unités et choisir la loi pertinente."] if physics_hint else [])+(["Sciences naturelles : distinguer observation, interprétation et conclusion."] if science_hint else [])
@@ -1302,7 +1302,7 @@ def _heuristic_question_analysis(candidate, language):
         steps=["Lire tout l'énoncé et préciser chaque demande.","Relever les données explicites sans modifier unités ni symboles.","Choisir la relation ou la notion adaptée et justifier ce choix.","Rédiger les étapes sans omettre conversions ni justifications.","Vérifier le résultat, les unités et la cohérence avec la question."]
         caveat="Analyse heuristique initiale ; aucune réponse finale fiable n'est déduite automatiquement. Vérification humaine nécessaire."
         title="Comprendre l'énoncé — analyse initiale";givens_label,req_label,concept_label,steps_label,answer_label,checks_label="Données repérées","Demandes possibles","Notions à revoir","Plan de résolution","Réponse / solution","Vérifications"
-        answer="Aucune solution finale n'est produite en mode local. Résoudre manuellement ou configurer Groq côté serveur ; toute réponse générée doit être vérifiée par l'enseignant."
+        answer="Aucune solution finale n'est produite en mode local. Résoudre manuellement ou configurer Gemini côté serveur ; toute réponse générée doit être vérifiée par l'enseignant."
         checks=["Toutes les données sont-elles fidèlement reprises ?","Les unités sont-elles cohérentes ?","Chaque partie de la consigne est-elle traitée ?","Le résultat peut-il être vérifié indépendamment ?"]
     else:
         concepts=(["Mathematics: check units, symbols and relationships before substitution."] if math_hint else [])+(["Physics: list quantities with units and select a relevant law."] if physics_hint else [])+(["Natural sciences: distinguish observation, interpretation and conclusion."] if science_hint else [])
@@ -1310,7 +1310,7 @@ def _heuristic_question_analysis(candidate, language):
         steps=["Read the complete question and identify each requested task.","Extract explicit givens without changing units or symbols.","Choose a suitable rule, relationship or concept and justify it.","Write the solution step by step, including conversions and reasoning.","Check the result, units and consistency with the requested task."]
         caveat="Initial rule-based analysis; no reliable final answer has been inferred. Inspect the source question, figures and documents manually."
         title="Understand the question — initial analysis";givens_label,req_label,concept_label,steps_label,answer_label,checks_label="Detected givens","Possible requirements","Concepts to review","Suggested solution plan","Answer / solution","Checks"
-        answer="No final answer is generated in local mode. Solve manually or use the in-app Groq tutor for a generated explanation; teacher review is still required."
+        answer="No final answer is generated in local mode. Solve manually or use the in-app Gemini tutor for a generated explanation; teacher review is still required."
         checks=["Were all givens copied accurately?","Are units consistent?","Does the solution address every requested part?","Can the result be independently checked?"]
     givens = givens or ([lines[0][:400]] if lines else [])
     wanted = wanted or ([lines[-1][:400]] if len(lines)>1 else [])
@@ -1387,15 +1387,15 @@ async def claude_content_draft(payload: ClaudeContentRequest):
 
 @app.post("/api/v1/ai/tutor")
 async def ai_tutor(payload: TutorRequest):
-    """Local fallback only. Live AI requests are routed directly from the app to Groq."""
+    """Local fallback only. Live AI requests are routed directly from the app to Gemini."""
     demos = {
-        "lesson": "المعلّم الذكي غير مفعّل بعد. افتح إعدادات Groq داخل التطبيق وأدخل مفتاحك لتفعيل الشرح المباشر.",
-        "practice": "إنشاء التمارين بالذكاء الاصطناعي يحتاج إلى تفعيل Groq من إعدادات التطبيق. يمكنك استعمال بنك التمارين المحلي حالياً.",
-        "evaluate": "التصحيح الذكي يحتاج إلى تفعيل Groq من إعدادات التطبيق. يمكنك مقارنة إجابتك بالحلول الموجودة في الدرس حالياً."
+        "lesson": "المعلّم الذكي غير مفعّل بعد. افتح إعدادات Gemini داخل التطبيق وأدخل مفتاحك لتفعيل الشرح المباشر.",
+        "practice": "إنشاء التمارين بالذكاء الاصطناعي يحتاج إلى تفعيل Gemini من إعدادات التطبيق. يمكنك استعمال بنك التمارين المحلي حالياً.",
+        "evaluate": "التصحيح الذكي يحتاج إلى تفعيل Gemini من إعدادات التطبيق. يمكنك مقارنة إجابتك بالحلول الموجودة في الدرس حالياً."
     }
     return {"mode": "demo", "task": payload.task, "answer": demos[payload.task], "remaining": None}
 
 @app.post("/api/v1/ai/chat")
 async def ai_chat(payload: ChatRequest):
-    """Compatibility fallback; the client sends live requests directly to Groq."""
-    return {"mode": "demo", "answer": "المساعد الذكي غير مفعّل بعد. افتح إعدادات Groq داخل التطبيق وأدخل مفتاحك لتفعيل الإجابات المباشرة.", "remaining": None}
+    """Compatibility fallback; the client sends live requests directly to Gemini."""
+    return {"mode": "demo", "answer": "المساعد الذكي غير مفعّل بعد. افتح إعدادات Gemini داخل التطبيق وأدخل مفتاحك لتفعيل الإجابات المباشرة.", "remaining": None}

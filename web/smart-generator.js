@@ -157,7 +157,7 @@
   return '';
  }
  /* ---------- AI simulation (optional) ---------- */
- const aiReady=()=>!!(ls.get('smSchoolGroqKey')||(typeof apiBase==='function'&&apiBase()));
+ const aiReady=()=>!!(ls.get('smSchoolGeminiKeys')||(typeof apiBase==='function'&&apiBase()));
  function parseAI(text,s){
   const clean=String(text||'').replace(/```json|```/g,'');const a=clean.indexOf('{'),b=clean.lastIndexOf('}');
   if(a<0||b<=a)return null;
@@ -184,10 +184,10 @@
   const groups=parseAI(d.answer||d.response||'',Object.assign({},s,{points:s.points}));
   return {groups,raw:d.answer||d.response||''};
  }
- const noAi='<p class="notice">التوليد بالذكاء الاصطناعي يحتاج مفتاح Groq (من لوحة المعلّم الذكي) أو خادماً مفعّلاً.</p>';
+ const noAi='<p class="notice">التوليد بالذكاء الاصطناعي يحتاج مفتاح Gemini (من لوحة المعلّم الذكي) أو خادماً مفعّلاً.</p>';
  async function aiGenerate(refIdx){
   if(busy)return;const mount=$('smGeneratorResult');if(!mount)return;
-  if(!aiReady()){mount.innerHTML=noAi;try{if(typeof g.toast==='function')g.toast('التوليد بالذكاء الاصطناعي يحتاج مفتاح Groq من لوحة المعلّم الذكي أو خادماً مفعّلاً.')}catch(e){}try{mount.scrollIntoView({behavior:'smooth'})}catch(e){}return}
+  if(!aiReady()){mount.innerHTML=noAi;try{if(typeof g.toast==='function')g.toast('التوليد بالذكاء الاصطناعي يحتاج مفتاح Gemini من لوحة المعلّم الذكي أو خادماً مفعّلاً.')}catch(e){}try{mount.scrollIntoView({behavior:'smooth'})}catch(e){}return}
   busy=true;const s=Object.assign({},st);
   mount.innerHTML='<p class="notice">جارٍ إعداد الموضوع بالذكاء الاصطناعي…</p>';
   let ref='',refNote='';

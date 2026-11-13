@@ -11,8 +11,8 @@ assert(js.includes('starterLessons')&&js.includes('lessonLibraryPage')&&js.inclu
 assert(js.includes('parentDashboard')&&js.includes('downloadParentReport')&&js.includes('text/csv;charset=utf-8'));
 assert((js.match(/g:'(?:primary|middle|secondary)'/g)||[]).length>=9);
 assert(js.includes('startMockExam')&&js.includes('submitMockExam')&&js.includes('examClock')&&js.includes('shuffleList')&&js.includes('cancelActiveExam'));
-assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('Live AI requests are routed directly from the app to Groq'));
-assert(fs.readFileSync(root+'/web/groq-direct.js','utf8').includes('https://api.groq.com/openai/v1'));
+assert(fs.readFileSync(root+'/backend/app/main.py','utf8').includes('Live AI requests are routed directly from the app to Gemini'));
+assert(fs.readFileSync(root+'/web/gemini-direct.js','utf8').includes('https://generativelanguage.googleapis.com/v1beta/models'));
 assert(js.includes('tutorSubject')&&js.includes("subject:$('#tutorSubject')?.value||'عام'"));
 assert(js.includes('smSchoolRevisionPlan')&&js.includes('track')); 
 assert(js.includes('subjectPractice')&&js.includes('practiceDemo')&&js.includes('backSubjects'));
@@ -146,7 +146,7 @@ console.log('PASS: v1.4.0 feature retained: local personalized remediation plans
 
 assert(js.includes('/api/v1/ai/tutor')&&js.includes('tutorTask')&&js.includes('studentAnswer'));
 assert(js.includes('value="lesson"')&&js.includes('value="practice"')&&js.includes('value="evaluate"'));
-assert(backend.includes('class TutorRequest')&&backend.includes('/api/v1/ai/tutor')&&backend.includes('Live AI requests are routed directly from the app to Groq')&&backend.includes('in-app Groq tutor'));
+assert(backend.includes('class TutorRequest')&&backend.includes('/api/v1/ai/tutor')&&backend.includes('Live AI requests are routed directly from the app to Gemini')&&backend.includes('in-app Gemini tutor'));
 assert(fs.readFileSync(root+'/web/styles.css','utf8').includes('.tutor-form'));
 console.log('PASS: v1.4.0 feature retained: AI tutor lesson teaching, practice generation, written-answer feedback workflow and multilingual controls');
 
@@ -405,7 +405,7 @@ assert(js.includes('smSchoolTutorHistory:')&&js.includes('startsWith(\'smSchoolT
 const tutorBackend=fs.readFileSync(root+'/backend/app/main.py','utf8');
 assert(tutorBackend.includes('learner_name: str = Field(default="", max_length=50)'));
 assert(tutorBackend.includes('learning_context: str = Field(default="", max_length=1200)'));
-assert(fs.readFileSync(root+'/web/groq-direct.js','utf8').includes('never shame or label the learner.'));
+assert(fs.readFileSync(root+'/web/gemini-direct.js','utf8').includes('never shame or label the learner.'));
 assert(fs.readFileSync(root+'/web/styles.css','utf8').includes('v1.6.6 — learner-aware AI tutor'));
 console.log('PASS: v1.6.6 learner-aware tutor context, per-learner local history, backup/restore and deletion lifecycle');
 

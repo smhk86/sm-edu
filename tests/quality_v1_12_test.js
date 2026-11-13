@@ -44,7 +44,7 @@ for (const s of sit) {
 const be = fs.readFileSync(root + '/backend/app/main.py', 'utf8');
 assert(be.includes('def require_admin(') && !be.includes(':generateContent?key='));
 assert((be.match(/dependencies=\[Depends\(require_admin\)\]/g) || []).length >= 16);
-assert(!be.includes('x-goog-api-key') && !be.includes('api.groq.com') && !be.includes('generateContent'), 'AI provider credentials and calls must stay out of the backend');
+assert(!be.includes('x-goog-api-key') && !be.includes('api.gemini.com') && !be.includes('generateContent'), 'AI provider credentials and calls must stay out of the backend');
 const sw = fs.readFileSync(root + '/web/sw.js', 'utf8');
 assert(sw.includes('exercise-bank-2026-2027.json') && sw.includes('Promise.allSettled'));
 assert(fs.readFileSync(root + '/web/config.js', 'utf8').includes('smFetchJSON'));

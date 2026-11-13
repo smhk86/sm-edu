@@ -17,17 +17,17 @@
   });
  };
 
- /* ---------- 2) Network guard: no Groq key -> clear message instead of an HTML page ---------- */
+ /* ---------- 2) Network guard: no Gemini key -> clear message instead of an HTML page ---------- */
  const _fetch=window.fetch.bind(window);
  window.fetch=function(input,init){
   try{
    const url=typeof input==='string'?input:(input&&input.url)||'';
    if(/^\/api\/v1\//.test(url)){
     const base=(localStorage.getItem('smSchoolApiBase')||(window.SM_SCHOOL_CONFIG&&window.SM_SCHOOL_CONFIG.apiBase)||'').trim();
-    const groq=window.SM_GROQ&&window.SM_GROQ.enabled();
+    const gemini=window.SM_AI&&window.SM_AI.enabled();
     const isTutor=/\/api\/v1\/ai\/tutor$/.test(url.split('?')[0]);
-    if((isTutor&&!groq)||(!base&&!isTutor)){
-     const detail=isTutor?tr('الذكاء الاصطناعي غير مفعّل. أدخلي مفتاح Groq المجاني في أعلى صفحة «المساعد الذكي».','IA non activée : saisissez la clé Groq gratuite en haut de la page « Assistant IA ».','AI is not enabled. Paste your free Groq key at the top of the AI assistant page.'):tr('هذه الميزة تحتاج خادماً متصلاً وغير متاحة في التطبيق.','Cette fonction nécessite un serveur.','This feature needs a server and is not available in the app.');
+    if((isTutor&&!gemini)||(!base&&!isTutor)){
+     const detail=isTutor?tr('الذكاء الاصطناعي غير مفعّل. أدخلي مفتاح Gemini المجاني في أعلى صفحة «المساعد الذكي».','IA non activée : saisissez la clé Gemini gratuite en haut de la page « Assistant IA ».','AI is not enabled. Paste your free Gemini key at the top of the AI assistant page.'):tr('هذه الميزة تحتاج خادماً متصلاً وغير متاحة في التطبيق.','Cette fonction nécessite un serveur.','This feature needs a server and is not available in the app.');
      return Promise.resolve(new Response(JSON.stringify({detail}),{status:503,headers:{'Content-Type':'application/json'}}));
     }
    }
@@ -35,24 +35,24 @@
   return _fetch(input,init);
  };
 
- /* ---------- 3) AI status card (replaces the confusing "Groq server" notice) ---------- */
+ /* ---------- 3) AI status card (replaces the confusing "Gemini server" notice) ---------- */
  window.smAiStatusCard=function(){
-  const on=!!(window.SM_GROQ&&window.SM_GROQ.enabled());
-  if(on)return `<section class="panel ai-status ai-ok"><b>✅ ${tr('الذكاء الاصطناعي مفعّل','IA activée','AI is on')}</b><small>Groq · ${esc(window.SM_GROQ.model())}</small></section>`;
+  const on=!!(window.SM_AI&&window.SM_AI.enabled());
+  if(on)return `<section class="panel ai-status ai-ok"><b>✅ ${tr('الذكاء الاصطناعي مفعّل','IA activée','AI is on')}</b><small>Gemini · ${esc(window.SM_AI.model())}</small></section>`;
   return `<section class="panel ai-status"><b>⚪ ${tr('فعّل الذكاء الاصطناعي في 3 خطوات (مجاني)','Activez l’IA en 3 étapes (gratuit)','Turn on AI in 3 steps (free)')}</b>`+
-   `<ol><li>${tr('أنشئ مفتاحاً مجانياً من الموقع أدناه','Créez une clé gratuite sur le site ci-dessous','Create a free key on the site below')}</li><li>${tr('الصقه في خانة «مفتاح Groq» بالأسفل','Collez-la dans « Clé Groq » ci-dessous','Paste it in the “Groq key” box below')}</li><li>${tr('اضغط «حفظ وتفعيل» ثم «اختبار»','Appuyez sur « Enregistrer » puis « Tester »','Tap “Save” then “Test”')}</li></ol>`+
-   `<a class="primary-btn" href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer">${tr('إنشاء مفتاح Groq','Créer une clé Groq','Create a Groq key')} ↗</a>`+
+   `<ol><li>${tr('أنشئ مفتاحاً مجانياً من الموقع أدناه','Créez une clé gratuite sur le site ci-dessous','Create a free key on the site below')}</li><li>${tr('الصقه في خانة «مفتاح Gemini» بالأسفل','Collez-la dans « Clé Gemini » ci-dessous','Paste it in the “Gemini key” box below')}</li><li>${tr('اضغط «حفظ وتفعيل» ثم «اختبار»','Appuyez sur « Enregistrer » puis « Tester »','Tap “Save” then “Test”')}</li></ol>`+
+   `<a class="primary-btn" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">${tr('إنشاء مفتاح Gemini','Créer une clé Gemini','Create a Gemini key')} ↗</a>`+
    `<small>${tr('دون مفتاح تعمل أجوبة محدودة بدون إنترنت فقط.','Sans clé : réponses hors ligne limitées.','Without a key only limited offline answers work.')}</small></section>`;
  };
- window.smAiBadge=function(){const on=window.SM_GROQ&&window.SM_GROQ.enabled();return `<span class="status-dot" style="display:inline-block"></span> ${on?'Groq':tr('وضع دون اتصال','Hors ligne','Offline')}`};
- /* the old "demo / Groq server" wording */
+ window.smAiBadge=function(){const on=window.SM_AI&&window.SM_AI.enabled();return `<span class="status-dot" style="display:inline-block"></span> ${on?'Gemini':tr('وضع دون اتصال','Hors ligne','Offline')}`};
+ /* the old "demo / Gemini server" wording */
  try{
-  dict.ar.aiLimited='يعمل المساعد الذكي بمفتاح Groq المجاني. أدخله في الأعلى لتفعيل الإجابات الكاملة.';
-  dict.fr.aiLimited='L’assistant utilise une clé Groq gratuite. Saisissez-la plus haut pour activer les réponses.';
-  dict.en.aiLimited='The assistant uses a free Groq key. Enter it above to enable full answers.';
-  dict.ar.aiDemo='لتفعيل الإجابات الذكية أدخل مفتاح Groq المجاني في أعلى هذه الصفحة.';
-  dict.fr.aiDemo='Pour activer les réponses intelligentes, saisissez la clé Groq gratuite en haut de la page.';
-  dict.en.aiDemo='To enable smart answers, enter your free Groq key at the top of this page.';}catch(e){}
+  dict.ar.aiLimited='يعمل المساعد الذكي بمفتاح Gemini المجاني. أدخله في الأعلى لتفعيل الإجابات الكاملة.';
+  dict.fr.aiLimited='L’assistant utilise une clé Gemini gratuite. Saisissez-la plus haut pour activer les réponses.';
+  dict.en.aiLimited='The assistant uses a free Gemini key. Enter it above to enable full answers.';
+  dict.ar.aiDemo='لتفعيل الإجابات الذكية أدخل مفتاح Gemini المجاني في أعلى هذه الصفحة.';
+  dict.fr.aiDemo='Pour activer les réponses intelligentes, saisissez la clé Gemini gratuite en haut de la page.';
+  dict.en.aiDemo='To enable smart answers, enter your free Gemini key at the top of this page.';}catch(e){}
 
  /* ---------- 4) Test bank: only what a student needs (no archive / PDF / admin / server panels) ---------- */
  ['externalExamLibraryPanel','examLibraryPanel','pdfReviewPanel','schoolAssessmentsArchivePanel','examArchivePanel','curriculumGovernancePanel','curriculumExamBuilderPanel','claudeContentDraftPanel'].forEach(n=>{if(typeof window[n]==='function')window[n]=()=>''});

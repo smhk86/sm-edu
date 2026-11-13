@@ -1,7 +1,7 @@
 const fs=require('fs'),assert=require('assert'),vm=require('vm');
 const root=process.cwd(),runtime=fs.readFileSync(root+'/web/v2-8-5.js','utf8');
 const html=fs.readFileSync(root+'/web/index.html','utf8'),sw=fs.readFileSync(root+'/web/sw.js','utf8');
-const smart=fs.readFileSync(root+'/web/smart-teacher.js','utf8'),groq=fs.readFileSync(root+'/web/groq-direct.js','utf8'),pkg=require(root+'/package.json');
+const smart=fs.readFileSync(root+'/web/smart-teacher.js','utf8'),gemini=fs.readFileSync(root+'/web/gemini-direct.js','utf8'),pkg=require(root+'/package.json');
 const data=JSON.parse(fs.readFileSync(root+'/web/data/teacher-source-register-2026-2027.json','utf8'));
 const w={};vm.runInNewContext(runtime,{window:w});
 assert.equal(pkg.version,'2.9.40');assert.equal(w.SM_EDUCATION_RELEASE.version,'2.8.5');
@@ -10,7 +10,7 @@ assert(sw.includes('sm-school-ai-v2.9.40-shell-r1')&&sw.includes('./v2-8-5.js'))
 assert(smart.includes('smartExamTopics')&&smart.includes('smTeacherBuildExamPrompt'));
 assert(smart.includes('smTeacherBuildReviewContext'));
 assert(smart.includes('smartTeacherAiConsent')&&smart.includes('إرسال نص الملف والصور'));
-assert(groq.includes('exact number of exercises requested')&&groq.includes("payload.task==='practice'?5000"));
+assert(gemini.includes('exact number of exercises requested')&&gemini.includes("payload.task==='practice'?9000"));
 const prompt=w.smTeacherBuildExamPrompt({grade:'الرابعة متوسط',subject:'الرياضيات',term:'2',topics:'المعادلات والتناسبية',duration:60,count:4});
 assert(prompt.includes('الرابعة متوسط')&&prompt.includes('المعادلات والتناسبية'));
 assert(prompt.includes('ورقة التلميذ')&&prompt.includes('التصحيح النموذجي')&&prompt.includes('مجموع النقاط 20'));

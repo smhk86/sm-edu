@@ -135,8 +135,8 @@
   const st=await stats();
   items.push(st.books?{ok:true,t:`قاعدة المعرفة: ${st.books} كتاباً، ${st.pages.toLocaleString('ar-DZ')} صفحة مفهرسة، ${st.terms.toLocaleString('ar-DZ')} مصطلحاً.`}:{ok:false,t:'لا كتب مفهرسة بعد؛ حمّل أو استورد كتاباً واحداً على الأقل.'});
   items.push(enabled()?{ok:true,t:'استعمال الكتب في أجوبة الذكاء الاصطناعي: مفعّل.'}:{ok:null,t:'استعمال الكتب في أجوبة الذكاء الاصطناعي: متوقف (الأجوبة دون اتصال تستعمل كتبك دائماً).'});
-  const groq=!!(g.SM_GROQ&&g.SM_GROQ.enabled&&g.SM_GROQ.enabled());
-  items.push(groq?{ok:true,t:'Groq مفعّل: يصل المقتطف المطابق إلى المعلم الذكي.'}:{ok:null,t:'Groq غير مفعّل: لن تُرسل مقتطفات إلى الذكاء الاصطناعي، لكن البحث المحلي يعمل.'});
+  const gemini=!!(g.SM_AI&&g.SM_AI.enabled&&g.SM_AI.enabled());
+  items.push(gemini?{ok:true,t:'Gemini مفعّل: يصل المقتطف المطابق إلى المعلم الذكي.'}:{ok:null,t:'Gemini غير مفعّل: لن تُرسل مقتطفات إلى الذكاء الاصطناعي، لكن البحث المحلي يعمل.'});
   return items;
  }
  const mark=ok=>ok===true?'✅':ok===false?'❌':'⚠️';

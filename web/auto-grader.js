@@ -5,7 +5,7 @@
    - The AI only judges each question; the final mark is computed here from the per-question points
      (clamped, rounded to 0.25, scaled to the requested maximum) so the total is always consistent.
    - Marks are formative estimates, never official. Nothing is uploaded to GitHub and no GitHub
-     token exists anywhere in the app. Images/text go to Groq only after explicit consent. */
+     token exists anywhere in the app. Images/text go to Gemini only after explicit consent. */
 (function(){
  'use strict';
  const L=()=>(typeof lang!=='undefined'?lang:'ar');
@@ -146,8 +146,8 @@
   return `${base}/api/v1/ai/tutor`;
  }
  async function gradeAnswers(p){
-  const groq=window.SM_GROQ;
-  if(!groq||!groq.enabled())throw new Error('groq-disabled');
+  const gemini=window.SM_AI;
+  if(!gemini||!gemini.enabled())throw new Error('gemini-disabled');
   if(!p.consent)throw new Error('no-consent');
   const studentImages=(p.studentImages||[]),modelImages=(p.modelImages||[]);
   if(!studentImages.length&&!String(p.studentText||'').trim())throw new Error('no-student');
@@ -229,7 +229,7 @@
   `<label>${T('المادة','Matière','Subject')}<input id="agrSubject" maxlength="80" value="${esc(sel&&sel.value||'')}"></label>`+
   `<label>${T('نص الموضوع/السؤال (اختياري)','Énoncé (facultatif)','Question/prompt (optional)')}<textarea id="agrQuestion" rows="2" maxlength="3000"></textarea></label>`+
   `<label>${T('العلامة القصوى','Note maximale','Maximum mark')}<input id="agrMax" type="number" min="1" max="100" step="0.5" value="20" dir="ltr"></label>`+
-  `<label class="notice"><input id="agrConsent" type="checkbox"> ${T('أوافق على إرسال النص والصور إلى Groq للتصحيح. لا يُرسل شيء قبل تفعيل هذا الخيار، ولا تُحفظ الصور.','J’accepte l’envoi du texte et des images à Groq. Rien n’est envoyé avant, et les images ne sont pas conservées.','I agree to send the text and images to Groq for grading. Nothing is sent before this is checked and images are not stored.')}</label>`+
+  `<label class="notice"><input id="agrConsent" type="checkbox"> ${T('أوافق على إرسال النص والصور إلى Gemini للتصحيح. لا يُرسل شيء قبل تفعيل هذا الخيار، ولا تُحفظ الصور.','J’accepte l’envoi du texte et des images à Gemini. Rien n’est envoyé avant, et les images ne sont pas conservées.','I agree to send the text and images to Gemini for grading. Nothing is sent before this is checked and images are not stored.')}</label>`+
   `<button class="primary-btn" type="button" onclick="smAutoGrade()">${T('صحّح الآن','Corriger maintenant','Grade now')}</button><div id="agrOut" aria-live="polite"></div></section>`;
  }
  async function refreshUiLibrary(){
@@ -240,8 +240,8 @@
  }
  const ERR=e=>{
   const m=String(e&&e.message||e);
-  if(m==='groq-disabled')return T('فعّل مفتاح Groq أولاً.','Activez d’abord la clé Groq.','Enable your Groq key first.');
-  if(m==='no-consent')return T('يجب الموافقة أولاً على إرسال المحتوى إلى Groq.','Veuillez d’abord consentir à l’envoi à Groq.','Please consent to sending content to Groq first.');
+  if(m==='gemini-disabled')return T('فعّل مفتاح Gemini أولاً.','Activez d’abord la clé Gemini.','Enable your Gemini key first.');
+  if(m==='no-consent')return T('يجب الموافقة أولاً على إرسال المحتوى إلى Gemini.','Veuillez d’abord consentir à l’envoi à Gemini.','Please consent to sending content to Gemini first.');
   if(m==='no-student')return T('أضف ورقة التلميذ أو اكتب إجابته.','Ajoutez la copie de l’élève ou sa réponse.','Add the student sheet or type the answer.');
   if(m==='no-model')return T('أضف الإجابة النموذجية نصاً أو ملفاً أو من المكتبة.','Ajoutez le corrigé (texte, fichier ou bibliothèque).','Add the model answer (text, file or library).');
   if(m==='unsupported-file')return T('صيغة الملف غير مدعومة. استعمل صورة PNG/JPEG/WEBP أو PDF.','Format non pris en charge (PNG/JPEG/WEBP/PDF).','Unsupported file (use PNG/JPEG/WEBP/PDF).');
@@ -255,7 +255,7 @@
   const val=id=>($(id)&&$(id).value||'').trim(),files=id=>($(id)&&$(id).files&&$(id).files[0])||null;
   try{
    if(!$('agrConsent')||!$('agrConsent').checked)throw new Error('no-consent');
-   if(!(window.SM_GROQ&&window.SM_GROQ.enabled()))throw new Error('groq-disabled');
+   if(!(window.SM_AI&&window.SM_AI.enabled()))throw new Error('gemini-disabled');
    const sFile=files('agrStudentFile'),mFile=files('agrModelFile'),lib=val('agrLibrary'),sTextIn=val('agrStudentText');
    if(!sFile&&!sTextIn)throw new Error('no-student');
    if(!val('agrModelText')&&!mFile&&!lib)throw new Error('no-model');

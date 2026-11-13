@@ -5,7 +5,7 @@ global.window=global;global.localStorage={getItem:()=>null,setItem(){},removeIte
 global.document={getElementById:()=>null,addEventListener(){}};
 Object.assign(global,{lang:'ar',grade:'الثانية متوسط',level:'middle',levels:{primary:[],middle:[],secondary:[]},fetch:()=>Promise.reject(1),
  tutorServerPanel:()=>'',smAiStatusCard:()=>'',starterLessons:[],smFetchJSON:()=>Promise.reject(1),exerciseBankRecords:[],
- otNorm:x=>x,otTokens:()=>[],otScore:()=>0,otBank:async()=>[],startSmartTeacherSession(){},SM_GROQ:{enabled:()=>false}});
+ otNorm:x=>x,otTokens:()=>[],otScore:()=>0,otBank:async()=>[],startSmartTeacherSession(){},SM_AI:{enabled:()=>false}});
 eval(src);
 const bank=JSON.parse(fs.readFileSync(root+'/web/data/exercise-bank-2026-2027.json','utf8')).records;
 const out=window.smQualityFilter(bank);

@@ -1,17 +1,17 @@
-// v2.8.7: auto-grader logic, consent/Groq gates, library wiring, and "no GitHub secrets in the app" scan.
+// v2.8.7: auto-grader logic, consent/Gemini gates, library wiring, and "no GitHub secrets in the app" scan.
 const fs=require('fs'),path=require('path'),assert=require('assert'),vm=require('vm');
 const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
 
 const els={};const calls=[];
 const ctx={console,Response,lang:'ar',grade:'الثانية متوسط',toast(){},escapeReviewText:s=>String(s),
  activeLearner:()=>({id:'l1',name:'Secret Pupil',grade:'الثانية متوسط'}),apiBase:()=>'',
- document:{getElementById:id=>els[id]||null},SM_GROQ:{enabled:()=>true}};
+ document:{getElementById:id=>els[id]||null},SM_AI:{enabled:()=>true}};
 ctx.window=ctx;
 ctx.fetch=async(u,i)=>{calls.push([u,JSON.parse(i.body)]);return ctx.__reply()};
 vm.createContext(ctx);vm.runInContext(read('web/auto-grader.js'),ctx);
 const A=ctx.SM_AUTOGRADER,t=A._t;
 
-const reply=obj=>()=>new Response(JSON.stringify({mode:'groq',answer:typeof obj==='string'?obj:JSON.stringify(obj)}),{status:200});
+const reply=obj=>()=>new Response(JSON.stringify({mode:'gemini',answer:typeof obj==='string'?obj:JSON.stringify(obj)}),{status:200});
 const good={questions:[
  {id:'1',max:8,awarded:8,verdict:'wrong',student_answer:'x=3',errors:[],correction:''},        // verdict lies: must be corrected to "correct"
  {id:'2',max:6,awarded:2.1,verdict:'correct',student_answer:'y=2',errors:['خطأ في الإشارة'],correction:'y=-2'},
@@ -42,15 +42,15 @@ const good={questions:[
  assert(prompt.includes('الحل: x=3')&&prompt.includes('x=4')&&prompt.includes('JSON')&&prompt.includes('أول 2 صورة'));
  assert(!prompt.includes('Secret Pupil'));
 
- // --- gates: consent, Groq key, missing inputs — nothing is sent
+ // --- gates: consent, Gemini key, missing inputs — nothing is sent
  const base={consent:true,subject:'رياضيات',grade:'2AM',maxMark:20,modelText:'m',studentText:'s'};
  await assert.rejects(()=>A.grade({...base,consent:false}),/no-consent/);
- ctx.SM_GROQ.enabled=()=>false;await assert.rejects(()=>A.grade(base),/groq-disabled/);ctx.SM_GROQ.enabled=()=>true;
+ ctx.SM_AI.enabled=()=>false;await assert.rejects(()=>A.grade(base),/gemini-disabled/);ctx.SM_AI.enabled=()=>true;
  await assert.rejects(()=>A.grade({...base,studentText:''}),/no-student/);
  await assert.rejects(()=>A.grade({...base,modelText:''}),/no-model/);
  assert.equal(calls.length,0,'no network call before all gates pass');
 
- // --- full call: Groq-routable payload, vision budget (3 images, student sheet first), strict JSON
+ // --- full call: Gemini-routable payload, vision budget (3 images, student sheet first), strict JSON
  ctx.__reply=reply(good);
  const res=await A.grade({...base,studentImages:['s1','s2','s3'],modelImages:['m1']});
  const [url,body]=calls[0];
@@ -82,11 +82,11 @@ const good={questions:[
  await assert.rejects(()=>t.readLibraryPdf('evil:1'),/invalid/);
 
  // --- wiring
- const html2=read('web/index.html'),sw=read('web/sw.js'),teacher=read('web/smart-teacher.js'),groq=read('web/groq-direct.js');
+ const html2=read('web/index.html'),sw=read('web/sw.js'),teacher=read('web/smart-teacher.js'),gemini=read('web/gemini-direct.js');
  assert(html2.includes('src="auto-grader.js"')&&html2.includes('src="v2-8-7.js"')&&sw.includes('./auto-grader.js')&&sw.includes('./v2-8-7.js'));
  assert(html2.indexOf('auto-grader.js')<html2.indexOf('v2-8-7.js'));
  assert(teacher.includes('smAutoGraderPanel')&&teacher.includes('smLibraryPdfOptions')&&teacher.includes('smReadLibraryPdf'));
- assert(groq.includes('strict_json'));
+ assert(gemini.includes('strict_json'));
  const rel={};vm.runInContext(read('web/v2-8-7.js'),Object.assign(ctx,{SM_EDUCATION_RELEASE:{}}));assert.equal(ctx.SM_EDUCATION_RELEASE.version,'2.8.7');
 
  // --- no GitHub (or other) secrets anywhere in the shipped web app, and no GitHub API access

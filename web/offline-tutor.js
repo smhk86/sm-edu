@@ -1,4 +1,4 @@
-/* SM SCHOOL AI — offline tutor fallback. Live AI is handled by the in-app Groq client. */
+/* SM SCHOOL AI — offline tutor fallback. Live AI is handled by the in-app Gemini client. */
 function otNorm(x){return String(x||'').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').toLowerCase()}
 const OT_STOP=new Set(['ما','هو','هي','في','من','على','الي','عن','كيف','لماذا','اشرح','شرح','لي','درس','سوال','هل','ماذا','اعطني','اريد']);
 function otTokens(q){return otNorm(q).split(/[^\p{L}\p{N}]+/u).map(w=>w.replace(/^ال/,'')).filter(w=>w.length>=2&&!OT_STOP.has(w))}

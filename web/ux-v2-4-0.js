@@ -39,7 +39,7 @@
   const status=typeof smAiStatusCard==='function'?smAiStatusCard():'';
   const server=typeof tutorServerPanel==='function'?tutorServerPanel():'';
   const badge=typeof smAiBadge==='function'?smAiBadge():'';
-  const privacy=tr('عند تفعيل Groq يُرسل السؤال وملخص الأداء التعليمي مباشرة إلى Groq؛ لا يُرسل اسم الطفل.','Avec Groq, la question et un résumé des résultats sont envoyés directement à Groq ; le nom de l’élève n’est pas transmis.','When Groq is enabled, the question and a learning summary are sent directly to Groq; the learner name is not sent.');
+  const privacy=tr('عند تفعيل Gemini يُرسل السؤال وملخص الأداء التعليمي مباشرة إلى Gemini؛ لا يُرسل اسم الطفل.','Avec Gemini, la question et un résumé des résultats sont envoyés directement à Gemini ; le nom de l’élève n’est pas transmis.','When Gemini is enabled, the question and a learning summary are sent directly to Gemini; the learner name is not sent.');
   const suggestions=rows.length?'':`<div class="v240-suggest" id="v240Suggest">${[
    ['lesson',tr('اشرح لي درساً من الصفر','Explique-moi une leçon depuis zéro','Explain a lesson from scratch')],
    ['practice',tr('أعطني 5 تمارين مع الحل','Donne-moi 5 exercices corrigés','Give me 5 questions with answers')],

@@ -1,8 +1,8 @@
 // v2.9.40 — stepwise formative grading and release wiring.
 const fs=require('fs'),path=require('path'),assert=require('assert'),vm=require('vm');
 const root=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
-const els={};const ctx={console,Response,lang:'ar',grade:'الثانية متوسط',toast(){},document:{getElementById:id=>els[id]||null},SM_GROQ:{enabled:()=>true},apiBase:()=>''};
-ctx.window=ctx;ctx.fetch=async()=>new Response(JSON.stringify({mode:'groq',answer:'{}'}),{status:200});
+const els={};const ctx={console,Response,lang:'ar',grade:'الثانية متوسط',toast(){},document:{getElementById:id=>els[id]||null},SM_AI:{enabled:()=>true},apiBase:()=>''};
+ctx.window=ctx;ctx.fetch=async()=>new Response(JSON.stringify({mode:'gemini',answer:'{}'}),{status:200});
 vm.createContext(ctx);vm.runInContext(read('web/auto-grader.js'),ctx);
 const t=ctx.SM_AUTOGRADER._t;
 const graded=t.normalizeGrade({confidence:'high',questions:[{

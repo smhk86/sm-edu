@@ -1,8 +1,8 @@
 /* SM EDUCATION — Smart Teacher core (radical rework of the tutor chat).
  * 1) ONE local knowledge index over every platform source (deep lesson packs, encyclopedia, exercise bank) searched
  *    across ALL subjects and nearby grades — the learner no longer has to pick the "right" subject first;
- * 2) the retrieved lessons ground the Groq answer (kb_context) and the last turns are sent too (real conversation);
- * 3) a Groq failure is shown IN the chat with its real reason, followed by the best local answer — never a silent fallback;
+ * 2) the retrieved lessons ground the Gemini answer (kb_context) and the last turns are sent too (real conversation);
+ * 3) a Gemini failure is shown IN the chat with its real reason, followed by the best local answer — never a silent fallback;
  * 4) the local answer is a real lesson (explanation, rule, worked example, mind-map, remedial tasks), or an honest
  *    "not in the base" with the closest lessons found in any grade/subject.
  * Derived platform content is a study aid, not an official ministry text. */
@@ -11,7 +11,7 @@
  const esc=s=>clean(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const curGrade=()=>typeof grade!=='undefined'?grade:'';
  const curLang=()=>typeof lang!=='undefined'?lang:'ar';
- const aiEnabled=()=>{try{if(g.SM_GROQ&&typeof g.SM_GROQ.enabled==='function')return !!g.SM_GROQ.enabled()}catch(e){}return !!lsGet('smSchoolGroqKey')};
+ const aiEnabled=()=>{try{if(g.SM_AI&&typeof g.SM_AI.enabled==='function')return !!g.SM_AI.enabled()}catch(e){}return !!lsGet('smSchoolGeminiKeys')};
  const lsGet=k=>{try{return g.localStorage.getItem(k)||''}catch(e){return ''}};
  /* ---------- Arabic-aware tokenizer ---------- */
  function norm(s){return clean(s).normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).toLowerCase()}
@@ -107,7 +107,7 @@
   const near=hits.slice(0,5).map(h=>place(h.d));
   const parts=[L('لا يوجد في قاعدة المنصة المحلية درس يتناول هذا السؤال بدقة.','Aucune leçon de la base locale ne traite précisément cette question.','The local base has no lesson that precisely covers this question.')];
   if(near.length)parts.push('','**'+L('أقرب ما وجدتُه (قد لا يكون هو المقصود)','Le plus proche','Closest found (may not be what you mean)')+':**',list(near));
-  parts.push('',L('للحصول على شرح حرّ لأي موضوع: فعّل مفتاح Groq (لوحة «إعدادات المساعد»)، أو حمّل كتاب المادة داخل التطبيق ليبحث فيه المعلم ويستشهد برقم الصفحة.','Pour une explication libre : activez la clé Groq ou ajoutez le manuel de la matière.','For a free explanation: enable the Groq key or add the subject textbook.'));
+  parts.push('',L('للحصول على شرح حرّ لأي موضوع: فعّل مفتاح Gemini (لوحة «إعدادات المساعد»)، أو حمّل كتاب المادة داخل التطبيق ليبحث فيه المعلم ويستشهد برقم الصفحة.','Pour une explication libre : activez la clé Gemini ou ajoutez le manuel de la matière.','For a free explanation: enable the Gemini key or add the subject textbook.'));
   return parts.join('\n');
  }
  /* ---------- grounded context for the AI ---------- */
@@ -119,7 +119,7 @@
    return `[${place(d)}]\n${r.question} — ${r.solution}. ${r.explanation||''}`}).join('\n\n').slice(0,4500);
  }
  const prev=g.offlineTutorReply;
- /* ---------- answer mode: 'db' = platform knowledge base first (default), 'ai' = Groq first ---------- */
+ /* ---------- answer mode: 'db' = platform knowledge base first (default), 'ai' = Gemini first ---------- */
  const MODE_KEY='smTeacherMode';
  let forceAI=false;const getMode=()=>lsGet(MODE_KEY)==='ai'?'ai':'db';
  const setMode=v=>{try{g.localStorage.setItem(MODE_KEY,v==='ai'?'ai':'db')}catch(e){}};
@@ -175,14 +175,14 @@
   const aiOn=aiEnabled();
   let head;
   if(aiOn&&lastErr&&Date.now()-lastErr.at<60000)head='⚠️ '+L('تعذّر الحصول على جواب الذكاء الاصطناعي: ','Réponse IA indisponible : ','AI answer unavailable: ')+lastErr.detail+'\n🟡 '+L('هذا جواب من قاعدة المنصة المحلية:','Réponse de la base locale :','Local base answer:');
-  else head=aiOn?'🟡 '+L('الذكاء الاصطناعي لم يردّ؛ هذا جواب من قاعدة المنصة المحلية:','IA sans réponse ; réponse locale :','AI did not answer; local answer:'):'🟢 '+L('وضع القاعدة المحلية (Groq غير مفعّل):','Base locale (Groq inactif) :','Local base mode (Groq off):');
+  else head=aiOn?'🟡 '+L('الذكاء الاصطناعي لم يردّ؛ هذا جواب من قاعدة المنصة المحلية:','IA sans réponse ; réponse locale :','AI did not answer; local answer:'):'🟢 '+L('وضع القاعدة المحلية (Gemini غير مفعّل):','Base locale (Gemini inactif) :','Local base mode (Gemini off):');
   const body=I?localAnswer(msg,hits,{subject}):'⚠️ '+L('تعذّر تحميل قاعدة المعرفة المحلية'+(buildError?': '+buildError:'')+'. حدّث الصفحة.','Base locale indisponible.','Local knowledge base unavailable.');
   const out=head+'\n\n'+body;pushH('user',msg);pushH('assistant',body);return out;
  }
  g.offlineTutorReply=reply;
  /* ---------- status + settings panel ---------- */
  async function status(){
-  const s={groq:aiEnabled(),lastError:lastErr?lastErr.detail:'',history:HIST.length,loaded:!!IDX,error:buildError};
+  const s={gemini:aiEnabled(),lastError:lastErr?lastErr.detail:'',history:HIST.length,loaded:!!IDX,error:buildError};
   try{const I=await ensure();s.loaded=true;s.lessons=I.counts.deep;s.exerciseLinks=I.counts.bank;s.terms=I.post.size;s.docs=I.docs.length}catch(e){s.error=String(e&&e.message||e)}
   try{if(g.SM_TEXTBOOK_KB){const t=await g.SM_TEXTBOOK_KB.stats();s.books=t.books;s.bookPages=t.pages}}catch(e){}
   return s;
@@ -197,7 +197,7 @@
   const s=await status(),t=await selfTest().catch(()=>[]);
   const row=(ok,txt)=>`<li>${ok===true?'✅':ok===false?'❌':'⚠️'} ${esc(txt)}</li>`;
   el.innerHTML='<ul class="sm-kb-list">'+
-   row(s.groq,s.groq?L('مفتاح Groq محفوظ على هذا الجهاز.','Clé Groq enregistrée.','Groq key saved on this device.'):L('مفتاح Groq غير محفوظ: المعلم يعمل بالقاعدة المحلية فقط.','Clé Groq absente : base locale uniquement.','No Groq key: local base only.'))+
+   row(s.gemini,s.gemini?L('مفتاح Gemini محفوظ على هذا الجهاز.','Clé Gemini enregistrée.','Gemini key saved on this device.'):L('مفتاح Gemini غير محفوظ: المعلم يعمل بالقاعدة المحلية فقط.','Clé Gemini absente : base locale uniquement.','No Gemini key: local base only.'))+
    (s.lastError?row(false,L('آخر خطأ من الذكاء الاصطناعي: ','Dernière erreur IA : ','Last AI error: ')+s.lastError):'')+
    row(s.loaded&&!s.error,s.loaded?L(`القاعدة المحلية: ${s.lessons} درساً و${s.exerciseLinks} تمريناً مرتبطاً (${s.terms} مصطلحاً مفهرساً).`,`Base locale : ${s.lessons} leçons.`,`Local base: ${s.lessons} lessons.`):L('القاعدة المحلية لم تُحمَّل: ','Base locale non chargée : ','Local base not loaded: ')+(s.error||''))+
    row(s.books?true:null,s.books?L(`كتبك: ${s.books} كتاباً و${s.bookPages} صفحة مفهرسة.`,`Manuels : ${s.books}.`,`Textbooks: ${s.books}.`):L('لا كتب مفهرسة بعد (حمّل كتاب المادة ليستشهد به المعلم).','Aucun manuel indexé.','No textbook indexed yet.'))+
