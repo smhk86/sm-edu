@@ -18,4 +18,14 @@ assert.strictEqual(V.clean('**مرحبا** `x` ```code``` <b>hi</b> # عنوان
 assert.strictEqual(V.guess('ما هو الجذر التربيعي؟'),'ar');
 assert.strictEqual(V.guess('Bonjour le monde','ar'),'fr');
 assert.strictEqual(V.guess('Hello world','en'),'en');
+assert.strictEqual(V.autoOn(),true,'auto-read is on by default');
+let stored='0';global.localStorage={getItem:()=>stored,setItem(){}};assert.strictEqual(V.autoOn(),false,'user can turn it off');
+assert.deepStrictEqual(V.tagsFor('ar'),['ar-DZ','ar-SA']);assert.deepStrictEqual(V.tagsFor('fr'),['fr-FR']);
+// engine choice: offline with the native plugin -> native; online with a Gemini key -> gemini
+Object.defineProperty(global,'navigator',{value:{onLine:false,mediaDevices:{getUserMedia(){}}},configurable:true,writable:true});global.MediaRecorder=function(){};global.AudioContext=function(){};
+global.SM_AI={enabled:()=>true,transcribe(){}};global.Capacitor={isNativePlatform:()=>true,Plugins:{SpeechRecognition:{}}};
+assert.strictEqual(V.engine(),'native','offline -> Android recognizer');
+global.navigator.onLine=true;assert.strictEqual(V.engine(),'gemini','online + key -> Gemini');
+global.SM_AI.enabled=()=>false;assert.strictEqual(V.engine(),'native','no key -> Android recognizer');
+delete global.Capacitor;assert.strictEqual(V.engine(),'','nothing available');
 console.log('voice_test ok');

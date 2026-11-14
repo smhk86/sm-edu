@@ -53,22 +53,46 @@ function speak(text,lg,btn){
 let rec=null;
 function mkBtn(id,label,title){const b=d.createElement('button');b.type='button';b.id=id;b.className='v243-btn';b.textContent=label;b.title=title;b.setAttribute('aria-label',title);return b}
 function setState(btn,st){if(!btn)return;btn.classList.toggle('rec',st==='rec');btn.classList.toggle('busy',st==='busy');btn.textContent=st==='rec'?'⏹':st==='busy'?'⏳':'🎤'}
+/* Android's own recognizer through the Capacitor plugin: works without internet when the Arabic offline pack is installed on the phone */
+function nat(){try{const C=g.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.SpeechRecognition||null}catch(e){return null}}
 function engine(){
- if(g.SM_AI&&g.SM_AI.enabled&&g.SM_AI.enabled()&&g.SM_AI.transcribe&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&g.MediaRecorder&&(g.AudioContext||g.webkitAudioContext))return 'gemini';
+ const online=navigator.onLine!==false;
+ const gem=!!(g.SM_AI&&g.SM_AI.enabled&&g.SM_AI.enabled()&&g.SM_AI.transcribe&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&g.MediaRecorder&&(g.AudioContext||g.webkitAudioContext));
+ if(gem&&online)return 'gemini';
+ if(nat())return 'native';
  if(g.SpeechRecognition||g.webkitSpeechRecognition)return 'sr';
- return '';
+ return gem?'gemini':'';
+}
+function tagsFor(h){const l=h||L();return l==='ar'?['ar-DZ','ar-SA']:[VOICE[l]||'en-US']}
+async function nativeDictate(btn,onText,hint){
+ const P=nat();
+ let av={available:false};try{av=await P.available()}catch(e){}
+ if(!av.available){say(tr('خدمة التعرف على الكلام غير متوفرة على هذا الهاتف (تحتاج تطبيق Google / خدمات الصوت)','Reconnaissance vocale indisponible sur ce téléphone (Google / services vocaux requis)','Speech recognition is not available on this phone (Google / voice services required)'));return}
+ try{const c=await P.checkPermissions();if(c.speechRecognition!=='granted'){const r=await P.requestPermissions();if(r.speechRecognition!=='granted'){say(tr('لم يُسمح باستعمال الميكروفون. فعّل الإذن من إعدادات الهاتف.','Micro refusé. Autorisez-le dans les réglages.','Microphone blocked. Allow it in the phone settings.'));return}}}catch(e){}
+ rec={native:true,btn,timer:setTimeout(stopRec,MAX_SEC*1000)};setState(btn,'rec');
+ let text='',err=null;
+ for(const tag of tagsFor(hint)){
+  try{const r=await P.start({language:tag,maxResults:1,partialResults:false,popup:false});text=((r&&r.matches)||[])[0]||'';err=null;break}catch(e){err=e}
+  if(!rec)break;
+ }
+ if(rec&&rec.timer)clearTimeout(rec.timer);
+ setState(btn,'');rec=null;
+ if(text)onText(text);
+ else if(err)say(tr('تعذر التعرف على الصوت. دون إنترنت: نزّل حزمة اللغة العربية دون اتصال من إعدادات خدمات الصوت في Google.','Reconnaissance impossible. Hors ligne : téléchargez le pack de langue hors connexion dans les réglages vocaux Google.','Recognition failed. Offline: download the offline language pack in the Google voice settings.'));
+ else say(tr('لم أسمع كلاماً، حاول مجدداً','Aucune parole détectée','No speech detected'));
 }
 function stopRec(){
  if(!rec)return;
  const r=rec;
  if(r.timer)clearTimeout(r.timer);
- try{if(r.sr)r.sr.stop();else if(r.mr&&r.mr.state!=='inactive')r.mr.stop()}catch(e){}
+ try{if(r.native){const P=nat();if(P)P.stop()}else if(r.sr)r.sr.stop();else if(r.mr&&r.mr.state!=='inactive')r.mr.stop()}catch(e){}
 }
 async function toggleMic(btn,onText,hint){
  if(rec){stopRec();return}
  stopSpeak();
  const eng=engine();
- if(!eng){say(tr('الإملاء الصوتي يحتاج مفتاح Gemini (في إعدادات المعلم الذكي)','La dictée vocale nécessite une clé Gemini (réglages du tuteur)','Voice dictation needs a Gemini key (in the teacher settings)'));return}
+ if(!eng){say(tr('الإملاء الصوتي يحتاج مفتاح Gemini (في إعدادات المعلم الذكي) أو خدمة التعرف الصوتي في الهاتف','La dictée vocale nécessite une clé Gemini (réglages du tuteur) ou la reconnaissance vocale du téléphone','Voice dictation needs a Gemini key (teacher settings) or the phone speech recognition')) ;return}
+ if(eng==='native'){await nativeDictate(btn,onText,hint);return}
  if(eng==='sr'){
   const SR=g.SpeechRecognition||g.webkitSpeechRecognition,r=new SR();
   r.lang=VOICE[hint]||VOICE[L()]||'ar-SA';r.interimResults=false;r.maxAlternatives=1;
@@ -103,7 +127,7 @@ async function toggleMic(btn,onText,hint){
 }
 
 /* ---------- teacher chat ---------- */
-function autoOn(){return store.get(AUTO)==='1'}
+function autoOn(){return store.get(AUTO)!=='0'}
 function updateAuto(b){b.textContent=autoOn()?'🔊':'🔇';b.classList.toggle('on',autoOn());b.title=autoOn()?tr('القراءة التلقائية للردود: مفعّلة','Lecture automatique : activée','Auto-read: on'):tr('القراءة التلقائية للردود: متوقفة','Lecture automatique : désactivée','Auto-read: off')}
 function scan(){
  const row=d.querySelector('.v240-inputrow');
@@ -153,5 +177,5 @@ d.head.appendChild(css);
 let tm=null;const run=()=>{tm=null;try{scan();scanTranslator()}catch(e){}};
 new MutationObserver(()=>{if(!tm)tm=setTimeout(run,250)}).observe(d.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 run();
-g.SMVoice={clean,guess,encodeWav,speak};
+g.SMVoice={clean,guess,encodeWav,speak,autoOn,engine,tagsFor};
 })();
