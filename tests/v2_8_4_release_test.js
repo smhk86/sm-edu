@@ -8,7 +8,7 @@ const refs=JSON.parse(fs.readFileSync(root+'/web/data/exam-benchmark-reference-s
 const template=JSON.parse(fs.readFileSync(root+'/web/data/teacher-review-template-2026-2027.json','utf8'));
 assert.strictEqual(pkg.version,'2.9.40');
 assert(html.includes('v2.9.40')&&html.includes('v2-8-4.js'));
-assert(sw.includes('sm-school-ai-v2.9.40-shell-r1')&&sw.includes('./v2-8-4.js')&&sw.includes('./v2-8-5.js'));
+assert(sw.includes('sm-school-ai-v2.9.40-shell-r2')&&sw.includes('./v2-8-4.js')&&sw.includes('./v2-8-5.js'));
 assert(sw.includes('./data/teacher-review-template-2026-2027.json')&&sw.includes('./data/exam-benchmark-reference-set-2026-2027.json'));
 assert(runtime.includes("version:'2.8.5'"));
 assert.strictEqual(refs.entries.length,5);

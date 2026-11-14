@@ -11,7 +11,7 @@ assert(backend.includes('total_points: int = Field(default=20'));
 assert(backend.includes('exclude_question_ids: list[str]'));
 assert(backend.includes("def _build_question_rubric(question, points):")&&backend.includes("_build_question_rubric(x, x[\"points\"])") );
 assert(html.includes('v2.9.40')&&html.includes('v2-8-4.js'));
-assert(sw.includes('sm-school-ai-v2.9.40-shell-r1')&&sw.includes('./v2-8-4.js')&&sw.includes('./v2-8-5.js'));
+assert(sw.includes('sm-school-ai-v2.9.40-shell-r2')&&sw.includes('./v2-8-4.js')&&sw.includes('./v2-8-5.js'));
 const rel={};vmRun();function vmRun(){require('vm').runInNewContext(fs.readFileSync(root+'/web/v2-8-4.js','utf8'),{window:rel});}
 assert.strictEqual(rel.SM_EDUCATION_RELEASE.version,'2.8.4');
 assert.strictEqual(rel.smEducationExamQualityRubric().reduce((a,x)=>a+x.weight,0),100);

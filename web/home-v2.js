@@ -11,7 +11,6 @@
   ['exercises','✎',['تمرّن','S’entraîner','Practice'],['تمارين مع الحلول','Exercices corrigés','Exercises with solutions']],
   ['tests','▣',['اختبر نفسك','Se tester','Test yourself'],['اختبارات وفروض','Tests et devoirs','Tests & exams']],
   ['teacher','🎓',['المعلم الذكي','Enseignant IA','Smart teacher'],['شرح ثم تقييم','Explication puis évaluation','Explain then assess']],
-  ['tutor','✧',['المساعد الذكي','Assistant IA','AI assistant'],['اسأل وستجد شرحاً','Posez vos questions','Ask anything']],
   ['computing','⌘',['الذكاء الاصطناعي والحوسبة','IA et informatique','AI & computing'],['برمجة وروبوتيك','Code et robotique','Coding & robotics']],
   ['videos','▷',['فيديوهات الشرح','Vidéos','Videos'],['شروح مرئية','Cours en vidéo','Video lessons']],
   ['certificates','☆',['الشهادات','Examens nationaux','National exams'],['BEM و BAC','BEM et BAC','BEM & BAC']]

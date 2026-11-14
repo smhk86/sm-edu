@@ -464,4 +464,78 @@ computing|متغير|variable|variable|variable|Variable
 computing|حلقة تكرار|boucle|loop|bucle|Schleife
 computing|شرط|condition|condition|condición|Bedingung
 computing|مخرجات|sorties|outputs|salidas|Ausgaben
+school|سبورة|tableau|board/blackboard|pizarra|tafel
+school|طباشير|craie|chalk|tiza|kreide
+school|ممحاة|gomme|eraser|borrador|radiergummi
+school|مسطرة|règle|ruler|regla|lineal
+school|حقيبة مدرسية|cartable|schoolbag|mochila|schulranzen
+school|مخبر|laboratoire|laboratory/lab|laboratorio|labor
+school|ملاحظة|remarque|note/remark|observación|bemerkung
+school|علامة|note|grade/mark|nota|note
+school|نتيجة|résultat|result|resultado|ergebnis
+school|جدول|tableau|table/schedule|tabla/horario|tabelle/stundenplan
+school|فصل دراسي|trimestre|term/semester|trimestre|trimester
+school|مدير|directeur|principal/headteacher|director|direktor
+school|إدارة|administration|administration|administración|verwaltung
+school|تسجيل|inscription|registration|inscripción|anmeldung
+school|غياب|absence|absence|ausencia|abwesenheit
+school|حضور|présence|attendance/presence|asistencia|anwesenheit
+sci|تجربة|expérience|experiment|experimento|experiment
+sci|فرضية|hypothèse|hypothesis|hipótesis|hypothese
+sci|ملاحظة علمية|observation scientifique|scientific observation|observación científica|wissenschaftliche beobachtung
+sci|قياس|mesure|measurement|medición|messung
+sci|كتلة|masse|mass|masa|masse
+sci|حجم|volume|volume|volumen|volumen
+sci|كثافة|densité|density|densidad|dichte
+sci|درجة الحرارة|température|temperature|temperatura|temperatur
+sci|طاقة|énergie|energy|energía|energie
+sci|قوة|force|force|fuerza|kraft
+sci|سرعة|vitesse|speed/velocity|velocidad|geschwindigkeit
+sci|ضوء|lumière|light|luz|licht
+sci|صوت|son|sound|sonido|schall
+sci|خلية|cellule|cell|célula|zelle
+sci|جسم|corps|body/object|cuerpo|körper
+sci|مادة|matière|matter/material|materia|materie
+sci|ذرة|atome|atom|átomo|atom
+sci|جزيء|molécule|molecule|molécula|molekül
+sci|كوكب|planète|planet|planeta|planet
+sci|الأرض|terre|earth|tierra|erde
+sci|قمر|lune|moon|luna|mond
+sci|شمس|soleil|sun|sol|sonne
+sci|جاذبية|gravité|gravity|gravedad|gravitation
+sci|تبخر|évaporation|evaporation|evaporación|verdunstung
+sci|تكاثف|condensation|condensation|condensación|kondensation
+sci|ذوبان|fusion|melting|fusión|schmelzen
+sci|أكسجين|oxygène|oxygen|oxígeno|sauerstoff
+sci|هيدروجين|hydrogène|hydrogen|hidrógeno|wasserstoff
+gram|لأن|parce que|because|porque|weil
+gram|لكن|mais|but|pero|aber
+gram|لذلك|donc|therefore/so|por lo tanto|deshalb
+gram|قبل|avant|before|antes|vor
+gram|بعد|après|after|después|nach
+gram|أثناء|pendant|during|durante|während
+gram|دائما|toujours|always|siempre|immer
+gram|أحيانا|parfois|sometimes|a veces|manchmal
+gram|نادرا|rarement|rarely|raramente|selten
+gram|ربما|peut-être|maybe/perhaps|quizás|vielleicht
+verb|يفهم|comprendre|understand|entender|verstehen
+verb|يشرح|expliquer|explain|explicar|erklären
+verb|يحسب|calculer|calculate|calcular|berechnen
+verb|يقارن|comparer|compare|comparar|vergleichen
+verb|يصف|décrire|describe|describir|beschreiben
+verb|يستنتج|déduire|infer/conclude|deducir|schlussfolgern
+verb|يلاحظ|observer|observe|observar|beobachten
+verb|يختار|choisir|choose|elegir|wählen
+verb|يحتاج|avoir besoin de|need|necesitar|brauchen
+verb|يستعمل|utiliser|use|usar|benutzen
+phr|ما معنى هذا؟|Que signifie cela ?|What does this mean?|¿Qué significa esto?|Was bedeutet das?
+phr|كيف نقول هذا؟|Comment dit-on cela ?|How do you say this?|¿Cómo se dice esto?|Wie sagt man das?
+phr|أعد من فضلك|Répétez, s'il vous plaît|Please repeat|Repita, por favor|Wiederholen Sie bitte
+phr|لم أفهم|Je n'ai pas compris|I did not understand|No entendí|Ich habe nicht verstanden
+phr|هل يمكنك المساعدة؟|Pouvez-vous aider ?|Can you help?|¿Puede ayudarme?|Können Sie helfen?
+phr|أين توجد المكتبة؟|Où se trouve la bibliothèque ?|Where is the library?|¿Dónde está la biblioteca?|Wo ist die Bibliothek?
+phr|أحتاج إلى قاموس|J'ai besoin d'un dictionnaire|I need a dictionary|Necesito un diccionario|Ich brauche ein Wörterbuch
+phr|صباح الخير|Bonjour|Good morning|Buenos días|Guten Morgen
+phr|مساء الخير|Bonsoir|Good evening|Buenas tardes|Guten Abend
+phr|إلى اللقاء غدا|À demain|See you tomorrow|Hasta mañana|Bis morgen
 `};

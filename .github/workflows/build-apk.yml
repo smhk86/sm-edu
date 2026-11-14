@@ -50,6 +50,12 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Allow microphone (voice dictation)
+        run: |
+          M=android/app/src/main/AndroidManifest.xml
+          grep -q RECORD_AUDIO "$M" || sed -i 's#</manifest>#    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n</manifest>#' "$M"
+          grep -c RECORD_AUDIO "$M"
+
       - name: Set Android version from package.json
         run: |
           VERSION=$(node -p "require('./package.json').version")

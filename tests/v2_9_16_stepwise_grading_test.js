@@ -39,7 +39,7 @@ assert.equal(pkg.version,'2.9.40');assert(main.includes('version="2.9.40"'));
 assert(htmlApp.includes('v2.9.40')&&htmlApp.includes('v2-9-16.js'));
 assert(htmlApp.includes('v2-9-17.js'));
 assert(sw.includes('./v2-9-17.js'));
-assert(sw.includes('sm-school-ai-v2.9.40-shell-r1')&&sw.includes('./v2-9-16.js'));
+assert(sw.includes('sm-school-ai-v2.9.40-shell-r2')&&sw.includes('./v2-9-16.js'));
 const release={};vm.runInNewContext(read('web/v2-9-16.js'),{window:release});
 assert.equal(release.SM_EDUCATION_RELEASE.version,'2.9.16');
 console.log('PASS: v2.9.40 stepwise rubric, point normalization, missing/unreadable verdicts, error localization, rendering and release wiring');

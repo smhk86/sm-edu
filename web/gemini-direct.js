@@ -144,5 +144,27 @@
   }
   say(tr('نتيجة الاختبار ','Résultat ','Test ')+res.join('  '));
  };
- window.SM_AI={enabled,model,visionModel,buildMessages,keysCount:()=>keys().length};
+ /* v2.9.45 — speech to text with the same key rotation (audio is sent to Google only when the user taps the microphone) */
+ async function transcribe(b64,mime){
+  const ks=keys();
+  if(!ks.length)return {ok:false,status:401,detail:errMessage(401)};
+  const start=Math.min(parseInt(store.get(IDX)||'0',10)||0,ks.length-1),done=exhausted();
+  const order=[];for(let n=0;n<ks.length;n++){const i=(start+n)%ks.length;if(!done.includes(i))order.push(i)}
+  if(!order.length)return {ok:false,status:429,detail:errMessage(429)};
+  const prompt='Transcribe this audio exactly as spoken, in the language that is spoken (Arabic, including Algerian dialect, must be written in Arabic script; French and English in their own script). Output only the transcript, with no comment and no translation. If there is no speech, output nothing.';
+  const body=JSON.stringify({contents:[{role:'user',parts:[{text:prompt},{inlineData:{mimeType:mime||'audio/wav',data:b64}}]}],generationConfig:{temperature:0,maxOutputTokens:2000}});
+  let last=0;
+  for(const i of order){
+   let r;
+   try{r=await _fetch(BASE+'/'+encodeURIComponent(model())+':generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':ks[i]},body})}catch{last=0;continue}
+   if(r.ok){try{const d=await r.json();const text=((d.candidates||[])[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();store.set(IDX,String(i));return {ok:true,text}}catch{last=0;continue}}
+   last=r.status;
+   if(r.status===429){let t='';try{t=await r.text()}catch{}if(/PerDay|per day/i.test(t))markExhausted(i);continue}
+   if(r.status===401||r.status===403){markExhausted(i);continue}
+   if(r.status>=500||r.status===400)continue;
+   break;
+  }
+  return {ok:false,status:last,detail:errMessage(last)};
+ }
+ window.SM_AI={enabled,model,visionModel,buildMessages,transcribe,keysCount:()=>keys().length};
 })();

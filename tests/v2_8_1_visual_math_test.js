@@ -28,6 +28,6 @@ assert.strictEqual(window.SM_AI.visionModel(),'gemini-3.5-flash');
  assert(release.SM_EDUCATION_RELEASE.features.includes('multimodal-image-understanding'));
  const html=fs.readFileSync(root+'/web/index.html','utf8'),sw=fs.readFileSync(root+'/web/sw.js','utf8');
  assert(html.includes('v2.9.40')&&html.includes('v2-8-1.js'));
- assert(sw.includes('sm-school-ai-v2.9.40-shell-r1')&&sw.includes('./v2-8-1.js'));
+ assert(sw.includes('sm-school-ai-v2.9.40-shell-r2')&&sw.includes('./v2-8-1.js'));
  console.log('v2.8.4 multimodal visual maths tests passed');
 })().catch(e=>{console.error(e);process.exit(1)});

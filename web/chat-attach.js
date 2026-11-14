@@ -98,7 +98,7 @@
 
  /* 4) Style */
  const st=document.createElement('style');
- st.textContent='.v240-modes{display:none!important}'
+ st.textContent='.v240-modes,.v240-suggest{display:none!important}'
  +'.v242-attach{flex:0 0 38px;width:38px;height:38px;border:0;border-radius:50%;background:transparent;color:var(--cc-muted,var(--ink,#555));display:inline-flex;align-items:center;justify-content:center;cursor:pointer}'
  +'.v242-attach:hover{background:rgba(127,127,127,.15)}'
  +'.v242-previews{display:flex;gap:6px;flex-wrap:wrap;padding:0 6px 6px}'
