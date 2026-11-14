@@ -136,9 +136,21 @@
  function load(){if(!loading)loading=store.keys().then(k=>{have=k}).catch(()=>{}).then(()=>{ready=true;refresh();return true});return loading}
  const gradeDocs=()=>docs.map((d,i)=>({d,i})).filter(x=>x.d.grade===S.grade);
  const norm=s=>String(s||'').replace(/[\u064B-\u065F\u0640]/g,'').toLowerCase();
+ const rjPathTags=d=>{const t=String(d.title||'')+' '+String(d.branch||'');
+  if(/شعب\s*علمية/.test(t))return ['experimental_sciences','mathematics','technical_mathematics'];
+  if(/شعب\s*أدبية/.test(t))return ['letters_philosophy','foreign_languages'];
+  if(/شعبة\s*ع\.ت/.test(t))return ['experimental_sciences'];
+  if(/شعبة\s*رياضيات/.test(t))return ['mathematics'];
+  if(/شعبة\s*آ\.ف/.test(t))return ['letters_philosophy'];
+  if(/شعبة\s*ت\.إ/.test(t))return ['management_economics'];
+  if(/ج\.م\.ع\.ت/.test(t))return ['common_science_technology'];
+  if(/ج\.م\.آ/.test(t))return ['common_letters'];
+  return null};
+ const rjPath=()=>{try{return localStorage.getItem('smSchoolSecondaryPathway')||''}catch(e){return ''}};
+ const pathOk=d=>{if(!/ثانوي/.test(S.grade))return true;const p=rjPath();if(!p)return true;const t=rjPathTags(d);return !t||t.includes(p)};
  function filtered(){
   const q=norm(S.q).trim();
-  return gradeDocs().filter(({d})=>(!S.subject||d.subject===S.subject)&&(!S.term||String(d.term)===String(S.term))&&(!S.sol||d.solution)&&(!S.ext||ext(d)===S.ext)&&(!q||norm(d.title+' '+(d.subject||'')).includes(q)))
+  return gradeDocs().filter(({d})=>pathOk(d)&&(!S.subject||d.subject===S.subject)&&(!S.term||String(d.term)===String(S.term))&&(!S.sol||d.solution)&&(!S.ext||ext(d)===S.ext)&&(!q||norm(d.title+' '+(d.subject||'')).includes(q)))
    .sort((a,b)=>String(a.d.subject||'~').localeCompare(String(b.d.subject||'~'),'ar')||String(a.d.title).localeCompare(String(b.d.title),'ar'));
  }
 
