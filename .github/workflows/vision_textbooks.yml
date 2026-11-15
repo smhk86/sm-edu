@@ -60,4 +60,5 @@ jobs:
           ls -lh textbooks_out
           gh release view "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" >/dev/null 2>&1 || \
             gh release create "$RELEASE_TAG" --repo "$TEXTBOOKS_REPO" --title "Textbooks data" --notes "Index texte des manuels par niveau"
+          python3 tools/merge_release.py "${{ matrix.level }}" || echo "merge skipped, publishing as is"
           gh release upload "$RELEASE_TAG" textbooks_out/*-sci.json.gz --repo "$TEXTBOOKS_REPO" --clobber
