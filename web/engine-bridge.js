@@ -46,7 +46,7 @@
   +'<p>الكتب المدمجة في التطبيق تُستورد تلقائياً مرة واحدة. ويمكنك هنا أيضاً اختيار ملف أو أكثر (مثل 1AM-sci.json.gz) من هاتفك. إعادة الاستيراد تحدّث الكتاب ولا تكرّره.</p>'
   +'<input id="smBkFiles" type="file" multiple accept=".gz,.json,application/gzip,application/json"> '
   +'<button type="button" class="primary-btn" onclick="SM_ENGINE_BRIDGE.importBooks()">استيراد الملفات المختارة</button>'
-  +'<pre id="smBkOut" style="white-space:pre-wrap;margin-top:8px"></pre></details>'}
+  +'<div id="smBkStatus" style="white-space:pre-wrap;margin-top:8px;font-size:13px"></div><pre id="smBkOut" style="white-space:pre-wrap;margin-top:8px"></pre></details>'}
  async function importBooks(){
   const d=g.document,out=d&&d.getElementById('smBkOut'),el=d&&d.getElementById('smBkFiles'),say=t=>{if(out)out.textContent=t};
   const fs=el&&el.files?Array.from(el.files):[];
@@ -59,10 +59,18 @@
    catch(e){lines.push('⚠️ '+f.name+' — '+(e&&e.message||'خطأ'))}
   }
   let tail='';try{const s=await g.SM_TEXTBOOK_KB.stats();tail='\nالمجموع في القاعدة: '+s.books+' كتاباً، '+s.pages+' صفحة.'}catch(e){}
-  say(lines.join('\n')+'\nاكتمل: '+ok+' من '+fs.length+' ملفاً.'+tail)}
+  say(lines.join('\n')+'\nاكتمل: '+ok+' من '+fs.length+' ملفاً.'+tail);refreshBooksStatus()}
  g.SM_ENGINE_BRIDGE.importBooks=importBooks;
+ async function refreshBooksStatus(){
+  const el=g.document&&g.document.getElementById('smBkStatus');if(!el)return;
+  try{const B=g.SM_TEACHER_BOOKS,G=(g.SM_VISION_IMPORT&&g.SM_VISION_IMPORT.GRADES)||{};
+   const rows=B&&B.listSaved?await B.listSaved():[];let tb=0,tp=0,n=0;const L=[];
+   Object.keys(G).forEach(c=>{const rs=rows.filter(r=>r.grade===G[c]&&r.source==='vision_ocr'),p=rs.reduce((a,r)=>a+(r.pages||0),0);if(rs.length){n++;tb+=rs.length;tp+=p}L.push((rs.length?'✅ ':'❌ ')+c+' — '+rs.length+' كتاباً، '+p+' صفحة')});
+   el.textContent='📚 المستويات المستوردة: '+n+' من '+Object.keys(G).length+' — '+tb+' كتاباً، '+tp+' صفحة\n'+L.join('\n')
+  }catch(e){el.textContent='تعذّر قراءة حالة الكتب: '+(e&&e.message||'')}}
+ g.SM_ENGINE_BRIDGE.refreshBooksStatus=refreshBooksStatus;
  const _tsp=g.tutorServerPanel;
- g.tutorServerPanel=function(){return (typeof _tsp==='function'?_tsp.apply(this,arguments):'')+booksPanel()};
+ g.tutorServerPanel=function(){setTimeout(()=>{try{refreshBooksStatus()}catch(e){}},0);return (typeof _tsp==='function'?_tsp.apply(this,arguments):'')+booksPanel()};
 
  /* ---- الكتب المدمجة داخل التطبيق: تُستورد تلقائياً مرة واحدة لكل مستوى من ./books/<LEVEL>-sci.json.gz ---- */
  const BUNDLE='2026-11-15',lsk=c=>'sm_books_bundle_'+BUNDLE+'_'+c;
@@ -86,7 +94,7 @@
    if(done){try{g.SM_TEXTBOOK_KB&&g.SM_TEXTBOOK_KB.invalidate&&g.SM_TEXTBOOK_KB.invalidate()}catch(e){}
     let t='';try{const s=await g.SM_TEXTBOOK_KB.stats();t=' — القاعدة: '+s.books+' كتاباً، '+s.pages+' صفحة'}catch(e){}
     show('📚 اكتمل استيراد الكتب المدمجة: '+done+' مستوى جديداً'+t)}
-  }finally{running=false}}
+  }finally{running=false;try{refreshBooksStatus()}catch(e){}}}
  g.SM_ENGINE_BRIDGE.autoImport=autoImport;
  if(g.document)g.setTimeout(()=>{autoImport(false)},8000);
  g.fetch=async function(input,init){
