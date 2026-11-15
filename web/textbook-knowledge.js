@@ -30,12 +30,14 @@
  async function build(){
   const rows=(g.SM_TEACHER_BOOKS&&g.SM_TEACHER_BOOKS.listSaved)?await g.SM_TEACHER_BOOKS.listSaved():[];
   const docs=[],post=new Map();let total=0;
-  rows.forEach(b=>{pagesOf(b).forEach(p=>{
-   const text=clean(p.text);if(text.replace(/\s/g,'').length<20)return;
+  let n=0;const tick=()=>new Promise(r=>setTimeout(r,0));
+  for(const b of rows){for(const p of pagesOf(b)){
+   const text=clean(p.text);if(text.replace(/\s/g,'').length<20)continue;
    const toks=tokens(text),tf=new Map();toks.forEach(t=>tf.set(t,(tf.get(t)||0)+1));
    const di=docs.length;docs.push({b,page:p.page,text,len:toks.length||1});total+=toks.length||1;
    tf.forEach((c,t)=>{let a=post.get(t);if(!a){a=[];post.set(t,a)}a.push(di,c)});
-  })});
+   if(++n%300===0)await tick();
+  }}
   idx={docs,post,avg:docs.length?total/docs.length:1,books:rows};
   return idx;
  }
@@ -92,7 +94,19 @@
   return f.text?'\n\nمقتطفات من كتب المستخدم المدرسية (اذكر الكتاب والصفحة عند الاستشهاد):\n'+f.text:'';
  }
  /* ---- offline answers + prompt builders ---- */
- function offlineBlock(hits){return '📚 من كتبك المدرسية المفهرسة (بحث محلي لا يغادر الجهاز):\n'+hits.map(h=>`• «${h.book}» — ص ${h.page}: ${h.snippet.slice(0,380)}`).join('\n')}
+ function cleanSnip(s){
+ s=String(s||'');
+ for(let i=0;i<3;i++)s=s.replace(/\\?d?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,'$1/$2');
+ s=s.replace(/\\text\{([^{}]*)\}/g,'$1').replace(/\\sqrt\{([^{}]*)\}/g,'√($1)')
+  .replace(/\\(left|right|quad|qquad|,|;|!)/g,' ')
+  .replace(/\\times/g,'×').replace(/\\div/g,'÷').replace(/\\cdot/g,'·')
+  .replace(/\\leq?/g,'≤').replace(/\\geq?/g,'≥').replace(/\\neq/g,'≠').replace(/\\approx/g,'≈').replace(/\\%/g,'%')
+  .replace(/\^2/g,'²').replace(/\^3/g,'³').replace(/\^\{([^{}]*)\}/g,'^$1')
+  .replace(/\\[a-zA-Z]+/g,'').replace(/[{}]/g,'').replace(/\$/g,'').replace(/\s+/g,' ').trim();
+ if(s.length>260){const c=s.slice(0,260),i=c.lastIndexOf(' ');s=(i>150?c.slice(0,i):c)+'…'}
+ return s}
+/*END_CLEAN*/
+function offlineBlock(hits){return '📚 من كتبك المدرسية المفهرسة (بحث محلي لا يغادر الجهاز):\n'+hits.map(h=>`• «${h.book}» — ص ${h.page}: ${cleanSnip(h.snippet)}`).join('\n')}
  function wrapGlobals(){
   const old=g.offlineTutorReply;
   if(typeof old==='function'&&!old._kb){
@@ -178,7 +192,7 @@
  }
  if(g.addEventListener)g.addEventListener('sm-books-changed',invalidate);
  if(g.document){
-  if(g.document.readyState==='complete')wrapGlobals();else if(g.addEventListener)g.addEventListener('load',()=>{wrapGlobals();ensure().catch(()=>{})});
+  if(g.document.readyState==='complete')wrapGlobals();else if(g.addEventListener)g.addEventListener('load',()=>{wrapGlobals();setTimeout(()=>{ensure().catch(()=>{})},15000)});
   if(g.document.head&&!byId('smTextbookKbCss')){const s=g.document.createElement('style');s.id='smTextbookKbCss';s.textContent='.sm-kb-panel{margin-top:14px}.sm-kb-auto{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:10px 0}.sm-kb-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sm-kb-actions select{min-width:0;flex:1}.sm-kb-list{list-style:none;padding:0;margin:8px 0;display:grid;gap:6px;font-size:13px;line-height:1.7}';g.document.head.appendChild(s)}
  }
  g.SM_TEXTBOOK_KB={search,searchSync,context,enabled,setAuto,stats,selfTest,readiness,runChecks,probeUI,invalidate,ensure,lastSourcesLine,render:renderStats,_t:{tokens,norm,run,syncContext,wrapGlobals,format}};

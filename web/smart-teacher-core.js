@@ -91,7 +91,7 @@
   else out.push('',L('لا تحتوي القاعدة على شرح لهذا الدرس، بل على تمارين فقط.','La base ne contient que des exercices.','The base only has exercises for this lesson.'));
   if(ex)out.push('','## '+L('جرّب بنفسك','Essayez','Try it'),ex.question+(ex.choices&&ex.choices.length?'\n'+ex.choices.map((c,i)=>'• '+String.fromCharCode(65+i)+'. '+c).join('\n'):''),'**'+L('الجواب','Réponse','Answer')+':** '+ex.solution+(ex.explanation&&norm(ex.explanation)!==norm(ex.solution)?' — '+ex.explanation:''));
   if(F.length<3)out.push('','⚠️ '+L('المتوفر في القاعدة عن هذا الدرس محدود جداً. لشرح أوسع اضغط «تعمّق بالذكاء الاصطناعي» أو أضف كتاب المادة إلى التطبيق.','Contenu très limité pour cette leçon.','Very little content for this lesson in the base.'));
-  out.push('','*'+L('المصدر: قاعدة بيانات المنصة — مادة مشتقة للدراسة وليست نصاً وزارياً معتمداً.','Source : base de la plateforme (non officiel).','Source: platform knowledge base (not an official text).')+'*');
+  void 0&&out.push('','*'+L('المصدر: قاعدة بيانات المنصة — مادة مشتقة للدراسة وليست نصاً وزارياً معتمداً.','Source : base de la plateforme (non officiel).','Source: platform knowledge base (not an official text).')+'*');
   return out.join('\n');
  }
  function exerciseAnswer(d){const e=d.rec;return [`**${d.lesson}**  ·  ${d.subject}  ·  ${d.grade}`,'',e.question+(e.choices&&e.choices.length?'\n'+e.choices.map((c,i)=>'• '+String.fromCharCode(65+i)+'. '+c).join('\n'):''),'','**'+L('الجواب','Réponse','Answer')+':** '+e.solution,e.explanation||'',(e.solution_steps||[]).map((x,i)=>(i+1)+'. '+x).join('\n'),'','*'+L('المصدر: بنك تمارين المنصة.','Source : banque d’exercices.','Source: exercise bank.')+'*'].filter((x,i)=>x!==''||i<3).join('\n')}

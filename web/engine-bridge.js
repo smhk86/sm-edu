@@ -78,10 +78,10 @@
     try{
      let res=await _fetch('books/'+c+'-sci.json.gz',{credentials:'omit'});if(!res.ok)res=await _fetch('books/'+c+'-sci.json',{credentials:'omit'});
      if(!res.ok){missing++;show('⚠️ '+c+': الملف غير موجود في التطبيق');continue}
-     const r=await g.SM_VISION_IMPORT.importBuffer(await res.arrayBuffer(),c);
-     if(r){lsSet(lsk(c));done++;show('📚 استيراد الكتب المدمجة: '+c+' ✅ ('+r.pages+' صفحة) — '+(done+skipped)+' من '+codes.length)}
+     const _t0=Date.now();const r=await g.SM_VISION_IMPORT.importBuffer(await res.arrayBuffer(),c);const _sec=Math.round((Date.now()-_t0)/1000);
+     if(r){lsSet(lsk(c));done++;show('📚 استيراد الكتب المدمجة: '+c+' ✅ ('+r.pages+' صفحة، '+_sec+' ث) — '+(done+skipped)+' من '+codes.length)}
     }catch(e){console.warn('books autoImport',c,e&&e.message);show('⚠️ '+c+': '+(e&&e.message||'خطأ'))}
-    await new Promise(r=>setTimeout(r,250));
+    await new Promise(r=>setTimeout(r,1500));
    }
    if(done){try{g.SM_TEXTBOOK_KB&&g.SM_TEXTBOOK_KB.invalidate&&g.SM_TEXTBOOK_KB.invalidate()}catch(e){}
     let t='';try{const s=await g.SM_TEXTBOOK_KB.stats();t=' — القاعدة: '+s.books+' كتاباً، '+s.pages+' صفحة'}catch(e){}
