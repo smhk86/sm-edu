@@ -40,6 +40,55 @@
    if(e&&/\d\s*[+\-*\/^]\s*\(?\d/.test(e)&&!/x/i.test(e)){const v=E.evaluate(e);return '📐 **'+e+' = '+rnd(v)+'**'+FOOT}}
   return null}
  g.SM_ENGINE_BRIDGE={solve,norm,cleanExpr};
+
+ /* ---- استيراد كتب Vision (عدة ملفات دفعة واحدة) داخل «⚙ إعدادات المساعد» ---- */
+ function booksPanel(){return '<details class="panel" id="smBooksImport"><summary><b>📥 استيراد الكتب المُستخرجة (Vision)</b></summary>'
+  +'<p>الكتب المدمجة في التطبيق تُستورد تلقائياً مرة واحدة. ويمكنك هنا أيضاً اختيار ملف أو أكثر (مثل 1AM-sci.json.gz) من هاتفك. إعادة الاستيراد تحدّث الكتاب ولا تكرّره.</p>'
+  +'<input id="smBkFiles" type="file" multiple accept=".gz,.json,application/gzip,application/json"> '
+  +'<button type="button" class="primary-btn" onclick="SM_ENGINE_BRIDGE.importBooks()">استيراد الملفات المختارة</button>'
+  +'<pre id="smBkOut" style="white-space:pre-wrap;margin-top:8px"></pre></details>'}
+ async function importBooks(){
+  const d=g.document,out=d&&d.getElementById('smBkOut'),el=d&&d.getElementById('smBkFiles'),say=t=>{if(out)out.textContent=t};
+  const fs=el&&el.files?Array.from(el.files):[];
+  if(!fs.length){say('اختر ملفاً واحداً على الأقل.');return}
+  if(!g.SM_VISION_IMPORT){say('وحدة الاستيراد غير محمّلة.');return}
+  let lines=[],ok=0;
+  for(const f of fs){
+   say(lines.join('\n')+(lines.length?'\n':'')+'… جارٍ استيراد '+f.name);
+   try{const r=await g.SM_VISION_IMPORT.importFile(f);if(r){ok++;lines.push('✅ '+f.name+' — '+r.added+' جديد، '+r.updated+' محدَّث، '+r.pages+' صفحة')}else lines.push('⚠️ '+f.name+' — لم يُستورد')}
+   catch(e){lines.push('⚠️ '+f.name+' — '+(e&&e.message||'خطأ'))}
+  }
+  let tail='';try{const s=await g.SM_TEXTBOOK_KB.stats();tail='\nالمجموع في القاعدة: '+s.books+' كتاباً، '+s.pages+' صفحة.'}catch(e){}
+  say(lines.join('\n')+'\nاكتمل: '+ok+' من '+fs.length+' ملفاً.'+tail)}
+ g.SM_ENGINE_BRIDGE.importBooks=importBooks;
+ const _tsp=g.tutorServerPanel;
+ g.tutorServerPanel=function(){return (typeof _tsp==='function'?_tsp.apply(this,arguments):'')+booksPanel()};
+
+ /* ---- الكتب المدمجة داخل التطبيق: تُستورد تلقائياً مرة واحدة لكل مستوى من ./books/<LEVEL>-sci.json.gz ---- */
+ const BUNDLE='2026-11-15',lsk=c=>'sm_books_bundle_'+BUNDLE+'_'+c;
+ const lsGet=k=>{try{return g.localStorage.getItem(k)}catch(e){return null}},lsSet=k=>{try{g.localStorage.setItem(k,'1')}catch(e){}};
+ let running=false;
+ async function autoImport(force){
+  if(running||!g.SM_VISION_IMPORT||!g.SM_VISION_IMPORT.importBuffer)return;running=true;
+  const out=()=>g.document&&g.document.getElementById('smBkOut'),show=t=>{const o=out();if(o)o.textContent=t};
+  const codes=Object.keys(g.SM_VISION_IMPORT.GRADES||{});let done=0,skipped=0,missing=0;
+  try{
+   for(const c of codes){
+    if(!force&&lsGet(lsk(c))==='1'){skipped++;continue}
+    try{
+     const res=await _fetch('books/'+c+'-sci.json.gz',{credentials:'omit'});
+     if(!res.ok){missing++;continue}
+     const r=await g.SM_VISION_IMPORT.importBuffer(await res.arrayBuffer(),c);
+     if(r){lsSet(lsk(c));done++;show('📚 استيراد الكتب المدمجة: '+c+' ✅ ('+r.pages+' صفحة) — '+(done+skipped)+' من '+codes.length)}
+    }catch(e){console.warn('books autoImport',c,e&&e.message)}
+    await new Promise(r=>setTimeout(r,250));
+   }
+   if(done){try{g.SM_TEXTBOOK_KB&&g.SM_TEXTBOOK_KB.invalidate&&g.SM_TEXTBOOK_KB.invalidate()}catch(e){}
+    let t='';try{const s=await g.SM_TEXTBOOK_KB.stats();t=' — القاعدة: '+s.books+' كتاباً، '+s.pages+' صفحة'}catch(e){}
+    show('📚 اكتمل استيراد الكتب المدمجة: '+done+' مستوى جديداً'+t)}
+  }finally{running=false}}
+ g.SM_ENGINE_BRIDGE.autoImport=autoImport;
+ if(g.document)g.setTimeout(()=>{autoImport(false)},8000);
  g.fetch=async function(input,init){
   try{
    let url='';try{url=typeof input==='string'?input:(input&&input.url)||''}catch(e){}

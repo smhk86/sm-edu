@@ -69,14 +69,14 @@
  async function importFile(file){
   if(!file){say('اختر ملف المستوى أولاً (مثل 2AM-sci.json.gz).');return null}
   try{const r=await importBuffer(await file.arrayBuffer(),file.name);say(sum(r));return r}catch(e){say(msg(e));return null}}
- async function importUI(){const el=g.document&&g.document.getElementById('smViFile');return importFile(el&&el.files&&el.files[0])}
+ async function importUI(){const el=g.document&&g.document.getElementById('smViFile');const fs=el&&el.files?Array.from(el.files):[];if(!fs.length)return importFile(null);let last=null,ok=0;for(const f of fs){const r=await importFile(f);if(r)ok++;last=r}if(fs.length>1)say('اكتمل استيراد '+ok+' من '+fs.length+' ملفاً.');return last}
  async function importRemote(code){
   code=String(code||'').toUpperCase();const base=String(cfg().visionBooksBase||'').replace(/\/+$/,'');
   if(!base||!/^https:\/\//i.test(base)){say('مصدر الملفات غير مفعّل (visionBooksBase).');return null}
   if(!GRADES[code]){say('مستوى غير معروف.');return null}
   try{const res=await g.fetch(base+'/'+code+'-sci.json.gz',{credentials:'omit'});if(!res.ok)throw new Error('HTTP '+res.status);
    const r=await importBuffer(await res.arrayBuffer(),code);say(sum(r));return r}catch(e){say(msg(e));return null}}
- function section(){return `<section class="panel sm-vi-panel"><h3>📥 استيراد كتب مُستخرجة (Vision)</h3><p>اختر ملف مستوى مثل <b>2AM-sci.json.gz</b> من هاتفك فتدخل كتبه قاعدة المعرفة مباشرة دون اتصال. إعادة الاستيراد تحدّث الكتاب ولا تكرّره.</p><div class="sm-kb-actions"><input id="smViFile" type="file" accept=".gz,.json,application/gzip,application/json"><button type="button" class="primary-btn" onclick="SM_VISION_IMPORT.importUI()">استيراد الملف</button></div></section>`}
+ function section(){return `<section class="panel sm-vi-panel"><h3>📥 استيراد كتب مُستخرجة (Vision)</h3><p>اختر ملف مستوى مثل <b>2AM-sci.json.gz</b> من هاتفك فتدخل كتبه قاعدة المعرفة مباشرة دون اتصال. إعادة الاستيراد تحدّث الكتاب ولا تكرّره.</p><div class="sm-kb-actions"><input id="smViFile" type="file" multiple accept=".gz,.json,application/gzip,application/json"><button type="button" class="primary-btn" onclick="SM_VISION_IMPORT.importUI()">استيراد الملف</button></div></section>`}
  const B=g.SM_TEACHER_BOOKS;
  if(B&&typeof B.panelHtml==='function'){const old=B.panelHtml;B.panelHtml=function(){return old.apply(this,arguments)+section()}}
  g.SM_VISION_IMPORT={importFile,importUI,importBuffer,importData,importRemote,GRADES,_t:{toRows,subjectKey,subjectAr,levelCode,gunzip}};
