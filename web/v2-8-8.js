@@ -2,7 +2,7 @@
 (function(g){'use strict';
  const KEY='smRepoIndexSyncAt',EVERY=12*3600*1000;
  const prior=g.SM_EDUCATION_RELEASE||{};
- g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.8.8',focus:'github-repository-to-app-link',integrations:['dzexams','raji3dz'],features:(prior.features||[]).concat(['auto-repository-sync','sync-approved-exams-workflow'])});
+ g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.8.8',focus:'github-repository-to-app-link',integrations:['dzexams','raji3dz'],features:[].concat(Array.isArray(prior.features)?prior.features:Object.entries(prior.features||{}).map(function(e){return typeof e[1]==='string'?e[1]:e[0]}),['auto-repository-sync','sync-approved-exams-workflow'])});
  async function sync(force){
   try{
    if(typeof navigator!=='undefined'&&navigator.onLine===false)return {skipped:'offline'};

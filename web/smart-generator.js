@@ -1,7 +1,7 @@
 /* SM EDUCATION v2.9.5 — المولّد الذكي (إعادة بناء): منهاج 2026-2027 + بنك التمارين + مرجع Raji3DZ + ذكاء اصطناعي اختياري. */
 (function(g){'use strict';
  const prior=g.SM_EDUCATION_RELEASE||{};
- g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.5',focus:'smart-generator-v2',features:(prior.features||[]).concat(['generator-ai-fill-shortage','generator-saved-ai-bank','generator-secondary-streams','generator-kinds-devoir-exam-bem-bac','generator-topic-balance-no-repeat','generator-exercise-structure-marking','generator-raji3dz-references','generator-ai-simulation-optional','generator-all-stages-subjects','generator-reference-simulation','generator-saved-papers-keep-delete'])});
+ g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.5',focus:'smart-generator-v2',features:[].concat(Array.isArray(prior.features)?prior.features:Object.entries(prior.features||{}).map(function(e){return typeof e[1]==='string'?e[1]:e[0]}),['generator-ai-fill-shortage','generator-saved-ai-bank','generator-secondary-streams','generator-kinds-devoir-exam-bem-bac','generator-topic-balance-no-repeat','generator-exercise-structure-marking','generator-raji3dz-references','generator-ai-simulation-optional','generator-all-stages-subjects','generator-reference-simulation','generator-saved-papers-keep-delete'])});
  const doc=g.document;
  const $=id=>doc?doc.getElementById(id):null;
  const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

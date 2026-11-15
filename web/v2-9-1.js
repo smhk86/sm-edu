@@ -1,7 +1,7 @@
 /* SM EDUCATION v2.9.1 — dedicated Algerian curriculum generator and navigation cleanup. */
 (function(g){'use strict';
  const prior=g.SM_EDUCATION_RELEASE||{};
- g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.1',focus:'dedicated-curriculum-generator-pdf-arabic-ux',features:(prior.features||[]).concat(['dedicated-generator-all-grades-bank','term-difficulty-duration-points','answer-key-marking-scheme','raji3dz-reference-entry','remove-progress-navigation','remove-textbook-navigation','arabic-pdf-text-layer-typography'])});
+ g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.1',focus:'dedicated-curriculum-generator-pdf-arabic-ux',features:[].concat(Array.isArray(prior.features)?prior.features:Object.entries(prior.features||{}).map(function(e){return typeof e[1]==='string'?e[1]:e[0]}),['dedicated-generator-all-grades-bank','term-difficulty-duration-points','answer-key-marking-scheme','raji3dz-reference-entry','remove-progress-navigation','remove-textbook-navigation','arabic-pdf-text-layer-typography'])});
  const $=id=>document.getElementById(id), esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const grades=['الأولى ابتدائي','الثانية ابتدائي','الثالثة ابتدائي','الرابعة ابتدائي','الخامسة ابتدائي','الأولى متوسط','الثانية متوسط','الثالثة متوسط','الرابعة متوسط','الأولى ثانوي','الثانية ثانوي','الثالثة ثانوي'];
  const lang=()=>g.lang||'ar';

@@ -5,7 +5,7 @@
    Output has the same shape the existing exam-builder UI already renders. */
 (function(g){'use strict';
 const prior=g.SM_EDUCATION_RELEASE||{};
-g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.0',focus:'local-exam-generator',features:(prior.features||[]).concat(['local-math-generator-primary','local-generator-middle-secondary','offline-exam-builder'])});
+g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.0',focus:'local-exam-generator',features:[].concat(Array.isArray(prior.features)?prior.features:Object.entries(prior.features||{}).map(function(e){return typeof e[1]==='string'?e[1]:e[0]}),['local-math-generator-primary','local-generator-middle-secondary','offline-exam-builder'])});
 
 const ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
 const pick=a=>a[ri(0,a.length-1)];

@@ -4,7 +4,7 @@
    تُستعمل لأمرين: 1) إرفاق مراجع بالسؤال قبل إرساله للذكاء الاصطناعي (RAG). 2) إجابة محلية أغنى عند انقطاع الاتصال. */
 (function(g){'use strict';
  const prior=g.SM_EDUCATION_RELEASE||{};
- g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.7',focus:'tutor-knowledge-base',features:(prior.features||[]).concat(['tutor-kb-bm25-search','tutor-rag-context','tutor-offline-rich-answers','tutor-kb-builder-tool'])});
+ g.SM_EDUCATION_RELEASE=Object.assign({},prior,{version:'2.9.7',focus:'tutor-knowledge-base',features:[].concat(Array.isArray(prior.features)?prior.features:Object.entries(prior.features||{}).map(function(e){return typeof e[1]==='string'?e[1]:e[0]}),['tutor-kb-bm25-search','tutor-rag-context','tutor-offline-rich-answers','tutor-kb-builder-tool'])});
 
  const STOP=new Set(['ما','ماذا','هو','هي','هذا','هذه','في','من','على','الي','إلى','عن','كيف','لماذا','اشرح','شرح','لي','لنا','درس','سؤال','هل','اعطني','أعطني','اريد','أريد','بين','مع','او','أو','ثم','كل','هناك','يمكن','وضح','أذكر','اذكر','عرف','عرّف']);
  const norm=s=>String(s==null?'':s).normalize('NFKC').replace(/[\u064B-\u065F\u0670\u0640]/g,'').replace(/[أإآٱ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').toLowerCase();
