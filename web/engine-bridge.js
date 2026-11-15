@@ -76,11 +76,11 @@
    for(const c of codes){
     if(!force&&lsGet(lsk(c))==='1'){skipped++;continue}
     try{
-     const res=await _fetch('books/'+c+'-sci.json.gz',{credentials:'omit'});
-     if(!res.ok){missing++;continue}
+     let res=await _fetch('books/'+c+'-sci.json.gz',{credentials:'omit'});if(!res.ok)res=await _fetch('books/'+c+'-sci.json',{credentials:'omit'});
+     if(!res.ok){missing++;show('⚠️ '+c+': الملف غير موجود في التطبيق');continue}
      const r=await g.SM_VISION_IMPORT.importBuffer(await res.arrayBuffer(),c);
      if(r){lsSet(lsk(c));done++;show('📚 استيراد الكتب المدمجة: '+c+' ✅ ('+r.pages+' صفحة) — '+(done+skipped)+' من '+codes.length)}
-    }catch(e){console.warn('books autoImport',c,e&&e.message)}
+    }catch(e){console.warn('books autoImport',c,e&&e.message);show('⚠️ '+c+': '+(e&&e.message||'خطأ'))}
     await new Promise(r=>setTimeout(r,250));
    }
    if(done){try{g.SM_TEXTBOOK_KB&&g.SM_TEXTBOOK_KB.invalidate&&g.SM_TEXTBOOK_KB.invalidate()}catch(e){}
