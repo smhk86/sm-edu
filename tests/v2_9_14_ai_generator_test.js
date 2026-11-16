@@ -1,0 +1,11 @@
+'use strict';
+const fs=require('fs'),assert=require('assert');
+const root=process.cwd();
+const backend=fs.readFileSync(root+'/backend/app/main.py','utf8');
+const app=fs.readFileSync(root+'/web/app.js','utf8');
+const gen=fs.readFileSync(root+'/web/smart-generator.js','utf8');
+const env=fs.readFileSync(root+'/backend/.env.example','utf8');
+assert(!/claude|anthropic/i.test(backend+app+gen+env),'provider implementation and secrets must be removed');
+assert(backend.includes('@app.post("/api/v1/ai/tutor")'),'shared AI tutor endpoint remains');
+assert(gen.includes('ai:aiGenerate'),'Smart Generator remains connected to its AI workflow');
+console.log('PASS: removed-provider cleanup and retained AI generator endpoint');

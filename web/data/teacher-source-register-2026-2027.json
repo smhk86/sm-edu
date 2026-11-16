@@ -1,0 +1,59 @@
+{
+  "academic_year": "2026-2027",
+  "country": "DZ",
+  "policy": {
+    "official_curriculum_source": "Ministry of National Education only",
+    "third_party_content": "discovery and metadata only unless reuse permission or licence is documented",
+    "no_automatic_copying": true,
+    "no_bypass_of_login_or_access_controls": true,
+    "teacher_validation_required": true
+  },
+  "sources": [
+    {
+      "name": "وزارة التربية الوطنية الجزائرية",
+      "url": "https://www.education.gov.dz/",
+      "type": "official",
+      "purpose": "البرامج والقرارات والترتيبات البيداغوجية الرسمية",
+      "reuse": "تحقق من الوثيقة وتاريخها قبل اعتمادها"
+    },
+    {
+      "name": "DzExams",
+      "url": "https://www.dzexams.com/",
+      "type": "third_party",
+      "purpose": "استكشاف نماذج الفروض والاختبارات والحلول حسب الطور والمستوى",
+      "reuse": "لا نسخ أو تنزيل آلي قبل الحصول على إذن أو ترخيص مناسب"
+    },
+    {
+      "name": "Ency-Education",
+      "url": "https://www.ency-education.net/exams",
+      "type": "third_party",
+      "purpose": "استكشاف بنك الفروض والاختبارات والموارد حسب الأطوار",
+      "reuse": "لا نسخ أو تنزيل آلي قبل الحصول على إذن أو ترخيص مناسب"
+    },
+    {
+      "name": "DzMadrassa",
+      "url": "https://dzmadrassa.com/",
+      "type": "third_party",
+      "purpose": "استكشاف الفروض والاختبارات والحلول والموارد التعليمية",
+      "reuse": "لا نسخ أو تنزيل آلي قبل الحصول على إذن أو ترخيص مناسب"
+    },
+    {
+      "name": "DzSujets",
+      "url": "https://dzsujets.com/",
+      "type": "third_party",
+      "purpose": "استكشاف الوثائق والفروض والامتحانات والدروس المصححة",
+      "reuse": "لا نسخ أو تنزيل آلي قبل الحصول على إذن أو ترخيص مناسب"
+    },
+    {
+      "name": "Raji3DZ",
+      "url": "https://raji3dz.com/",
+      "type": "third_party",
+      "purpose": "استكشاف بنك الدروس والفروض والاختبارات",
+      "reuse": "أفاد المستخدم بحصوله على إذن وموافقة صريحة من صاحب الموقع للتحميل المباشر داخل التطبيق. يظل الاستخدام محلياً على جهاز المستخدم، ولا يُعاد نشر الملفات أو تجاوز تسجيل الدخول أو القيود التقنية. أُضيفت بوابة تفعيل محلية قابلة للإلغاء.",
+      "permission_reported_by_user": true,
+      "download_host_allowlist": [
+        "raji3dz.com"
+      ]
+    }
+  ]
+}

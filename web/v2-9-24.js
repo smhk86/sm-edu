@@ -1,0 +1,2 @@
+/* SM EDUCATION v2.9.24 — evidence-based topic diagnosis and targeted remedial practice. */
+(function(root){'use strict';root.SM_EDUCATION_RELEASE=root.SM_EDUCATION_RELEASE||{};root.SM_EDUCATION_RELEASE.version='2.9.24';root.SM_EDUCATION_RELEASE.features=Object.assign({},root.SM_EDUCATION_RELEASE.features||{},{topicEvidenceDiagnosis:true,learnerScopedLearningErrors:true,verifiedBankRemedialPractice:true});})(window);

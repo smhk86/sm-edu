@@ -1,0 +1,15 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const teacher=fs.readFileSync('web/smart-teacher.js','utf8');
+assert(teacher.includes("/api/v1/archive/document-review/docx-text"));
+assert(teacher.includes("/api/v1/archive/document-review/image-ocr"));
+assert(teacher.includes('image/png,.docx')||teacher.includes('image/webp'));
+assert(teacher.includes('3 تمارين علاجية متدرجة'));
+assert(teacher.includes('سؤالاً بسؤال وبنداً بنداً'));
+const code=fs.readFileSync('web/v2-7-0.js','utf8');const window={SM_SCHOOL_CONFIG:{apiBase:'https://example.invalid'}};const navigator={serviceWorker:{}};
+vm.runInNewContext(code,{window,navigator});
+assert.strictEqual(window.SM_EDUCATION_RELEASE.version,'2.7.0');
+assert(window.SM_EDUCATION_RELEASE.features.includes('docx-text-extraction'));
+assert.strictEqual(window.smEducationDocumentCapabilities().imageOcr,true);
+const html=fs.readFileSync('web/index.html','utf8'),sw=fs.readFileSync('web/sw.js','utf8');
+assert(html.includes('src="v2-7-0.js"'));assert(sw.includes('./v2-7-0.js'));
+console.log('v2.7.0 document and smart teacher regression tests passed');

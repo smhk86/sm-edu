@@ -1,0 +1,11 @@
+'use strict';
+const fs=require('fs'),assert=require('assert');
+const root=process.cwd();
+const gen=fs.readFileSync(root+'/web/smart-generator.js','utf8');
+const app=fs.readFileSync(root+'/web/app.js','utf8');
+const backend=fs.readFileSync(root+'/backend/app/main.py','utf8');
+assert(gen.includes('async function aiGenerate('),'Gemini-powered generation remains available');
+assert(gen.includes('async function aiFill('),'Gemini-powered fill remains available');
+assert(!/claude|anthropic/i.test(gen+app+backend),'removed provider must not remain in executable integration');
+assert(gen.includes('SM_GENERATOR={set,topic,generate,ai:aiGenerate,fill:aiFill'),'generator public API remains intact');
+console.log('PASS: generator retains Gemini flow and no removed-provider hooks');

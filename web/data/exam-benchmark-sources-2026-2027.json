@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "purpose": "Reference-source register for human-reviewed benchmark construction; links only, no copied exam text.",
+  "sources": [
+    {
+      "id": "ministry-calendar",
+      "name": "وزارة التربية الوطنية - الرزنامة",
+      "url": "https://www.education.gov.dz/الرزنامة/",
+      "type": "official_schedule",
+      "authority": "official",
+      "use": "term timing and assessment calendar; not subject-content blueprint"
+    },
+    {
+      "id": "bem-official-ministry",
+      "name": "وزارة التربية الوطنية - بيانات الامتحانات",
+      "url": "https://www.education.gov.dz/",
+      "type": "official_announcements",
+      "authority": "official",
+      "use": "official notices and examination framework; verify each item by date"
+    },
+    {
+      "id": "bem-archive",
+      "name": "BEM Algérie - مواضيع السنوات السابقة",
+      "url": "https://bem-algerie.net/sujets.html",
+      "type": "past_exam_archive",
+      "authority": "independent_archive",
+      "use": "benchmark structure and question-type review; cross-check official status"
+    },
+    {
+      "id": "dzexams-middle-ar",
+      "name": "DzExams - نماذج اختبارات الفصل الأول للسنة الأولى متوسط في العربية",
+      "url": "https://www.dzexams.com/ar/1am/arabe/e1",
+      "type": "term_papers",
+      "authority": "independent_educational_site",
+      "use": "variety and term-paper format; not official curriculum authority"
+    },
+    {
+      "id": "dzexms",
+      "name": "DzExms - بنك الفروض والاختبارات",
+      "url": "https://dzexms.com/",
+      "type": "term_papers_and_solutions",
+      "authority": "independent_educational_site",
+      "use": "candidate sample discovery; verify grade, term, year and solution separately"
+    }
+  ]
+}

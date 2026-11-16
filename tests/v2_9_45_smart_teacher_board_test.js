@@ -1,0 +1,18 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const src=fs.readFileSync(__dirname+'/../web/smart-teacher-board.js','utf8');
+const sandbox={window:{},document:{head:{appendChild(){}},body:null,readyState:'loading',addEventListener(){},createElement(){return {setAttribute(){},addEventListener(){}}}},MutationObserver:class{observe(){}},lang:'ar'};
+vm.runInNewContext(src,sandbox);const B=sandbox.window.SM_TEACHER_BOARD;
+const steps=B.stepsOf('1. اقرأ المعطيات\n2) اختر القانون\n3. تحقق من النتيجة');
+assert.deepStrictEqual(Array.from(steps),['اقرأ المعطيات','اختر القانون','تحقق من النتيجة']);
+assert.deepStrictEqual(Array.from(B.visibleSteps(steps,0,false)),['اقرأ المعطيات']);
+assert.deepStrictEqual(Array.from(B.visibleSteps(steps,1,false)),['اقرأ المعطيات','اختر القانون']);
+assert.deepStrictEqual(Array.from(B.visibleSteps(steps,1,true)),Array.from(steps));
+assert.deepStrictEqual(Array.from(B.visibleSteps(steps,99,false)),Array.from(steps));
+assert(B.diagramFor('ارسم مثلث ABC').includes('<svg'));
+assert(B.diagramFor('مستطيل أضلاعه').includes('<svg'));
+assert(B.diagramFor('دائرة ونصف القطر').includes('<svg'));
+assert(B.diagramFor('مستقيم الأعداد').includes('<svg'));
+assert.strictEqual(B.diagramFor('درس في التاريخ'),'');
+assert(src.includes('data-stb="prev"')&&src.includes('data-stb="next"')&&src.includes('data-stb="reset"')&&src.includes('data-stb="all"'));
+assert(!src.includes('ANTHROPIC_API_KEY'));
+console.log('v2_9_45_smart_teacher_board_test ok');

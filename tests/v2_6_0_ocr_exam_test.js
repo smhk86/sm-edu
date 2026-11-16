@@ -1,0 +1,17 @@
+const fs=require('fs');const vm=require('vm');const assert=require('assert');
+const teacher=fs.readFileSync('web/smart-teacher.js','utf8');
+assert(teacher.includes('smartTeacherOcrPdf'));
+assert(teacher.includes('/api/v1/archive/pdf-review/upload'));
+assert(teacher.includes("'X-Admin-Token':token"));
+assert(teacher.includes('/ocr?languages='));
+assert(teacher.includes('smSchoolAdminToken'));
+assert(teacher.includes('smartExamCount'));
+assert(teacher.includes('smartExamDifficulty'));
+assert(teacher.includes('عدد التمارين'));
+assert(teacher.includes('لم تُنشر تلقائياً')||teacher.includes('never auto-published'));
+const code=fs.readFileSync('web/v2-6-0.js','utf8');
+const window={};const navigator={onLine:false,serviceWorker:{}};vm.runInNewContext(code,{window,navigator});
+assert.strictEqual(window.SM_EDUCATION_RELEASE.version,'2.6.0');
+assert.strictEqual(window.smEducationConnectionMode(),'offline');
+assert.strictEqual(window.smEducationDocumentCapabilities().offlineShell,true);
+console.log('v2.8.2 OCR and exam configuration tests passed');

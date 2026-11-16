@@ -1,0 +1,13 @@
+const fs=require('fs'),assert=require('assert');
+const src=fs.readFileSync(__dirname+'/../web/smart-teacher-board.js','utf8');
+const sandbox={window:{},document:{head:{appendChild(){}},body:null,readyState:'loading',addEventListener(){},createElement(){return {setAttribute(){},addEventListener(){}}}},MutationObserver:class{observe(){}},lang:'ar'};
+const vm=require('vm');vm.runInNewContext(src,sandbox);
+const B=sandbox.window.SM_TEACHER_BOARD;
+assert.deepStrictEqual(Array.from(B.stepsOf('1. اجمع الحدود\n2) اقسم على 2\nالنتيجة')),['اجمع الحدود','اقسم على 2']);
+assert(B.diagramFor('ارسم مثلث ABC').includes('<svg'));
+assert(B.diagramFor('مستطيل أضلاعه').includes('<svg'));
+assert(B.diagramFor('دائرة ونصف القطر').includes('<svg'));
+assert(B.diagramFor('مستقيم الأعداد').includes('<svg'));
+assert.strictEqual(B.diagramFor('درس في التاريخ'),'');
+assert(!src.includes('ANTHROPIC_API_KEY'));
+console.log('v2_9_44_smart_teacher_board_test ok');

@@ -1,0 +1,10 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const src=fs.readFileSync(__dirname+'/../web/smart-teacher-board.js','utf8');
+const sandbox={window:{},document:{head:{appendChild(){}},body:null,readyState:'loading',addEventListener(){},createElement(){return {setAttribute(){},addEventListener(){}}}},MutationObserver:class{observe(){}},lang:'ar'};
+vm.runInNewContext(src,sandbox);const B=sandbox.window.SM_TEACHER_BOARD;
+assert.strictEqual(B.version,'2.9.47');
+for(const x of ['stb-smart-diagram','data-vertex','data-radius','data-stb-image','analyze-image','vision_images','Gemini','5*1024*1024','درجة ثقة']) assert(src.includes(x),`missing ${x}`);
+for(const x of ['مثلث','مستطيل','دائرة','متجه','دارة','منحنى']) assert(src.includes(x),`missing visual domain ${x}`);
+assert(src.includes('activeText')&&src.includes('shown[shown.length-1]'),'diagram should follow visible explanation step');
+assert(src.includes('g.confirm(')&&src.includes('image/png,image/jpeg,image/webp'));
+console.log('v2_9_47_smart_teacher_visual_test PASS');

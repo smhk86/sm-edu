@@ -1,0 +1,11 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const pack=JSON.parse(fs.readFileSync('web/data/teacher-knowledge-2026-2027.json','utf8'));
+assert.equal(pack.statistics.exercise_records_indexed,1581);
+assert.equal(pack.statistics.practice_exam_papers_indexed,327);
+assert.equal(pack.statistics.integrative_situations_indexed,342);
+assert.equal(pack.records.length,948);
+assert(pack.records.every(r=>r.grade&&r.subject&&r.topic&&r.evidence_status==='platform_practice_derived_not_official_curriculum'));
+assert(pack.records.some(r=>r.examples.length&&r.examples[0].solution_steps.length));
+const g={fetch:async()=>({ok:true,json:async()=>pack}),SM_EDUCATION_RELEASE:{},smTeacherBuildReviewContext:()=> 'base review',smTeacherBuildExamPrompt:()=> 'base exam',smartTeacherPage:()=>'<section>hero</section>'};
+vm.runInNewContext(fs.readFileSync('web/v2-9-27.js','utf8'),{window:g,Promise,Number,String,Math});
+(async()=>{await g.smTeacherKnowledgeReady;const found=g.smTeacherKnowledgeSearch({grade:'الأولى ابتدائي',subject:'اللغة العربية',term:1,limit:5});assert(found.length>0);assert(found.every(r=>r.grade==='الأولى ابتدائي'&&r.subject==='اللغة العربية'));const ctx=g.smTeacherBuildReviewContext({grade:'الأولى ابتدائي',subject:'اللغة العربية',term:1});assert(ctx.includes('قاعدة معارف المعلم الذكي'));assert(ctx.includes('ليس توثيقاً رسمياً'));assert(g.smTeacherBuildExamPrompt({grade:'الأولى ابتدائي',subject:'اللغة العربية',term:1}).includes('أنشئ أسئلة أصلية جديدة'));assert(g.smartTeacherPage().includes('قاعدة معارف المعلم الذكي'));assert.equal(g.SM_EDUCATION_RELEASE.version,'2.9.27');console.log('PASS: 948 teacher knowledge records, grade/subject/term retrieval, worked examples, evidence guardrails and teacher UI integration');})().catch(e=>{console.error(e);process.exit(1)});

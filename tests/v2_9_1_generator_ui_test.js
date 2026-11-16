@@ -1,0 +1,11 @@
+const assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'web/index.html'),'utf8'),app=fs.readFileSync(path.join(root,'web/app.js'),'utf8'),sw=fs.readFileSync(path.join(root,'web/sw.js'),'utf8'),gen=fs.readFileSync(path.join(root,'web/v2-9-1.js'),'utf8'),css=fs.readFileSync(path.join(root,'web/styles.css'),'utf8');
+assert(!/data-page="progress"/.test(html),'progress navigation remains');
+assert(!/data-page="library"/.test(html),'textbook navigation remains');
+assert(/data-page="generator"/.test(html),'dedicated generator navigation missing');
+assert(/page==='generator'&&typeof smGeneratorPage/.test(app),'generator route missing');
+assert(/generator/.test(app.match(/new Set\(\[[^\]]+\]\)/)[0]),'generator not allowed');
+assert(/v2-9-1\.js/.test(html)&&/v2-9-1\.js/.test(sw),'new script not linked/cached');
+for(const x of ['smGenGrade','smGenSubject','smGenTerm','smGenDifficulty','smGenMinutes','smGenPoints','التصحيح النموذجي','Raji3DZ'])assert(gen.includes(x),'generator feature missing: '+x);
+assert(/textLayer/.test(css)&&/font-feature-settings/.test(css),'Arabic PDF typography rules missing');
+console.log('v2.9.1 navigation, generator, cache and PDF UX checks passed');

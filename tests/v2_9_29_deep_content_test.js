@@ -1,0 +1,16 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const pack=JSON.parse(fs.readFileSync('web/data/teacher-deep-content-2026-2027.json','utf8'));
+const base=JSON.parse(fs.readFileSync('web/data/teacher-encyclopedia-2026-2027.json','utf8'));
+assert.equal(pack.records.length,base.records.length);
+assert.equal(pack.statistics.lesson_packs,1250);
+assert.equal(pack.statistics.distinct_lessons,411);
+assert.equal(pack.statistics.remedial_tasks,3750);
+assert.equal(pack.statistics.mind_maps,1250);
+assert.equal(pack.statistics.science_experiment_packs,60);
+assert.equal(pack.statistics.officially_verified_lessons,0);
+assert(pack.records.every(r=>r.lesson_explanation?.core_explanation?.length&&r.rules_and_laws?.rule&&r.new_worked_examples?.length===1&&r.mind_map?.branches?.length===3&&r.remedial_exercises?.length===3&&r.evidence?.official_curriculum_verified===false));
+assert(pack.records.filter(r=>r.science_experiment).every(r=>r.science_experiment.safety&&r.science_experiment.steps.length>=2));
+const source=fs.readFileSync('web/v2-9-29.js','utf8');
+const g={fetch:async()=>({ok:true,json:async()=>pack}),SM_EDUCATION_RELEASE:{},smTeacherBuildReviewContext:()=> 'base review',smTeacherBuildExamPrompt:()=> 'base exam',smartTeacherPage:()=>'<section>teacher</section>',document:null};
+vm.runInNewContext(source,{window:g,Promise,Number,String,Math});
+(async()=>{await g.smTeacherDeepContentReady;const first=pack.records.find(r=>r.lesson==='قانون أوم');assert(first);const found=g.smTeacherDeepContentSearch({grade:first.grade,subject:first.subject,query:'قانون أوم',limit:5});assert(found.some(r=>r.lesson==='قانون أوم'));const ctx=g.smTeacherDeepContentContext({grade:first.grade,subject:first.subject,query:'قانون أوم'});assert(ctx.includes('قانون أوم'));assert(ctx.includes('مثال محلول'));assert(ctx.includes('لا تدّع المطابقة الرسمية'));assert(g.smTeacherBuildReviewContext({}).includes('حدّد المستوى'));assert(g.smTeacherBuildExamPrompt({}).includes('حدّد المستوى'));assert(g.smartTeacherPage().includes('مكتبة المحتوى التعليمي العميق'));assert.equal(g.SM_EDUCATION_RELEASE.version,'2.9.29');console.log(`PASS: ${pack.statistics.lesson_packs} lesson packs, ${pack.statistics.remedial_tasks} remedial activities, ${pack.statistics.science_experiment_packs} science experiments, search, context integration and official-alignment guardrails`);})().catch(e=>{console.error(e);process.exit(1)});

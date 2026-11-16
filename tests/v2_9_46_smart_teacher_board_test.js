@@ -1,0 +1,10 @@
+const fs=require('fs'),assert=require('assert'),vm=require('vm');
+const src=fs.readFileSync(__dirname+'/../web/smart-teacher-board.js','utf8');
+const sandbox={window:{},document:{head:{appendChild(){}},body:null,readyState:'loading',addEventListener(){},createElement(){return {setAttribute(){},addEventListener(){}}}},MutationObserver:class{observe(){}},lang:'ar'};
+vm.runInNewContext(src,sandbox);const B=sandbox.window.SM_TEACHER_BOARD;
+assert.strictEqual(B.version,'2.9.47');
+for(const tool of ['pen','line','rect','circle','erase','undo','clear']) assert(src.includes(`data-draw="${tool}"`),`missing drawing tool ${tool}`);
+assert(src.includes('pointerdown')&&src.includes('pointermove')&&src.includes('pointerup'));
+assert(src.includes('drawMarkup.join')&&src.includes('Le dessin reste local'));
+assert(src.includes('touch-action:none'));
+console.log('v2_9_46_smart_teacher_board_test ok');

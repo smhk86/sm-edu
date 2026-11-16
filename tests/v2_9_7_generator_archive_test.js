@@ -1,0 +1,17 @@
+const assert=require('assert'),fs=require('fs');
+const root=__dirname+'/..';
+const gen=fs.readFileSync(root+'/web/smart-generator.js','utf8');
+const curriculum=JSON.parse(fs.readFileSync(root+'/web/data/curriculum-2026-2027.json','utf8'));
+const bank=JSON.parse(fs.readFileSync(root+'/web/data/exercise-bank-2026-2027.json','utf8'));
+assert(gen.includes('smGenSavedPapers'),'local generated-paper archive storage missing');
+assert(gen.includes('function persistPaper()'),'save generated paper action missing');
+assert(gen.includes('function deletePaper(id)'),'delete saved paper action missing');
+assert(gen.includes('function openSavedPaper(id)'),'open saved paper action missing');
+assert(gen.includes('onclick="SM_GENERATOR.keep()"'),'keep button missing');
+assert(gen.includes('onclick="SM_GENERATOR.deleteSaved('),'delete button missing');
+assert(gen.includes('smGenSavedPapers'),'saved archive mount missing');
+assert(curriculum.records.some(x=>x.stage==='primary')&&curriculum.records.some(x=>x.stage==='middle')&&curriculum.records.some(x=>x.stage==='secondary'),'all education stages must exist');
+assert(bank.coverage.grades===12,'expected all 12 grades');
+assert(bank.coverage.grade_subject_pairs>=100,'broad grade/subject coverage missing');
+assert(gen.includes('محاكاة نموذج Raji3DZ'),'reference simulation labeling missing');
+console.log('v2.9.7 generator archive and coverage checks passed');

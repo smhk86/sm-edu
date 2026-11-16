@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "release": "2.9.33",
+  "academic_year": "2026-2027",
+  "title": "Teacher scientific and pedagogical review candidates",
+  "summary": {
+    "lessons_checked": 1250,
+    "deep_content_records": 1250,
+    "exercise_records": 1581,
+    "knowledge_records": 948,
+    "findings_total": 2,
+    "high_priority": 0,
+    "medium_priority": 2,
+    "low_priority": 0,
+    "officially_verified_lessons": 0,
+    "policy": "Deterministic structural/editorial screening only; findings are not proof of scientific or pedagogical error."
+  },
+  "severity_policy": {
+    "high": "خلل بنيوي واضح أو إحالة مفقودة تستلزم الفحص قبل الاستخدام.",
+    "medium": "نقص أو اختلاف يستحق مراجعة المحرر؛ لا يثبت خطأ علمياً.",
+    "low": "تحسين تحريري أو استكمال اختياري."
+  },
+  "findings": [
+    {
+      "record_id": "ency-00053",
+      "grade": "الثالثة ابتدائي",
+      "subject": "الرياضيات",
+      "lesson": "الجمع والطرح",
+      "code": "same_title_content_divergence",
+      "severity": "medium",
+      "confidence": "medium",
+      "detail": "دروس تحمل العنوان نفسه لكن أفكارها الأساسية تختلف؛ قد يكون الاختلاف مشروعاً لاختلاف المستوى أو السياق.",
+      "evidence": {
+        "related_record_ids": [
+          "ency-00053",
+          "ency-00898"
+        ],
+        "distinct_key_idea_sets": 2
+      },
+      "requires_human_review": true
+    },
+    {
+      "record_id": "ency-00898",
+      "grade": "الثالثة ابتدائي",
+      "subject": "الرياضيات",
+      "lesson": "الجمع والطرح",
+      "code": "same_title_content_divergence",
+      "severity": "medium",
+      "confidence": "medium",
+      "detail": "دروس تحمل العنوان نفسه لكن أفكارها الأساسية تختلف؛ قد يكون الاختلاف مشروعاً لاختلاف المستوى أو السياق.",
+      "evidence": {
+        "related_record_ids": [
+          "ency-00053",
+          "ency-00898"
+        ],
+        "distinct_key_idea_sets": 2
+      },
+      "requires_human_review": true
+    }
+  ],
+  "source_hashes": {
+    "teacher-encyclopedia-2026-2027.json": "237ce6f3e77f011e073238f5d352a49ac5d612d259fe4a4cee7d735f897a4b35",
+    "teacher-deep-content-2026-2027.json": "04c2e9ff62a0e99f31e9152878337ede87b37f124c35b9e5a8d109c954663313",
+    "exercise-bank-2026-2027.json": "b8e3bd90aadd0508c0df04b6f8b3fd2489842ca14e9ad07ebe9cf0e37870cdc0",
+    "teacher-knowledge-2026-2027.json": "1a2593bc6a68ef768bb5be8a24ca82bf6f2afcddd6242d465e3fabd92a4c9a1c",
+    "teacher-knowledge-graph-2026-2027.json": "5806c215f71776bc5b3ae377eeef1b79f87cebfbf1462d2230e36e51f6731fe6"
+  }
+}

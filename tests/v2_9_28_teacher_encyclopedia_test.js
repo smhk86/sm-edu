@@ -1,0 +1,14 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const pack=JSON.parse(fs.readFileSync('web/data/teacher-encyclopedia-2026-2027.json','utf8'));
+const bank=JSON.parse(fs.readFileSync('web/data/exercise-bank-2026-2027.json','utf8'));
+assert.equal(pack.statistics.exercise_records_linked,bank.records.length);
+assert.equal(pack.records.length,pack.statistics.lesson_capsules);
+assert(pack.records.length>1000);
+assert(pack.records.every(r=>r.grade&&r.subject&&r.lesson&&r.term>=1&&r.term<=3&&r.evidence_status==='platform_practice_derived_not_official_curriculum'));
+assert(pack.records.some(r=>r.worked_examples.length&&r.procedures.length));
+assert.equal(new Set(pack.records.map(r=>r.id)).size,pack.records.length);
+const linked=pack.records.flatMap(r=>r.exercise_ids);assert.equal(linked.length,bank.records.length);assert.equal(new Set(linked).size,bank.records.length);assert.deepEqual(new Set(linked),new Set(bank.records.map(r=>r.id)));
+assert(fs.readFileSync('web/smart-teacher.js','utf8').includes('await window.smTeacherEncyclopediaReady'));
+const g={fetch:async()=>({ok:true,json:async()=>pack}),SM_EDUCATION_RELEASE:{},smTeacherBuildReviewContext:()=> 'base review',smTeacherBuildExamPrompt:()=> 'base exam',smartTeacherPage:()=>'<section>hero</section>'};
+vm.runInNewContext(fs.readFileSync('web/v2-9-28.js','utf8'),{window:g,Promise,Number,String,Math});
+(async()=>{await g.smTeacherEncyclopediaReady;const found=g.smTeacherEncyclopediaSearch({grade:pack.records[0].grade,subject:pack.records[0].subject,term:pack.records[0].term,query:pack.records[0].lesson,limit:5});assert(found.length>0);assert(found.every(r=>r.grade===pack.records[0].grade&&r.subject===pack.records[0].subject));const ctx=g.smTeacherEncyclopediaContext({grade:pack.records[0].grade,subject:pack.records[0].subject,term:pack.records[0].term,query:pack.records[0].lesson});assert(ctx.includes('موسوعة المعلم الذكي'));assert(ctx.includes('ليست وثيقة رسمية'));assert(g.smTeacherBuildReviewContext({}).includes('وحدات دروس'));assert(g.smTeacherBuildExamPrompt({}).includes('لا تنسخ الأمثلة حرفياً'));assert(g.smartTeacherPage().includes('موسوعة الدروس الذكية'));assert.equal(g.SM_EDUCATION_RELEASE.version,'2.9.28');console.log(`PASS: ${pack.records.length} lesson capsules, ${pack.statistics.exercise_records_linked} linked exercises, filtered retrieval, worked examples, prompt integration and evidence guardrails`);})().catch(e=>{console.error(e);process.exit(1)});
