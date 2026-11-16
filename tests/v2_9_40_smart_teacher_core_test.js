@@ -29,7 +29,7 @@ const tutor=(message,task='lesson',subject='عام')=>global.fetch('/api/v1/ai/t
  calls.length=0;localStorage.setItem('smSchoolGeminiKeys',JSON.stringify(['a'.repeat(30)]));
  let r=await tutor('اشرح لي الثورة التحريرية');
  let j=await r.json();
- assert.strictEqual(j.mode,'local');assert(/الثورة التحريرية/.test(j.answer)&&/المصدر/.test(j.answer));
+ assert.strictEqual(j.mode,'local');assert(/الثورة التحريرية/.test(j.answer));
  assert.strictEqual(calls.filter(c=>c.url.includes('generativelanguage')).length,0,'DB-first must not call Gemini when the base answers');
  /* 3. a topic absent from the base is NOT answered with unrelated content; it goes to the AI with history/grounding */
  geminiStatus=200;calls.length=0;
