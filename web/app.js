@@ -61,7 +61,7 @@ const dict={ar:{tagline:'نتعلّم بذكاء، نتقدّم بثقة',studen
 dict.ar.homeschool='المدرسة المنزلية';dict.ar.homeschoolHint='يوم دراسي منزلي مرتّب وجدول أسبوعي وفق مواد سنة الطفل.';dict.fr.homeschool='École à la maison';dict.fr.homeschoolHint='Journée structurée et emploi du temps hebdomadaire selon les matières de l’année.';dict.en.homeschool='Home school';dict.en.homeschoolHint='A structured school day and weekly timetable for the child’s grade subjects.';
 let lang='ar',level='middle',grade=levels.middle[0],page='home';const $=s=>document.querySelector(s);const t=k=>dict[lang][k]||k;
 function setLanguage(v){if(activeExam&&!activeExam.submitted)cancelActiveExam();lang=v;localStorage.setItem('smSchoolLanguage',v);document.documentElement.lang=v;document.documentElement.dir=v==='ar'?'rtl':'ltr';document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.dataset.i18n;el.textContent=t(k)});render()}
-function setGrade(group,name){level=group;grade=name;localStorage.setItem('smSchoolLevel',group);localStorage.setItem('smSchoolGrade',name);updateActiveLearnerGrade(group,name);$('#levelSummary').textContent=name;render();toast(name)}
+function setGrade(group,name){const _prev=typeof grade!=='undefined'?grade:'';if(_prev&&_prev!==name){try{localStorage.removeItem(tutorHistoryKey())}catch(e){}}level=group;grade=name;localStorage.setItem('smSchoolLevel',group);localStorage.setItem('smSchoolGrade',name);updateActiveLearnerGrade(group,name);$('#levelSummary').textContent=name;render();toast(name)}
 function go(p,fromPopState=false){
  if(p==='tutor')p='teacher';
  const allowedPages=new Set(['home','generator','teacher',...Object.keys(pageInfo)]);if(!p||!allowedPages.has(p))return;

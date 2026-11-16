@@ -65,8 +65,8 @@
   const el=g.document&&g.document.getElementById('smBkStatus');if(!el)return;
   try{const B=g.SM_TEACHER_BOOKS,G=(g.SM_VISION_IMPORT&&g.SM_VISION_IMPORT.GRADES)||{};
    const rows=B&&B.listSaved?await B.listSaved():[];let tb=0,tp=0,n=0;const L=[];
-   Object.keys(G).forEach(c=>{const rs=rows.filter(r=>r.grade===G[c]&&r.source==='vision_ocr'),p=rs.reduce((a,r)=>a+(r.pages||0),0);if(rs.length){n++;tb+=rs.length;tp+=p}L.push((rs.length?'✅ ':'❌ ')+c+' — '+rs.length+' كتاباً، '+p+' صفحة')});
-   el.textContent='📚 المستويات المستوردة: '+n+' من '+Object.keys(G).length+' — '+tb+' كتاباً، '+tp+' صفحة\n'+L.join('\n')
+   Object.keys(G).forEach(c=>{const rs=rows.filter(r=>r.grade===G[c]&&r.source==='vision_ocr'),p=rs.reduce((a,r)=>a+(r.pages||0),0);if(rs.length){n++;tb+=rs.length;tp+=p}L.push((rs.length?'✅ ':'📦 ')+c+' — '+(rs.length?rs.length+' كتاباً، '+p+' صفحة (محمّل)':'مضمّن في التطبيق، يُحمَّل عند اختيار المستوى'))});
+   el.textContent='📦 كتب مضمّنة في التطبيق: '+Object.keys(G).length+' من '+Object.keys(G).length+' مستوى — محمّل الآن: '+n+' ('+tb+' كتاباً، '+tp+' صفحة)\n'+L.join('\n')
   }catch(e){el.textContent='تعذّر قراءة حالة الكتب: '+(e&&e.message||'')}}
  g.SM_ENGINE_BRIDGE.refreshBooksStatus=refreshBooksStatus;
  const _tsp=g.tutorServerPanel;
