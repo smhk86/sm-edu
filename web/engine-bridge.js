@@ -61,6 +61,30 @@
   let tail='';try{const s=await g.SM_TEXTBOOK_KB.stats();tail='\nالمجموع في القاعدة: '+s.books+' كتاباً، '+s.pages+' صفحة.'}catch(e){}
   say(lines.join('\n')+'\nاكتمل: '+ok+' من '+fs.length+' ملفاً.'+tail);refreshBooksStatus()}
  g.SM_ENGINE_BRIDGE.importBooks=importBooks;
+ function booksPanel2(){const G=(g.SM_VISION_IMPORT&&g.SM_VISION_IMPORT.GRADES)||{};
+  const o=Object.keys(G).map(c=>'<option value="'+c+'">'+G[c]+' ('+c+')</option>').join('');
+  return '<details class="panel" id="smBooksImport"><summary><b>📚 كتب المعلم الذكي</b></summary>'
+  +'<p>الكتب مضمّنة في التطبيق وتُحمَّل في الذاكرة دون نسخها إلى التخزين.</p>'
+  +'<select id="smBkLevel" style="max-width:100%">'+o+'</select> '
+  +'<button type="button" class="primary-btn" onclick="SM_ENGINE_BRIDGE.loadLevelUI()">استيراد مستوى</button> '
+  +'<button type="button" class="primary-btn" onclick="SM_ENGINE_BRIDGE.loadAllUI()">استيراد جميع المستويات</button>'
+  +'<div id="smBkStatus" style="white-space:pre-wrap;margin-top:8px;font-size:13px"></div><pre id="smBkOut" style="white-space:pre-wrap;margin-top:8px"></pre></details>'}
+ booksPanel=booksPanel2;
+ let _lvBusy=false;
+ async function _lvRun(codes){
+  const d=g.document,say=t=>{const o=d&&d.getElementById('smBkOut');if(o)o.textContent=t};
+  const L=g.SM_BOOKS_LOADER;if(!L){say('وحدة الكتب غير جاهزة بعد، أعد المحاولة بعد لحظات.');return}
+  if(_lvBusy){say('التحميل جارٍ، انتظر حتى ينتهي.');return}
+  _lvBusy=true;const lines=[];
+  try{for(let i=0;i<codes.length;i++){const c=codes[i],t0=Date.now();
+    say(lines.join('\n')+(lines.length?'\n':'')+'… جارٍ تحميل '+c+' ('+(i+1)+' من '+codes.length+')');
+    const n=await L.load(c);lines.push((n?'✅ ':'⚠️ ')+c+' — '+(n?n+' كتاباً':'تعذّر تحميل الملف')+' ('+Math.round((Date.now()-t0)/1000)+' ث)');
+    await new Promise(r=>setTimeout(r,500))}
+   L.flush();say(lines.join('\n')+'\nاكتمل.')}
+  catch(e){say(lines.join('\n')+'\n⚠️ '+(e&&e.message||'خطأ'))}
+  finally{_lvBusy=false;try{refreshBooksStatus()}catch(e){}}}
+ g.SM_ENGINE_BRIDGE.loadLevelUI=function(){const el=g.document.getElementById('smBkLevel');if(el&&el.value)return _lvRun([el.value])};
+ g.SM_ENGINE_BRIDGE.loadAllUI=function(){return _lvRun(Object.keys((g.SM_VISION_IMPORT&&g.SM_VISION_IMPORT.GRADES)||{}))};
  async function refreshBooksStatus(){
   const el=g.document&&g.document.getElementById('smBkStatus');if(!el)return;
   try{const B=g.SM_TEACHER_BOOKS,G=(g.SM_VISION_IMPORT&&g.SM_VISION_IMPORT.GRADES)||{};

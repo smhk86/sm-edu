@@ -61,6 +61,8 @@ jobs:
           M=android/app/src/main/AndroidManifest.xml
           grep -q RecognitionService "$M" || sed -i 's#</manifest>#    <queries><intent><action android:name="android.speech.RecognitionService" /></intent></queries>\n</manifest>#' "$M"
           grep -c RecognitionService "$M"
+          grep -q TTS_SERVICE "$M" || sed -i 's#</queries>#<intent><action android:name="android.intent.action.TTS_SERVICE" /></intent></queries>#' "$M"
+          grep -c TTS_SERVICE "$M"
 
       - name: Set Android version from package.json
         run: |
