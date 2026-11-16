@@ -141,7 +141,7 @@
   }
   if(rl.length){
    const l=rl[0].x,extra=pickQs(2).filter(r=>otNorm(r.lesson||'')===otNorm(arTxt(l.title))||rb.length);
-   return `${head}\n\n${lessonBlock(l)}`+(rl[1]?`\n\n➕ ${tr('دروس قريبة','Leçons proches','Related lessons')}: ${rl.slice(1,4).map(o=>arTxt(o.x.title)).join(' • ')}`:'')+(extra.length?`\n\n🧪 ${tr('جرّب','Essayez','Try')}:\n`+extra.map((r,i)=>`${i+1}) ${r.question}${choiceLine(r)}\n   ✅ ${r.solution}`).join('\n'):'');
+   return `${head}\n\n${lessonBlock(l)}`+(false&&rl[1]?`\n\n➕ ${tr('دروس قريبة','Leçons proches','Related lessons')}: ${rl.slice(1,4).map(o=>arTxt(o.x.title)).join(' • ')}`:'')+(extra.length?`\n\n🧪 ${tr('جرّب','Essayez','Try')}:\n`+extra.map((r,i)=>`${i+1}) ${r.question}${choiceLine(r)}\n   ✅ ${r.solution}`).join('\n'):'');
   }
   if(rb.length){
    const top=rb[0].r,steps=(top.solution_steps||[]).map((x,i)=>`${i+1}. ${x}`).join('\n');

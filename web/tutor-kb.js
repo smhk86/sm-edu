@@ -185,7 +185,7 @@
     out+='\n';
    }
    const more=lessons.slice(1,4).filter(h=>h.d.title!==top.title);
-   if(more.length)out+='\n🔗 دروس قريبة: '+more.map(h=>h.d.title).join('، ')+'\n';
+   if(false&&more.length)out+='\n🔗 دروس قريبة: '+more.map(h=>h.d.title).join('، ')+'\n';
    const ext=lessons.find(h=>h.d.kind==='external');
    if(ext)out+='\n📄 مقطع من '+ext.d.src+(ext.d.title?' ('+ext.d.title+')':'')+': '+clip(ext.d.text,400)+'\n';
    const sc=scopeFor(top.grade||gr,top.subject||subject).find(d=>!top.term||d.term===top.term)||scopeFor(top.grade||gr,top.subject||subject)[0];

@@ -96,7 +96,7 @@
     show('📚 اكتمل استيراد الكتب المدمجة: '+done+' مستوى جديداً'+t)}
   }finally{running=false;try{refreshBooksStatus()}catch(e){}}}
  g.SM_ENGINE_BRIDGE.autoImport=autoImport;
- if(g.document)g.setTimeout(()=>{autoImport(false)},8000);
+ /* auto-import disabled: books are read directly from books/ */
  g.fetch=async function(input,init){
   try{
    let url='';try{url=typeof input==='string'?input:(input&&input.url)||''}catch(e){}

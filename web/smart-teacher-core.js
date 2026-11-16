@@ -102,11 +102,11 @@
   if(hits.length&&confident(hits,msg)){
    const top=hits[0].d,others=hits.slice(1,4).map(h=>place(h.d));
    const note=gr&&top.grade!==gr?'ℹ️ '+L(`هذا الدرس مسجّل في مستوى «${top.grade}» (مستواك الحالي «${gr}»).`,`Cette leçon est classée en « ${top.grade} ».`,`This lesson is filed under “${top.grade}”.`)+'\n\n':'';
-   return note+compose(top)+(others.length?'\n\n➕ '+L('دروس قريبة','Leçons proches','Related lessons')+':\n'+list(others):'');
+   return note+compose(top)+(false&&others.length?'\n\n➕ '+L('دروس قريبة','Leçons proches','Related lessons')+':\n'+list(others):'');
   }
   const near=hits.slice(0,5).map(h=>place(h.d));
   const parts=[L('لا يوجد في قاعدة المنصة المحلية درس يتناول هذا السؤال بدقة.','Aucune leçon de la base locale ne traite précisément cette question.','The local base has no lesson that precisely covers this question.')];
-  if(near.length)parts.push('','**'+L('أقرب ما وجدتُه (قد لا يكون هو المقصود)','Le plus proche','Closest found (may not be what you mean)')+':**',list(near));
+  if(false&&near.length)parts.push('','**'+L('أقرب ما وجدتُه (قد لا يكون هو المقصود)','Le plus proche','Closest found (may not be what you mean)')+':**',list(near));
   parts.push('',L('للحصول على شرح حرّ لأي موضوع: فعّل مفتاح Gemini (لوحة «إعدادات المساعد»)، أو حمّل كتاب المادة داخل التطبيق ليبحث فيه المعلم ويستشهد برقم الصفحة.','Pour une explication libre : activez la clé Gemini ou ajoutez le manuel de la matière.','For a free explanation: enable the Gemini key or add the subject textbook.'));
   return parts.join('\n');
  }

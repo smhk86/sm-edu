@@ -11,9 +11,26 @@
  function notify(){try{g.dispatchEvent(new g.CustomEvent('sm-books-changed'))}catch(e){}}
  let dbp=null,cache=[];
  function db(){if(dbp)return dbp;dbp=new Promise((resolve,reject)=>{const r=indexedDB.open(DB,2);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE,{keyPath:'id'})};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});return dbp}
- async function all(){try{const d=await db();cache=await new Promise((res,rej)=>{const r=d.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)});return cache}catch(e){return cache}}
- async function put(row){const d=await db();await new Promise((res,rej)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).put(row);r.onsuccess=res;r.onerror=()=>rej(r.error)});await all();notify()}
- async function remove(id){const d=await db();await new Promise((res,rej)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).delete(id);r.onsuccess=res;r.onerror=()=>rej(r.error)});await all();notify();renderList()}
+ let _raw=false,_bp={};
+ async function all(){
+  if(!_raw){await allRaw();_raw=true}
+  try{
+   const V=g.SM_VISION_IMPORT,gr=(typeof grade!=='undefined'?grade:'');
+   const code=V&&V.GRADES?Object.keys(V.GRADES).find(c=>V.GRADES[c]===gr):'';
+   if(code){
+    const first=!_bp[code];
+    if(first)_bp[code]=(async()=>{
+     const res=await fetch('books/'+code+'-sci.json');if(!res.ok)return false;
+     const rows=V._t.toRows(await res.json(),code),ids=new Set(cache.map(x=>x.id));let n=0;
+     rows.forEach(r=>{if(!ids.has(r.id)){r.bundled=true;cache.push(r);n++}});
+     return n>0})().catch(()=>false);
+    const added=await _bp[code];if(first&&added)notify();
+   }
+  }catch(e){}
+  return cache}
+ async function allRaw(){try{const d=await db();cache=await new Promise((res,rej)=>{const r=d.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)});return cache}catch(e){return cache}}
+ async function put(row){const d=await db();await new Promise((res,rej)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).put(row);r.onsuccess=res;r.onerror=()=>rej(r.error)});cache=cache.filter(x=>x.id!==row.id);cache.push(row);notify()}
+ async function remove(id){const d=await db();await new Promise((res,rej)=>{const r=d.transaction(STORE,'readwrite').objectStore(STORE).delete(id);r.onsuccess=res;r.onerror=()=>rej(r.error)});_raw=false;_bp={};await all();notify();renderList()}
  function gradeSubjects(){try{return subjectsForCurrentGrade()}catch(e){return []}}
  function panelHtml(){init().then(renderList);const books=cache.filter(x=>x.grade===(typeof grade!=='undefined'?grade:''));return `<section class="panel sm-tb-panel"><div class="learning-meta"><h3>📚 المكتبة الوطنية للكتب المدرسية الجزائرية</h3><span class="pill">ابتدائي · متوسط · ثانوي</span></div><p>فهرس وطني خفيف للكتب من السنة الأولى ابتدائي إلى الثالثة ثانوي. لا يحتوي التطبيق على ملفات الكتب مسبقاً؛ اختر الكتاب الذي تحتاجه فقط ثم استورده ليُحفظ على جهازك للقراءة والبحث دون اتصال.</p><div class="sm-tb-official"><div><b>الديوان الوطني للمطبوعات المدرسية (ONPS)</b><small>المصدر الرسمي للكتب المدرسية الجزائرية</small></div><button type="button" class="primary-btn" onclick="SM_TEACHER_BOOKS.openOfficial()">فتح بوابة ONPS</button></div><div class="sm-tb-filter"><label>المستوى الدراسي<input value="${esc(typeof grade!=='undefined'?grade:'')}" readonly></label><label>المادة<select id="smTbSubject">${gradeSubjects().map(s=>`<option>${esc(s)}</option>`).join('')}</select></label></div><div class="sm-tb-import"><b>تنزيل/استيراد الكتاب الذي تحتاجه فقط</b><input id="smTbTitle" type="text" placeholder="عنوان الكتاب (اختياري)"><input id="smTbFile" type="file" accept="application/pdf,.pdf"><button type="button" class="secondary-btn" onclick="SM_TEACHER_BOOKS.importPdf()">إضافة الكتاب المختار وفهرسة صفحاته</button><small>لا تُنزّل بقية الكتب ولا تُضاف إلى حجم التطبيق. يُحفظ هذا الكتاب فقط محلياً على جهازك. يمكنك حذفه لاحقاً لتوفير المساحة. الحد الأقصى 35 ميغابايت؛ الكتب المصورة تحتاج OCR.</small></div><div class="sm-tb-search"><b>🔎 محرك البحث في الكتب المدرسية</b><div><input id="smTbQuery" type="search" placeholder="اكتب سؤالاً أو كلمة للبحث داخل الكتب"><button type="button" class="primary-btn" onclick="SM_TEACHER_BOOKS.searchUI()">بحث</button></div><div id="smTbResults" aria-live="polite"></div></div><div id="smTbSaved">${listHtml(books)}</div><label class="sm-tb-consent"><input id="smTbAiConsent" type="checkbox"> أسمح بإرسال المقتطفات المطابقة من الكتاب المحدد إلى مزود الذكاء الاصطناعي مع سؤالي.</label><div class="notice">تظهر نتائج البحث مع عنوان الكتاب والمستوى والمادة ورقم الصفحة. لا تُنشأ روابط تنزيل وهمية؛ تنزيل النسخ المستوردة متاح من القارئ الداخلي.</div></section>`}
  function listHtml(rows){if(!rows.length)return '<p class="empty-note">لم تُستورد كتب لهذا المستوى بعد. اختر كتاباً واحداً تحتاجه واستورده؛ لن يشغل التطبيق مساحة الكتب التي لم تخترها.</p>';return `<div class="sm-tb-list"><b>كتبي المفهرسة (${rows.length})</b>${rows.map(b=>`<article class="sm-tb-row"><div><b>${esc(b.title)}</b><small>${esc(b.subject)} · ${esc(b.grade)} · ${Number(b.pages||0)} صفحة · ${Number(b.chars||0).toLocaleString('ar-DZ')} حرف</small><small>فهرسة صفحة بصفحة · محفوظ محلياً</small></div><div><button type="button" class="secondary-btn" onclick="SM_TEACHER_BOOKS.openBook('${esc(b.id)}')">قراءة الكتاب</button><button type="button" class="secondary-btn" onclick="SM_TEACHER_BOOKS.select('${esc(b.id)}')">اعتماد للمعلم</button><button type="button" class="text-btn" onclick="SM_TEACHER_BOOKS.download('${esc(b.id)}')">تنزيل</button><button type="button" class="text-btn" onclick="SM_TEACHER_BOOKS.remove('${esc(b.id)}')">حذف</button></div></article>`).join('')}</div>`}
