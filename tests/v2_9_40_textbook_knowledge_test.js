@@ -139,5 +139,5 @@ const K=SM_TEXTBOOK_KB,T=K._t,D=SM_TEXTBOOK_DL;
  assert(R('web/smart-teacher.js').includes("SM_TEACHER_BOOKS.context((question||'')"),'document review searches the books with the exercise text');
  assert(R('web/smart-teacher-books.js').includes('sm-books-changed'),'saving or deleting a book refreshes the knowledge base');
  assert(R('web/gemini-direct.js').includes('Cite page numbers only as shown'),'AI prompt allows citing the supplied page numbers only');
- console.log('v2.9.49 textbook knowledge base tests: PASS');
+ console.log('v2.9.50 textbook knowledge base tests: PASS');
 })().catch(e=>{console.error(e);process.exit(1)});

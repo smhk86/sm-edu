@@ -54,6 +54,8 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+      - name: Native text-to-speech plugin (optional; never blocks the build)
+        run: npm install --no-save @capacitor-community/text-to-speech@^6.0.0 || echo "TTS plugin not installed; the app falls back to the WebView voice"
 
       - name: Add Android platform
         run: npx cap add android

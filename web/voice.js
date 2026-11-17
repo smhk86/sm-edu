@@ -35,17 +35,48 @@ function b64(u8){let s='';const k=0x8000;for(let i=0;i<u8.length;i+=k)s+=String.
 
 /* ---------- read aloud ---------- */
 let speakingBtn=null;
-function stopSpeak(){try{g.speechSynthesis&&speechSynthesis.cancel()}catch(e){}if(speakingBtn){speakingBtn.classList.remove('on');speakingBtn=null}}
+function stopSpeak(){try{g.speechSynthesis&&speechSynthesis.cancel()}catch(e){}try{const P=natTts();if(P&&P.stop)P.stop()}catch(e){}if(speakingBtn){speakingBtn.classList.remove('on');speakingBtn=null}}
+function natTts(){try{const C=g.Capacitor;return C&&C.isNativePlatform&&C.isNativePlatform()&&C.Plugins&&C.Plugins.TextToSpeech||null}catch(e){return null}}
+function pickVoice(lg){
+ try{const vs=g.speechSynthesis.getVoices()||[];if(!vs.length)return null;
+  const want=(VOICE[lg]||'en-US').toLowerCase(),pre=want.slice(0,2);
+  return vs.find(v=>String(v.lang||'').toLowerCase().replace('_','-')===want)||vs.find(v=>String(v.lang||'').toLowerCase().replace('_','-').startsWith(pre))||null}catch(e){return null}
+}
+function speakWeb(parts,lg2,btn){
+ const syn=g.speechSynthesis;
+ const go=()=>{
+  try{syn.resume&&syn.resume()}catch(e){}
+  const voice=pickVoice(lg2);let started=false;
+  parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p.trim());u.lang=voice&&voice.lang||VOICE[lg2]||'en-US';if(voice)u.voice=voice;u.rate=0.95;u.volume=1;
+   u.onstart=()=>{started=true};
+   if(i===parts.length-1)u.onend=u.onerror=()=>{if(speakingBtn===btn&&btn){btn.classList.remove('on');speakingBtn=null}};
+   syn.speak(u)});
+  setTimeout(()=>{if(!started&&!syn.speaking){if(btn){btn.classList.remove('on');if(speakingBtn===btn)speakingBtn=null}
+    say(tr('لا يوجد صوت قراءة لهذه اللغة على الهاتف. ثبّت «تحويل النص إلى كلام» من إعدادات الهاتف ← اللغة والإدخال، ونزّل صوت اللغة العربية.','Aucune voix pour cette langue. Installez la synthèse vocale dans les réglages du téléphone et téléchargez la voix.','No voice for this language. Install text-to-speech in the phone settings and download the voice.'))}},2500);
+ };
+ /* some WebViews load the voice list late: wait for it once */
+ let n=0;try{n=(syn.getVoices()||[]).length}catch(e){}
+ if(n||!('onvoiceschanged' in syn)){setTimeout(go,60);return}
+ let done=false;const fire=()=>{if(done)return;done=true;try{syn.onvoiceschanged=null}catch(e){}go()};
+ try{syn.onvoiceschanged=fire}catch(e){}setTimeout(fire,700);
+}
 function speak(text,lg,btn){
- if(!g.speechSynthesis||!g.SpeechSynthesisUtterance){say(tr('القراءة الصوتية غير متاحة على هذا الجهاز','Lecture vocale indisponible sur cet appareil','Read-aloud is not available on this device'));return false}
+ const P=natTts(),hasWeb=!!(g.speechSynthesis&&g.SpeechSynthesisUtterance);
+ if(!P&&!hasWeb){say(tr('القراءة الصوتية غير متاحة على هذا الجهاز','Lecture vocale indisponible sur cet appareil','Read-aloud is not available on this device'));return false}
  if(btn&&speakingBtn===btn){stopSpeak();return false}
  stopSpeak();
  const t=clean(text);if(!t)return false;
  const lg2=lg||guess(t),parts=t.match(/[^.!?؟۔\n]{1,400}[.!?؟۔]?/g)||[t];
  if(btn){btn.classList.add('on');speakingBtn=btn}
- parts.forEach((p,i)=>{const u=new SpeechSynthesisUtterance(p.trim());u.lang=VOICE[lg2]||'en-US';u.rate=0.95;
-  if(i===parts.length-1)u.onend=u.onerror=()=>{if(speakingBtn===btn&&btn){btn.classList.remove('on');speakingBtn=null}};
-  speechSynthesis.speak(u)});
+ const end=()=>{if(btn&&speakingBtn===btn){btn.classList.remove('on');speakingBtn=null}};
+ if(P){
+  /* Android's own speech engine through the Capacitor plugin: far more reliable than the WebView's speechSynthesis */
+  (async()=>{try{for(const p of parts){if(btn&&speakingBtn!==btn)break;await P.speak({text:p.trim(),lang:VOICE[lg2]||'en-US',rate:0.95,pitch:1,volume:1,category:'playback',queueStrategy:1})}}
+   catch(e){if(hasWeb&&speakingBtn===btn)speakWeb(parts,lg2,btn);else{end();say(tr('تعذّرت القراءة الصوتية. ثبّت صوت اللغة من إعدادات الهاتف.','Lecture impossible. Installez la voix dans les réglages.','Read-aloud failed. Install the voice in the phone settings.'))}return}
+   end()})();
+  return true;
+ }
+ speakWeb(parts,lg2,btn);
  return true;
 }
 

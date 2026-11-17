@@ -1,4 +1,4 @@
-// v2.9.49: home backup card, in-app update notice, footer credit, build-time bundler, strict CI, monotonic versionCode.
+// v2.9.50: home backup card, in-app update notice, footer credit, build-time bundler, strict CI, monotonic versionCode.
 const fs=require('fs'),path=require('path'),assert=require('assert'),vm=require('vm'),os=require('os'),cp=require('child_process');
 const root=path.join(__dirname,'..'),rd=f=>fs.readFileSync(path.join(root,f),'utf8');
 assert(rd('web/index.html').includes('src="v2-9-49.js"')&&rd('web/sw.js').includes('./v2-9-49.js'));
@@ -24,7 +24,7 @@ assert.strictEqual(typeof win.exportLocalBackup,'function');
   assert(banner.innerHTML.includes('v2.9.99')&&banner.innerHTML.includes('github.com/o/r/releases/latest'),'newer version shows the notice with the download link');
   win.smSkipUpdate();assert.strictEqual(banner.innerHTML,'','dismissed');
   // same or older version => no notice
-  store.smUpdateCheckInfo=JSON.stringify({version:'2.9.49',url:'https://github.com/o/r/x'});store.smUpdateCheckTime=String(Date.now());delete store.smUpdateSkipVersion;
+  store.smUpdateCheckInfo=JSON.stringify({version:'2.9.50',url:'https://github.com/o/r/x'});store.smUpdateCheckTime=String(Date.now());delete store.smUpdateSkipVersion;
   await listeners.online();assert.strictEqual(banner.innerHTML,'','same version: no notice');
 
   // ---- bundler on a temp copy ----
@@ -43,5 +43,5 @@ assert.strictEqual(typeof win.exportLocalBackup,'function');
   assert(wf.includes('skip_tests')&&wf.includes('gh release create')&&rd('.github/workflows/publish-learning-content.yml').includes('app-version.json')&&wf.includes('tools/bundle_web.js')&&wf.includes('build_tutor_kb.py'));
   assert(!wf.includes('% 1000')&&wf.includes('* 10000 + RUN'),'versionCode no longer wraps');
   const kb=JSON.parse(rd('web/data/tutor-kb.json'));assert(kb.schema==='sm-tutor-kb-v1'&&Array.isArray(kb.chunks));
-  console.log('v2.9.49 features tests: PASS');
+  console.log('v2.9.50 features tests: PASS');
 })().catch(e=>{console.error(e);process.exit(1)});

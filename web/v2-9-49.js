@@ -1,9 +1,9 @@
-/* SM éducation v2.9.49 — home backup card (works inside the Android app), in-app update notice, footer credit. */
+/* SM éducation v2.9.50 — home backup card (works inside the Android app), in-app update notice, footer credit. */
 (function(){
  'use strict';
  if(window.__smV2949)return;window.__smV2949=true;
  const cfg=window.SM_SCHOOL_CONFIG||{};
- const APP_VERSION='2.9.49';
+ const APP_VERSION='2.9.50';
  const K_TIME='smUpdateCheckTime',K_INFO='smUpdateCheckInfo',K_SKIP='smUpdateSkipVersion',K_LAST='smLastBackupAt';
  const L=()=>(typeof lang!=='undefined'?lang:'ar');
  const tr=(a,f,e)=>L()==='ar'?a:L()==='fr'?f:e;

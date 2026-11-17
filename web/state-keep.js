@@ -1,7 +1,7 @@
 (function(g){'use strict';
  var d=g.document;if(!d)return;
  try{if(g.localStorage.getItem('smKeepState')==='0')return}catch(e){}
- var K='smKeepState_v1',TTL=30*60*1000,tm=null,st={},ready=false;
+ var K='smKeepState_v1',TTL=10*60*1000,tm=null,st={},ready=false;
  try{st=JSON.parse(g.localStorage.getItem(K)||'{}')||{}}catch(e){st={}}
  var fresh=!!(st.t&&Date.now()-st.t<TTL);
  if(!fresh)st={};
