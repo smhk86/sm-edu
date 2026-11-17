@@ -23,6 +23,7 @@ def extract(path):
         return ''
 
 def clean(t):
+    t = t.encode('utf-8', 'ignore').decode('utf-8')
     t = unicodedata.normalize('NFKC', t)
     t = re.sub(r'[\u200e\u200f\u202a-\u202e\u2066-\u2069\u0640\x00-\x08\x0b\x0c\x0e-\x1f]', '', t)
     lines = [re.sub(r'[ \t]+', ' ', l).strip() for l in t.splitlines()]
