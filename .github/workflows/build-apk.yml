@@ -4,10 +4,15 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Build the APK without running the tests (manual runs only)'
+        type: boolean
+        default: false
 
 jobs:
   test:
-    continue-on-error: true
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.skip_tests) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +36,9 @@ jobs:
 
   apk:
     needs: test
+    if: ${{ !cancelled() && (needs.test.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.skip_tests)) }}
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,13 +76,24 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           IFS=. read -r MA MI PA <<< "$VERSION"
-          CODE=$(( (MA*10000 + MI*100 + PA) * 1000 + (GITHUB_RUN_NUMBER % 1000) ))
+          RUN=$GITHUB_RUN_NUMBER; [ "$RUN" -gt 9999 ] && RUN=9999
+          CODE=$(( (MA*10000 + MI*100 + PA) * 10000 + RUN ))
+          [ "$CODE" -lt 2100000000 ] || { echo "versionCode too large: $CODE"; exit 1; }
           GRADLE=android/app/build.gradle
           sed -i -E "s/versionCode [0-9]+/versionCode $CODE/; s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" "$GRADLE"
           grep -nE "versionCode|versionName" "$GRADLE"
 
       - name: Generate app icons (Android)
         run: npx --yes @capacitor/assets generate --android --assetPath assets
+
+      - name: Build the tutor knowledge base (optional; never blocks the build)
+        continue-on-error: true
+        run: |
+          pip install pypdf
+          python3 tools/build_tutor_kb.py --limit 300
+
+      - name: Bundle web scripts (fewer files, faster start; falls back to the plain files on any problem)
+        run: node tools/bundle_web.js
 
       - name: Keep the APK small (papers, lessons and curated repository files are downloaded from the content server)
         run: rm -rf web/exams web/repository
@@ -125,3 +144,11 @@ jobs:
         with:
           name: SM_EDUCATION-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish the APK as a GitHub Release (feeds the in-app update notice)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          cp android/app/build/outputs/apk/debug/app-debug.apk "SM_EDUCATION-v$VERSION.apk"
+          gh release create "v$VERSION-b$GITHUB_RUN_NUMBER" "SM_EDUCATION-v$VERSION.apk" --repo "$GITHUB_REPOSITORY" --title "SM éducation v$VERSION" --notes "APK build #$GITHUB_RUN_NUMBER. Install it over the current app: your data is kept when the signing key is the same." --latest

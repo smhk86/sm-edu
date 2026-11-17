@@ -80,5 +80,5 @@ const tutor=(message,task='lesson',subject='عام')=>global.fetch('/api/v1/ai/t
  r=await tutor('الكسور','practice');j=await r.json();assert.strictEqual(j.mode,'local');
  /* 9. status panel data */
  const st=await C.status();assert(st.loaded&&st.lessons>=1250&&st.encyclopedia>=1250);
- console.log('v2.9.48 smart teacher core tests: PASS');
+ console.log('v2.9.49 smart teacher core tests: PASS');
 })().catch(e=>{console.error(e);process.exit(1)});

@@ -9,11 +9,10 @@ BRANCH=main
 
 echo "1/4 — الأدوات"
 for t in git node; do command -v $t >/dev/null || { echo "ثبّت: pkg install git nodejs"; exit 1; }; done
-
 MSG="${1:-Release v$(node -p "require('./package.json').version")}"
-LOG="$(mktemp 2>/dev/null || echo "$HOME/.sm_test.log")"
+
 echo "2/4 — اختبارات JavaScript (يجب أن تنجح كلها)"
-fail=0; for f in tests/*.js; do node "$f" >"$LOG" 2>&1 || { echo "فشل: $f"; tail -3 "$LOG"; fail=1; }; done
+fail=0; for f in tests/*.js; do node "$f" >$HOME/.sm_test.log 2>&1 || { echo "فشل: $f"; tail -3 $HOME/.sm_test.log; fail=1; }; done
 [ $fail -eq 0 ] || { echo "أوقفت الرفع بسبب فشل اختبارات."; exit 1; }
 echo "كل الاختبارات نجحت."
 
@@ -27,6 +26,9 @@ git diff --cached --quiet && echo "لا توجد تغييرات جديدة." || 
 
 echo "4/4 — الرفع إلى $BRANCH"
 echo "عند طلب كلمة المرور استخدم Personal Access Token (صلاحية repo + workflow)، وليس كلمة مرور الحساب."
+if git fetch origin $BRANCH 2>/dev/null; then
+  git merge origin/$BRANCH --allow-unrelated-histories -X ours -m "Merge remote content" || { echo "تعذّر الدمج التلقائي: الصق الرسالة هنا."; exit 1; }
+fi
 git push -u origin $BRANCH
 echo
 echo "تم. تابع البناء: https://github.com/smhk86/sm-edu/actions"

@@ -9,6 +9,9 @@ on:
       - 'web/data/raji3dz-repository-index.json'
       - 'web/repository/**'
       - '.github/workflows/publish-learning-content.yml'
+  workflow_run:
+    workflows: ['Build Android APK']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -22,11 +25,18 @@ concurrency:
 
 jobs:
   publish:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: Check out project
         uses: actions/checkout@v4
+
+      - name: Write app-version.json (read by the in-app update notice)
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          printf '{"version":"%s","url":"https://github.com/%s/releases/latest"}\n' "$VERSION" "$GITHUB_REPOSITORY" > web/data/app-version.json
+          cat web/data/app-version.json
 
       - name: Check published site size
         run: |

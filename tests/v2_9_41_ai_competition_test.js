@@ -28,4 +28,4 @@ const gemini=fs.readFileSync(path.join(root,'web/gemini-direct.js'),'utf8');
 assert(core.includes('grade:requestGrade,subject:payload.subject'),'Smart Teacher request grade must scope first-pass retrieval');
 assert(core.includes('[KB-${index+1}'),'retrieved evidence must have stable source labels');
 assert(gemini.includes('CITATION RULES')&&gemini.includes('Do not invent source IDs'),'teacher prompt must prohibit fabricated citations');
-console.log('v2.9.48 Smart Teacher + Smart Generator quality gates: PASS');
+console.log('v2.9.49 Smart Teacher + Smart Generator quality gates: PASS');

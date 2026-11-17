@@ -72,5 +72,5 @@ const D=SM_TEXTBOOK_DL,T=D._t;
  assert(fs.readFileSync(path.join(root,'web/sw.js'),'utf8').includes('./textbook-downloader.js'),'script is precached');
  assert(JSON.parse(fs.readFileSync(path.join(root,'web/data/textbook-repository-index.json'),'utf8')).books.length>=0);
  assert(/textbookHosts:\s*\[/.test(fs.readFileSync(path.join(root,'web/config.js'),'utf8')),'config exposes textbookHosts');
- console.log('v2.9.48 textbook downloader tests: PASS');
+ console.log('v2.9.49 textbook downloader tests: PASS');
 })().catch(e=>{console.error(e);process.exit(1)});

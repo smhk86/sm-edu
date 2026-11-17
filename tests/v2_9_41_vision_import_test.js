@@ -36,5 +36,5 @@ const data=mk('3AM',[
  r=await V.importBuffer(ab(duplicate),'3AM.json.gz');
  assert.deepStrictEqual([r.added,r.updated,r.kept,r.pages],[1,0,0,2]);
  assert.strictEqual(store.get('vis-3AM-same').pages,2); // duplicate book IDs and page numbers are collapsed
- console.log('v2.9.48 vision import: OK');
+ console.log('v2.9.49 vision import: OK');
 })().catch(e=>{console.error(e);process.exit(1)});

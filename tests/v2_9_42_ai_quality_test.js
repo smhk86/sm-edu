@@ -29,4 +29,4 @@ assert.strictEqual(bad.valid,false,'citation absent from retrieved evidence must
 assert.deepStrictEqual(Array.from(bad.unknown),['KB-4']);
 const noCitation=audit('شرح عام دون إحالة','');
 assert.strictEqual(noCitation.status,'no_citations');
-console.log('v2.9.48 Smart Teacher citation audit + Smart Generator quality gates: PASS');
+console.log('v2.9.49 Smart Teacher citation audit + Smart Generator quality gates: PASS');
