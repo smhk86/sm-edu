@@ -30,13 +30,16 @@ class Links(HTMLParser):
 def file_links(html, base):
     p = Links()
     p.feed(html)
-    out = []
+    out, pdfs = [], []
     for u in p.found:
         full = urllib.parse.urljoin(base, u.split("#")[0])
+        for f in urllib.parse.parse_qs(urllib.parse.urlparse(full).query).get("file", []):
+            if f.lower().split("?")[0].endswith(".pdf") and f not in pdfs:
+                pdfs.append(f)
         path = urllib.parse.urlparse(full).path.lower()
-        if path.endswith(EXT) and full not in out:
+        if path.endswith(EXT) and full not in out and "app-install" not in path and not path.endswith("/eddirasa.png"):
             out.append(full)
-    return out
+    return pdfs or out
 
 
 def parse_line(line):

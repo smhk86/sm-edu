@@ -17,3 +17,11 @@ smedu.keystore
 smedu.keystore.b64
 *.keystore
 *.jks
+
+exams_in/
+run*.log
+certs_*.json
+cert_*.json
+*.json.tmp
+progress.py
+checkkeys.py
