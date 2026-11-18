@@ -19,7 +19,7 @@ assert(teacher.includes('teacher-advanced-tools'));
 assert(teacher.includes('smartTeacherPdf') && teacher.includes('smartTeacherAiConsent'));
 assert(teacher.includes('generateSmartMockExam') && teacher.includes('startSmartTeacherSession'));
 assert(css.includes('.teacher-advanced-tools>summary'));
-assert(sw.includes('sm-school-ai-v2.9.50-shell-r3-b21') && sw.includes('./v2-9-20.js'));
+assert(sw.includes('sm-school-ai-v2.9.50-shell-r3-b22') && sw.includes('./v2-9-20.js'));
 const w={};vm.runInNewContext(fs.readFileSync(root+'/web/v2-9-20.js','utf8'),{window:w});
 assert.equal(w.SM_EDUCATION_RELEASE.version,'2.9.22');
 assert.equal(w.SM_EDUCATION_RELEASE.features.unifiedSmartTeacher,true);

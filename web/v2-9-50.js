@@ -125,7 +125,7 @@
  function papersHtml(){
   const list=(S.papers||[]).filter(x=>x.track===S.track&&(!S.subject||x.subject===S.subject)&&(!S.year||String(x.year)===String(S.year)));
   if(!list.length)return '';
-  const blk=t=>`<div class="sm50-txt">${esc(t)}</div>`;
+  const blk=t=>`<div class="sm50-txt">${mhtml(t)}</div>`;
   return `<details class="sm50-topics" open><summary><b>📝 ${tr('مواضيع مقترحة (نص مقروء)','Sujets proposés (texte)','Suggested papers (text)')}</b> · ${list.length}</summary>`+list.map(x=>`<details class="sm50-paper"><summary>${esc([x.subject,x.title].filter(Boolean).join(' · '))}${x.solution?' ✅':''}</summary>${blk(x.text)}${x.solution?`<details><summary><b>${tr('الحل','Corrigé','Solution')}</b></summary>${blk(x.solution)}</details>`:''}${x.source?`<small class="sm50-sub">${tr('المصدر: ','Source : ','Source: ')}${esc(x.source)}</small>`:''}</details>`).join('')+`</details>`;
  }
  function topicsHtml(){
@@ -139,6 +139,36 @@
    rows.map(r=>`<div class="sm50-trow"><b>${esc(r.s)}</b><div class="tl-chips">${r.list.map(x=>`<button type="button" class="v240-chip" onclick="SM_V2950.ask(${esc(JSON.stringify(r.s))},${esc(JSON.stringify(x))})">${esc(x)}</button>`).join('')}</div></div>`).join('')+`</details>`;
  }
  function refresh(){const el=d.getElementById('sm50Cert');if(el)el.innerHTML=panelHtml()}
+ function mhtml(t){
+  t=String(t||'').replace(/<\/?u\s*\/?>/gi,'');
+  let o='',i=0,m;const re=/\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
+  while((m=re.exec(t))){
+   o+=esc(t.slice(i,m.index));
+   const tex=(m[1]!==undefined?m[1]:m[2]).trim();
+   o+=`<span class="sm50-m" dir="ltr" data-tex="${esc(tex)}"${m[1]!==undefined?' data-disp="1"':''}>${esc(m[0])}</span>`;
+   i=re.lastIndex;
+  }
+  return o+esc(t.slice(i));
+ }
+ let kxP=null;
+ function loadKatex(){
+  if(w.katex)return Promise.resolve(true);
+  if(kxP)return kxP;
+  kxP=new Promise(res=>{try{
+   const l=d.createElement('link');l.rel='stylesheet';l.href='vendor/katex/katex.min.css';d.head.appendChild(l);
+   const sc=d.createElement('script');sc.src='vendor/katex/katex.min.js';
+   sc.onload=()=>res(!!w.katex);sc.onerror=()=>res(false);d.head.appendChild(sc);
+  }catch(e){res(false)}});
+  return kxP;
+ }
+ async function typeset(root){
+  const nodes=[...root.querySelectorAll('.sm50-m:not([data-done])')];
+  if(!nodes.length)return;
+  if(!(await loadKatex()))return;
+  nodes.forEach(n=>{try{w.katex.render(n.getAttribute('data-tex'),n,{throwOnError:false,displayMode:n.hasAttribute('data-disp')});n.setAttribute('data-done','1')}catch(e){}});
+ }
+ try{if(d.addEventListener)d.addEventListener('toggle',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('sm50-paper')&&t.open)typeset(t)},true)}catch(e){}
+
  w.SM_V2950={
   track(k){if(!TRACKS[k])return;S.track=k;S.subject='';S.year='';S.shown=15;refresh()},
   set(k,v){S[k]=v;S.shown=15;refresh()},

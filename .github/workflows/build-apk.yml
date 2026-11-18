@@ -94,6 +94,13 @@ jobs:
           pip install pypdf
           python3 tools/build_tutor_kb.py --limit 300
 
+      - name: Add KaTeX (math rendering for exam papers)
+        run: |
+          npm install --no-save --no-package-lock katex@0.16.11
+          mkdir -p web/vendor/katex/fonts
+          cp node_modules/katex/dist/katex.min.js node_modules/katex/dist/katex.min.css web/vendor/katex/
+          cp node_modules/katex/dist/fonts/*.woff2 web/vendor/katex/fonts/
+
       - name: Bundle web scripts (fewer files, faster start; falls back to the plain files on any problem)
         run: node tools/bundle_web.js
 
