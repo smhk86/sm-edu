@@ -25,3 +25,6 @@ cert_*.json
 *.json.tmp
 progress.py
 checkkeys.py
+
+tafawoq_*.json
+tafawoq_*.bak

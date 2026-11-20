@@ -169,6 +169,33 @@
  }
  try{if(d.addEventListener)d.addEventListener('toggle',e=>{const t=e.target;if(t&&t.classList&&t.classList.contains('sm50-paper')&&t.open)typeset(t)},true)}catch(e){}
 
+
+ const TF_LV={'الأولى ابتدائي':'1ap','الثانية ابتدائي':'2ap','الثالثة ابتدائي':'3ap','الرابعة ابتدائي':'4ap','الخامسة ابتدائي':'5ap','الأولى متوسط':'1am','الثانية متوسط':'2am','الثالثة متوسط':'3am','الرابعة متوسط':'4am','الأولى ثانوي':'1as','الثانية ثانوي':'2as','الثالثة ثانوي':'3as'};
+ const TF={lv:'',data:{},subject:'',kind:'',term:'',shown:20};
+ function tfItems(){const a=TF.data[TF.lv];return Array.isArray(a)?a:[]}
+ function tfRefresh(){const el=d.getElementById('tafPanel');if(el)el.innerHTML=tfInner()}
+ function tfLoad(){const lv=TF.lv;if(!lv||TF.data[lv]!==undefined)return;TF.data[lv]=null;
+  fetch('data/tafawoq/'+lv+'.json').then(r=>r.ok?r.json():{items:[]}).then(j=>{TF.data[lv]=(j&&j.items)||[];tfRefresh()}).catch(()=>{TF.data[lv]=[];tfRefresh()})}
+ function tfInner(){
+  if(TF.data[TF.lv]===null)return `<p class="sm50-sub">${tr('جارٍ التحميل…','Chargement…','Loading…')}</p>`;
+  const all=tfItems();
+  if(!all.length)return `<p class="sm50-sub">${tr('لا توجد أوراق لهذه السنة بعد.','Aucun sujet pour ce niveau.','No papers for this grade yet.')}</p>`;
+  const subs=[...new Set(all.map(x=>x.subject))];
+  if(!subs.includes(TF.subject))TF.subject=subs[0];
+  const list=all.filter(x=>x.subject===TF.subject&&(!TF.kind||x.kind===TF.kind)&&(!TF.term||String(x.term)===TF.term));
+  const shown=list.slice(0,TF.shown);
+  const opt=(v,t,cur)=>`<option value="${esc(v)}"${String(v)===String(cur)?' selected':''}>${esc(t)}</option>`;
+  const sel=(k,opts,cur)=>`<select onchange="SM_TAF.set('${k}',this.value)">${opts.map(o=>opt(o[0],o[1],cur)).join('')}</select>`;
+  const lab=k=>k==='exam'?tr('اختبار','Examen','Exam'):tr('فرض','Devoir','Test');
+  return `<div class="sm50-seg">${sel('subject',subs.map(x=>[x,x]),TF.subject)}${sel('kind',[['',tr('الكل','Tout','All')],['exam',tr('اختبارات','Examens','Exams')],['test',tr('فروض','Devoirs','Tests')]],TF.kind)}${sel('term',[['',tr('كل الفصول','Tous','All terms')],['1',tr('الفصل 1','Trim. 1','Term 1')],['2',tr('الفصل 2','Trim. 2','Term 2')],['3',tr('الفصل 3','Trim. 3','Term 3')]],TF.term)}</div>`+
+   (shown.length?shown.map(x=>`<details class="sm50-paper"><summary>${esc(x.title||(lab(x.kind)+' '+x.n))}${x.solution?' ✅':''}</summary><div class="sm50-txt">${mhtml(x.text)}</div>${x.solution?`<details><summary><b>${tr('عرض الحل','Voir le corrigé','Show solution')}</b></summary><div class="sm50-txt">${mhtml(x.solution)}</div></details>`:''}</details>`).join(''):`<p class="sm50-sub">${tr('لا نتائج لهذا الاختيار.','Aucun résultat.','No results.')}</p>`)+
+   (list.length>shown.length?`<button type="button" class="v240-chip" onclick="SM_TAF.more()">${tr('عرض المزيد','Plus','More')} (${list.length-shown.length})</button>`:'');
+ }
+ w.tafawoqPanel=function(g){
+  TF.lv=TF_LV[g]||'';if(!TF.lv)return '';tfLoad();
+  return `<details class="panel sm50-topics" open><summary><b>📚 ${tr('اختبارات وفروض للمراجعة (مصدر: تفوّق)','Examens et devoirs de révision (source : Tafawoq)','Revision exams & tests (source: Tafawoq)')}</b></summary><p class="sm50-sub">${tr('أوراق مقترحة مع الحلول، وليست امتحانات وزارية رسمية.','Sujets proposés avec corrigés, non officiels.','Suggested papers with solutions, not official ministry exams.')}</p><div id="tafPanel">${tfInner()}</div></details>`;
+ };
+ w.SM_TAF={set(k,v){TF[k]=v;TF.shown=20;tfRefresh()},more(){TF.shown+=20;tfRefresh()}};
  w.SM_V2950={
   track(k){if(!TRACKS[k])return;S.track=k;S.subject='';S.year='';S.shown=15;refresh()},
   set(k,v){S[k]=v;S.shown=15;refresh()},

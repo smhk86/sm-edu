@@ -33,7 +33,7 @@ assert(smart.includes("toDataURL('image/jpeg',0.84)"));
 const pkg=JSON.parse(read('package.json')),main=read('backend/app/main.py'),index=read('web/index.html'),sw=read('web/sw.js');
 assert.equal(pkg.version,'2.9.50');assert(main.includes('version="2.9.50"'));
 assert(index.includes('v2-9-17.js')&&index.includes('v2.9.50'));
-assert(sw.includes('sm-school-ai-v2.9.50-shell-r3-b22')&&sw.includes('./v2-9-17.js'));
+assert(sw.includes('sm-school-ai-v2.9.50-shell-r3-b23')&&sw.includes('./v2-9-17.js'));
 const release={};vm.runInNewContext(read('web/v2-9-17.js'),{window:release});
 assert.equal(release.SM_EDUCATION_RELEASE.version,'2.9.17');
 console.log('PASS: v2.9.50 diagram-aware vision prompt, structured observations, confidence escalation, high-resolution image preparation and release wiring');
