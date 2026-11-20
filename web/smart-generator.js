@@ -176,6 +176,34 @@
   if(total>0){let left=total,seenCount=0;const per=Math.round(total/n*4)/4;groups.forEach(gr=>{gr.qs.forEach(q=>{seenCount++;q.points=seenCount===n?Math.max(0,Math.round(left*4)/4):Math.min(per,left);left-=q.points});gr.points=gr.qs.reduce((a,q)=>a+q.points,0)})}
   return groups;
  }
+  async function bookMessage(message,s){
+  const KB=g.SM_TEXTBOOK_KB,V=g.SM_VISION_IMPORT,L=g.SM_BOOKS_LOADER;
+  if(!KB||!KB.search||!V||!L)throw new Error('وحدة الكتب المدرسية غير جاهزة بعد، أعد المحاولة بعد لحظات.');
+  if(!KB.enabled())throw new Error('فعّل خيار «أسمح بإرسال المقتطفات من الكتاب إلى مزود الذكاء الاصطناعي» في قسم الكتب المدرسية، ليبني المولّد التمارين على كتاب مستواك.');
+  const code=Object.keys(V.GRADES||{}).find(c=>V.GRADES[c]===s.grade);
+  if(!code)throw new Error('لا يتوفر كتاب مضمَّن لهذا المستوى.');
+  await L.load(code);L.flush();await KB.ensure();
+  const nz=(KB._t&&KB._t.norm)||(x=>String(x||'')),ns=nz(s.subject);
+  const names=(s.topics&&s.topics.length?s.topics:curTopics.map(t=>t.name).filter(t=>t!=='ذكاء اصطناعي')).slice(0,8);
+  const qs=names.length?names:[s.subject],per=[];
+  for(const q of qs){const r=await KB.search(q,{grade:s.grade,subject:s.subject,limit:2});
+   per.push(r.filter(h=>{const hs=nz(h.subject);return !hs||!ns||hs.includes(ns)||ns.includes(hs)}))}
+  const seen=new Set(),hits=[];
+  for(let i=0;i<2;i++)for(const a of per){const h=a[i];if(!h)continue;const k=h.bookId+'|'+h.page;if(seen.has(k))continue;seen.add(k);hits.push(h)}
+  if(!hits.length){let n='';try{const st=await KB.stats();n=' (صفحات الكتب المفهرسة: '+st.pages+')'}catch(e){}
+   throw new Error('لم أجد في كتاب '+s.grade+' مقتطفات للمحاور المختارة'+n+'. اختر محاور أخرى أو استعمل «توليد من المنصة».')}
+  const TAIL='\n\nمقتطفات من الكتاب المدرسي لمستوى '+s.grade+' (هي المرجع الوحيد للمحتوى):\n';
+  const END='\nابنِ الأسئلة على مفاهيم هذه المقتطفات ومصطلحاتها فقط وبمستوى التلميذ، ولا تتجاوز ما فيها ولا تنقل جملها حرفياً. أخرج JSON واحداً فقط بالبنية المذكورة أعلاه.';
+  let msg=message,room=2950-msg.length-TAIL.length-END.length;
+  if(room<600){msg=msg.replace(/نص من موضوع سابق[^\n]*\n"""[\s\S]*?"""\n/,'');room=2950-msg.length-TAIL.length-END.length}
+  if(room<300)throw new Error('التعليمة طويلة جداً، قلّل عدد المحاور أو الأسئلة.');
+  room=Math.min(room,1600);
+  const each=Math.max(200,Math.min(450,Math.floor(room/Math.min(hits.length,4))));
+  let block='';
+  for(const h of hits){const b='[«'+h.book+'» — ص '+h.page+']\n'+String(h.snippet).slice(0,each)+'\n';if((block+b).length>room)break;block+=b}
+  if(!block)throw new Error('تعذّر تجهيز مقتطفات الكتاب.');
+  return msg+TAIL+block+END;
+ }
  async function aiCall(s,n,ref){
   const topics=(s.topics&&s.topics.length?s.topics:curTopics.map(t=>t.name).filter(t=>t!=='ذكاء اصطناعي')).join('، ');
   const k=KINDS[s.kind],comp=competencies(s).join(' — ');
@@ -186,7 +214,7 @@
    `التزم بما يدرسه تلميذ هذا المستوى في هذا الفصل ولا تتجاوزه. اختر معطيات جديدة وتأكد من صحة كل الحسابات في الحل. لا تدّعِ أن الموضوع رسمي.\n`+
    `أخرج JSON واحداً فقط بلا أي نص آخر. يجب أن يكون مجموع الأسئلة ${n} بالضبط دون زيادة أو نقص، ولكل سؤال إجابة نموذجية صحيحة وخطوتان مفسرتان على الأقل. لا تكرر السؤال بصياغة مختلفة ولا تترك حقولاً فارغة. البنية: {"exercises":[{"title":"التمرين الأول","questions":[{"question":"...","answer":"الجواب النهائي","steps":["خطوة 1","خطوة 2"],"explanation":"..."}]}]}`;
   const base=typeof apiBase==='function'?apiBase():'';
-  const r=await g.fetch(`${base}/api/v1/ai/tutor`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:'practice',message,language:'ar',grade:s.grade,subject:s.subject,learning_context:''})});
+  const r=await g.fetch(`${base}/api/v1/ai/tutor`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:'practice',message:await bookMessage(message,s),__kb:1,language:'ar',grade:s.grade,subject:s.subject,learning_context:''})});
   const d=await r.json();if(!r.ok)throw new Error(d&&d.detail||'ai');
   const groups=parseAI(d.answer||d.response||'',Object.assign({},s,{points:s.points}),n);
   return {groups,raw:d.answer||d.response||''};
