@@ -6,7 +6,7 @@ const data=JSON.parse(fs.readFileSync(root+'/web/data/teacher-source-register-20
 const w={};vm.runInNewContext(runtime,{window:w});
 assert.equal(pkg.version,'2.9.50');assert.equal(w.SM_EDUCATION_RELEASE.version,'2.8.5');
 assert(html.includes('v2.9.50')&&html.includes('v2-8-5.js'));
-assert(sw.includes('sm-school-ai-v2.9.50-shell-r3-b23')&&sw.includes('./v2-8-5.js'));
+assert(sw.includes('sm-school-ai-v2.9.50-shell-r3-b24')&&sw.includes('./v2-8-5.js'));
 assert(smart.includes('smartExamTopics')&&smart.includes('smTeacherBuildExamPrompt'));
 assert(smart.includes('smTeacherBuildReviewContext'));
 assert(smart.includes('smartTeacherAiConsent')&&smart.includes('إرسال نص الملف والصور'));

@@ -196,6 +196,27 @@
   return `<details class="panel sm50-topics" open><summary><b>📚 ${tr('اختبارات وفروض للمراجعة (مصدر: تفوّق)','Examens et devoirs de révision (source : Tafawoq)','Revision exams & tests (source: Tafawoq)')}</b></summary><p class="sm50-sub">${tr('أوراق مقترحة مع الحلول، وليست امتحانات وزارية رسمية.','Sujets proposés avec corrigés, non officiels.','Suggested papers with solutions, not official ministry exams.')}</p><div id="tafPanel">${tfInner()}</div></details>`;
  };
  w.SM_TAF={set(k,v){TF[k]=v;TF.shown=20;tfRefresh()},more(){TF.shown+=20;tfRefresh()}};
+
+ function tfWrap(){
+  const prev=w.testBankHomePage;
+  if(typeof prev!=='function'||prev.__tf)return;
+  const f=function(){
+   const html=prev.apply(this,arguments);
+   try{
+    if(html.indexOf('id="tafPanel"')>=0||typeof w.tafawoqPanel!=='function')return html;
+    const sel=d.getElementById('bankTestGrade');
+    let g=(sel&&sel.value)||(typeof w.grade==='string'?w.grade:'');
+    if(!g&&typeof grade!=='undefined')g=grade;
+    const panel=w.tafawoqPanel(g);
+    if(!panel)return html;
+    const mark='<section class="panel test-history"';
+    const k=html.indexOf(mark);
+    return k>=0?html.slice(0,k)+panel+html.slice(k):html+panel;
+   }catch(e){return html}
+  };
+  f.__tf=1;w.testBankHomePage=f;
+ }
+ tfWrap();
  w.SM_V2950={
   track(k){if(!TRACKS[k])return;S.track=k;S.subject='';S.year='';S.shown=15;refresh()},
   set(k,v){S[k]=v;S.shown=15;refresh()},

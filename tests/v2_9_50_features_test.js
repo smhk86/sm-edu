@@ -31,6 +31,10 @@ win.window=win;win.document=doc;vm.createContext(sb);vm.runInContext(rd('web/v2-
  assert(h.includes('وليست مواضيع رسمية'),'suggestions are labelled as non-official');
  assert(h.includes('sm50-paper')&&!h.includes('hidden'),'only rights-cleared papers shown');
  win.SM_V2950.set('sol',false);assert(win.SM_V2950._filtered().length>=f.length);
+ // Tafawoq panel on the real test-bank page (v2-pro replaces testBankHomePage; the wrapper must add the panel before "recent results")
+ assert(typeof win.tafawoqPanel==='function','tafawoqPanel is exposed');
+ assert(win.tafawoqPanel('الرابعة متوسط').includes('tafPanel')&&!win.tafawoqPanel('الأولى ثانوي').includes('undefined'),'panel renders for a known grade');
+ assert.strictEqual(win.tafawoqPanel('غير معروف'),'','no panel for an unknown grade');
  console.log('v2.9.50 features tests: PASS');
 })().catch(e=>{console.error(e);process.exit(1)});
 // certificate pipeline tools exist and parse

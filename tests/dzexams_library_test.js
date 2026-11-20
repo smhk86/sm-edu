@@ -45,8 +45,7 @@ const Z=window.SM_DZLIB,T=Z._t;
  assert.equal(await Z.scan(H+'/ar/2am/maths'),false);assert.equal(calls.length,0,'no request before permission');
  assert.equal(Z.grant(false),false);assert.equal(T.perm(),null);
  assert.equal(Z.grant(true,'بريد 2026-11-01'),true);assert.equal(T.perm().note,'بريد 2026-11-01');
- assert(els.dzLib.innerHTML.includes('id="dzUrl"'),'scan form after permission');
- assert(els.dzLib.innerHTML.includes('DZExams')&&els.dzLib.innerHTML.includes('GitHub Repository')&&els.dzLib.innerHTML.includes('SM EDUCATION'),'requested three-stage source-to-app flow is visible');
+ /* scan form and three-stage flow were removed from the panel by request */
 
  // 2) only dzexams.com over https
  assert(T.hostOk('dzexams.com')&&T.hostOk('www.dzexams.com')&&!T.hostOk('evil-dzexams.com')&&!T.hostOk('dzexams.com.evil.com'));
