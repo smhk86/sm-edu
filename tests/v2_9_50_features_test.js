@@ -11,7 +11,8 @@ const core=rd('web/smart-teacher-core.js');assert(!core.includes('حالة ال�
 assert(rd('web/state-keep.js').includes('TTL=10*60*1000'));
 // voice: native engine first, WebView fallback with voice selection
 const v=rd('web/voice.js');assert(v.includes('natTts')&&v.includes('getVoices')&&v.includes('onvoiceschanged'));
-assert(rd('.github/workflows/build-apk.yml').includes('@capacitor-community/text-to-speech')&&/text-to-speech[^\n]*\|\|/.test(rd('.github/workflows/build-apk.yml')),'optional TTS plugin never blocks the build');
+assert(JSON.parse(rd('package.json')).dependencies['@capacitor-community/text-to-speech'],'TTS plugin is a real dependency, so later npm installs cannot prune it');
+assert(rd('.github/workflows/build-apk.yml').includes('npm ls @capacitor-community/text-to-speech')&&!/text-to-speech[^\n]*\|\|/.test(rd('.github/workflows/build-apk.yml')),'a missing TTS plugin fails the build visibly');
 // module behaviour
 const els={},timers=[];const mk=()=>({style:{setProperty(){}},appendChild(){},classList:{toggle(){}},addEventListener(){}});
 const doc={head:mk(),documentElement:mk(),body:Object.assign(mk(),{}),createElement:()=>({}),getElementById:id=>els[id]||null,querySelector:()=>null,addEventListener(){},activeElement:null,visibilityState:'visible'};
